@@ -49,7 +49,6 @@ type FrameHeader struct {
 }
 
 func (fh *FrameHeader) Decode(conn net.Conn) {
-
 	b := make([]byte, 8)
 	n, err := conn.Read(b)
 
