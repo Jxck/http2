@@ -5,6 +5,7 @@ import (
 	_ "encoding/base64"
 	"encoding/binary"
 	"fmt"
+	. "github.com/jxck/color"
 	"log"
 	"net"
 )
@@ -67,6 +68,7 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	case 4:
 		frame := NewSettingsFrame(fh)
 		frame.Decode(buf)
+		fmt.Println(&frame)
 	default:
 		log.Println("other")
 	}
@@ -151,14 +153,14 @@ func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
 		binary.Read(buf, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
 	}
-	fmt.Println(frame)
 }
 
 func (frame *SettingsFrame) String() string {
-	str := fmt.Sprintf("SETTINGS frame <length=%v, flags=%v, stream_id=%v>\n(niv=%v)",
-		frame.Length, frame.Flags, frame.StreamId, len(frame.Settings))
+	str := Pink("SETTINGS")
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%v, stream_id=%v>\n(niv=%v)",
+		frame.Length, frame.Flags, frame.StreamId, len(frame.Settings)))
 	for _, s := range frame.Settings {
-		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
+		str += White(fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value))
 	}
 	return str
 }
