@@ -1,7 +1,10 @@
 package main
 
 import (
-	"encoding/base64"
+	"bytes"
+	_ "encoding/base64"
+	"encoding/binary"
+	"fmt"
 	"log"
 )
 
@@ -12,6 +15,7 @@ func init() {
 type FrameType uint8
 
 const (
+	// note: 0x08 dosen't used
 	HeadersFrameType      FrameType = 0x1
 	PriorityFrameType               = 0x2
 	RstStreamFrameType              = 0x3
@@ -23,7 +27,7 @@ const (
 	ContinuationFrameType           = 0xA
 )
 
-// Frame Format
+// Frame Header
 //
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -35,12 +39,28 @@ const (
 // |                   Frame Payload (0...)                      ...
 // +---------------------------------------------------------------+
 
-type ControlFrame struct {
+type FrameHeader struct {
 	Length   uint16
 	Type     uint8
 	Flags    uint8
 	R        uint8
 	StreamId uint32
+}
+
+func (fh *FrameHeader) Decode(b []byte) {
+	buf := bytes.NewBuffer(b)
+	binary.Read(buf, binary.BigEndian, &fh.Length)   // err
+	binary.Read(buf, binary.BigEndian, &fh.Type)     // err
+	binary.Read(buf, binary.BigEndian, &fh.Flags)    // err
+	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
+
+	switch fh.Type {
+	case 4:
+		frame := NewSettingsFrame(fh)
+		frame.Decode(buf)
+	default:
+		log.Println("other")
+	}
 }
 
 func main() {
@@ -54,8 +74,11 @@ func main() {
 		0, 0, 0, 0xc4,
 		// 00000000 00000000 00000000 11000100
 	}
-	str := base64.StdEncoding.EncodeToString(buf)
-	log.Println(str)
+	fh := FrameHeader{}
+	fh.Decode(buf)
+
+	// str := base64.StdEncoding.EncodeToString(buf)
+	// log.Println(str)
 }
 
 // HEADERS
@@ -67,8 +90,13 @@ func main() {
 // +-+-------------------------------------------------------------+
 // |                   Header Block Fragment (*)                 ...
 // +---------------------------------------------------------------+
-//
-//
+
+//type HeadersFrame struct {
+//	HeaderFrame
+//	Priority uint32
+//	HeaderBlock
+//}
+
 // PRIORITY
 //
 // 0                   1                   2                   3
@@ -96,11 +124,53 @@ func main() {
 // |                        Value (32)                             |
 // +---------------------------------------------------------------+
 
+type SettingsId uint32
+
+const (
+	SETTINGS_MAX_CONCURRENT_STREAMS SettingsId = 4
+	SETTINGS_INITIAL_WINDOW_SIZE               = 7
+	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
+)
+
+func NewSettingsFrame(fh *FrameHeader) SettingsFrame {
+	frame := SettingsFrame{}
+	frame.FrameHeader = *fh
+	return frame
+}
+
 type SettingsFrame struct {
-	ControlFrame
+	FrameHeader
+	Settings []Setting
+}
+
+type Setting struct {
 	Reserved   uint8
-	SettingsId uint32
+	SettingsId SettingsId
 	Value      uint32
+}
+
+func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
+	for niv := frame.Length / 8; niv > 0; niv-- {
+		s := Setting{}
+
+		var firstByte uint32
+		binary.Read(buf, binary.BigEndian, &firstByte) // err
+		s.SettingsId = SettingsId(firstByte & 0xFFFFFF)
+		s.Reserved = uint8(firstByte >> 24)
+		binary.Read(buf, binary.BigEndian, s.Value) // err
+		frame.Settings = append(frame.Settings, s)
+	}
+	fmt.Println(frame)
+}
+
+func (frame *SettingsFrame) String() string {
+	niv := len(frame.Settings)
+	str := fmt.Sprintf("SETTINGS frame <length=%v, flags=%v, stream_id=%v>\n(niv=%v)",
+		frame.Length, frame.Flags, frame.StreamId, niv)
+	for _, s := range frame.Settings {
+		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
+	}
+	return str
 }
 
 //
