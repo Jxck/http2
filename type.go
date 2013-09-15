@@ -82,11 +82,11 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 // |                   Header Block Fragment (*)                 ...
 // +---------------------------------------------------------------+
 
-//type HeadersFrame struct {
-//	HeaderFrame
-//	Priority uint32
-//	HeaderBlock
-//}
+type HeadersFrame struct {
+	FrameHeader
+	Priority    uint32
+	HeaderBlock []byte
+}
 
 // PRIORITY
 //
