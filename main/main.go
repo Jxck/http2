@@ -80,16 +80,17 @@ func main() {
 	fh = &FrameHeader{}
 	fh.Length = 8
 	fh.Type = 0x4
-	fh.Flags = 0x1 // END_STREAM
-	fh.StreamId = 1
+	fh.Flags = 0
+	fh.StreamId = 0
 
 	setting := Setting{0, 4, 1024}
 	sf := SettingsFrame{*fh, []Setting{setting}}
-	log.Println(sf)
+	log.Print(&sf)
+	log.Println(sf.Encode().Bytes())
 
 	n, e := conn.Write(sf.Encode().Bytes())
 	log.Println(n, e)
 
-	// SendHeaders(conn)
+	SendHeaders(conn)
 
 }
