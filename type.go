@@ -90,6 +90,19 @@ type HeadersFrame struct {
 	HeaderBlock []byte
 }
 
+func (frame *HeadersFrame) Encode() *bytes.Buffer {
+	buf := bytes.NewBuffer([]byte{})
+
+	binary.Write(buf, binary.BigEndian, frame.Length)
+	binary.Write(buf, binary.BigEndian, frame.Type)
+	binary.Write(buf, binary.BigEndian, frame.Flags)
+	binary.Write(buf, binary.BigEndian, frame.StreamId)
+	binary.Write(buf, binary.BigEndian, frame.Priority)
+	binary.Write(buf, binary.BigEndian, frame.HeaderBlock)
+
+	return buf
+}
+
 // PRIORITY
 //
 // 0                   1                   2                   3
@@ -140,6 +153,19 @@ type Setting struct {
 	Reserved   uint8
 	SettingsId SettingsId
 	Value      uint32
+}
+
+func (frame *SettingsFrame) Encode() *bytes.Buffer {
+	buf := bytes.NewBuffer([]byte{})
+
+	binary.Write(buf, binary.BigEndian, frame.Length)
+	binary.Write(buf, binary.BigEndian, frame.Type)
+	binary.Write(buf, binary.BigEndian, frame.Flags)
+	binary.Write(buf, binary.BigEndian, frame.StreamId)
+	binary.Write(buf, binary.BigEndian, frame.Settings[0].SettingsId)
+	binary.Write(buf, binary.BigEndian, frame.Settings[0].Value)
+
+	return buf
 }
 
 func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
