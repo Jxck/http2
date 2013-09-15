@@ -32,19 +32,7 @@ func setting() string {
 	return str
 }
 
-func main() {
-	conn, _ := net.Dial("tcp", "jxck.io:8080") // err
-
-	conn.Write([]byte("GET / HTTP/1.1\r\n"))                      // err
-	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n")) // err
-	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))          // err
-	conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))   // err
-	// n, e = conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD//w==\r\n")) // err
-	conn.Write([]byte("\r\n")) // err
-
-	fh := &FrameHeader{}
-	fh.Decode(conn)
-
+func SendHeaders(conn net.Conn) {
 	headers := http.Header{
 		"Scheme":     []string{"https"},
 		"Host":       []string{"jxck.io:8080"},
@@ -58,11 +46,11 @@ func main() {
 	client := NewContext()
 	wire := client.Encode(headers)
 
-	fh = &FrameHeader{}
+	fh := &FrameHeader{}
 	fh.Length = uint16(len(wire))
 	fh.Type = 0x1
 	fh.Flags = 0x1 // END_STREAM
-	fh.StreamId = 0
+	fh.StreamId = 1
 
 	hf := &HeadersFrame{*fh, 0, wire}
 	log.Println(hf.Encode().Bytes())
@@ -73,5 +61,35 @@ func main() {
 	b := make([]byte, 100)
 	n, err := conn.Read(b)
 	log.Println(n, err, b)
+}
+
+func main() {
+	conn, _ := net.Dial("tcp", "jxck.io:8080") // err
+
+	conn.Write([]byte("GET / HTTP/1.1\r\n"))                      // err
+	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n")) // err
+	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))          // err
+	//conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))   // err
+	conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD\r\n")) // err
+	conn.Write([]byte("\r\n"))                                    // err
+
+	fh := &FrameHeader{}
+	fh.Decode(conn)
+
+	// SendSettings
+	fh = &FrameHeader{}
+	fh.Length = 8
+	fh.Type = 0x4
+	fh.Flags = 0x1 // END_STREAM
+	fh.StreamId = 1
+
+	setting := Setting{0, 4, 1024}
+	sf := SettingsFrame{*fh, []Setting{setting}}
+	log.Println(sf)
+
+	n, e := conn.Write(sf.Encode().Bytes())
+	log.Println(n, e)
+
+	// SendHeaders(conn)
 
 }
