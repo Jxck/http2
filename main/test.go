@@ -1,9 +1,9 @@
 package main
 
 import (
+	. "github.com/jxck/http2"
 	"log"
 	"net"
-	. "github.com/jxck/http2"
 )
 
 func init() {
@@ -26,11 +26,6 @@ func main() {
 	n, e = conn.Write([]byte("\r\n"))
 	log.Println(n, e)
 
-	buf := make([]byte, 8)
-	n, err = conn.Read(buf)
-
 	fh := &FrameHeader{}
-	fh.Decode(buf)
-
-	log.Printf("%v %v %v", n, err, fh)
+	fh.Decode(conn)
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"net"
 )
 
 func init() {
@@ -47,12 +48,21 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func (fh *FrameHeader) Decode(b []byte) {
+func (fh *FrameHeader) Decode(conn net.Conn) {
+
+	b := make([]byte, 8)
+	n, err := conn.Read(b)
+
 	buf := bytes.NewBuffer(b)
 	binary.Read(buf, binary.BigEndian, &fh.Length)   // err
 	binary.Read(buf, binary.BigEndian, &fh.Type)     // err
 	binary.Read(buf, binary.BigEndian, &fh.Flags)    // err
 	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
+
+	b = make([]byte, fh.Length)
+	n, err = conn.Read(b)
+	log.Println(n, err)
+	buf = bytes.NewBuffer(b)
 
 	switch fh.Type {
 	case 4:
@@ -61,24 +71,6 @@ func (fh *FrameHeader) Decode(b []byte) {
 	default:
 		log.Println("other")
 	}
-}
-
-func main() {
-	buf := []byte{
-		0x0, 0x8, 0x4, 0,
-		// 00000000 00001000,00000100,00000000
-		0, 0, 0, 0,
-		// 00000000 00000000 00000000 00000000
-		0, 0, 0, 0x4,
-		// 00000000 00000000 00000000 00000100
-		0, 0, 0, 0xc4,
-		// 00000000 00000000 00000000 11000100
-	}
-	fh := FrameHeader{}
-	fh.Decode(buf)
-
-	// str := base64.StdEncoding.EncodeToString(buf)
-	// log.Println(str)
 }
 
 // HEADERS
