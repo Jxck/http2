@@ -148,7 +148,7 @@ func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
 		binary.Read(buf, binary.BigEndian, &firstByte) // err
 		s.SettingsId = SettingsId(firstByte & 0xFFFFFF)
 		s.Reserved = uint8(firstByte >> 24)
-		binary.Read(buf, binary.BigEndian, s.Value) // err
+		binary.Read(buf, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
 	}
 	fmt.Println(frame)
