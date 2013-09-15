@@ -155,9 +155,8 @@ func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
 }
 
 func (frame *SettingsFrame) String() string {
-	niv := len(frame.Settings)
 	str := fmt.Sprintf("SETTINGS frame <length=%v, flags=%v, stream_id=%v>\n(niv=%v)",
-		frame.Length, frame.Flags, frame.StreamId, niv)
+		frame.Length, frame.Flags, frame.StreamId, len(frame.Settings))
 	for _, s := range frame.Settings {
 		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
 	}
