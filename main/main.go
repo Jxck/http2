@@ -27,23 +27,20 @@ func setting() string {
 	}
 	str := base64.StdEncoding.EncodeToString(buf)
 
-	log.Printf("%v", str)
-	// AAgEAAAAAAAAAAAEAAAAxA==
+	// log.Printf("%v", str) // AAgEAAAAAAAAAAAEAAAAxA==
 
 	return str
 }
 
 func main() {
-	conn, err := net.Dial("tcp", "jxck.io:8080")
-	log.Println(err)
+	conn, _ := net.Dial("tcp", "jxck.io:8080") // err
 
-	n, e := conn.Write([]byte("GET / HTTP/1.1\r\n"))
-	n, e = conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n"))
-	n, e = conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))
-	n, e = conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))
-	// n, e = conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD//w==\r\n"))
-	n, e = conn.Write([]byte("\r\n"))
-	log.Println(n, e)
+	conn.Write([]byte("GET / HTTP/1.1\r\n"))                      // err
+	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n")) // err
+	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))          // err
+	conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))   // err
+	// n, e = conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD//w==\r\n")) // err
+	conn.Write([]byte("\r\n")) // err
 
 	fh := &FrameHeader{}
 	fh.Decode(conn)
@@ -68,6 +65,13 @@ func main() {
 	fh.StreamId = 0
 
 	hf := &HeadersFrame{*fh, 0, wire}
-	log.Println(hf)
+	log.Println(hf.Encode().Bytes())
+
+	n, e := conn.Write(hf.Encode().Bytes())
+	log.Println(n, e)
+
+	b := make([]byte, 100)
+	n, err := conn.Read(b)
+	log.Println(n, err, b)
 
 }
