@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	. "github.com/jxck/hpack"
 	. "github.com/jxck/http2"
 	"log"
@@ -12,6 +13,26 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+func setting() string {
+	// [0 8 4 0, 0 0 0 0, 0 0 0 4, 127 255 255 255]
+	buf := []byte{
+		0, 8, 4, 0,
+		// 00000000 00001000,00000100,00000000
+		0, 0, 0, 0,
+		// 00000000 00000000 00000000 00000000
+		0, 0, 0, 4,
+		// 00000000 00000000 00000000 00000100
+		0, 0, 0, 0xc4,
+		// 00000000 00000000 00000000 11000100
+	}
+	str := base64.StdEncoding.EncodeToString(buf)
+
+	log.Printf("%v", str)
+	// AAgEAAAAAAAAAAAEAAAAxA==
+
+	return str
+}
+
 func main() {
 	conn, err := net.Dial("tcp", "jxck.io:8080")
 	log.Println(err)
@@ -19,8 +40,8 @@ func main() {
 	n, e := conn.Write([]byte("GET / HTTP/1.1\r\n"))
 	n, e = conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n"))
 	n, e = conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))
-	// n, e = conn.Write([]byte("HTTP2-Settings: AAgEAAAAAAAAAAAEAAAAxA==\r\n"))
-	n, e = conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD//w==\r\n"))
+	n, e = conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))
+	// n, e = conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD//w==\r\n"))
 	n, e = conn.Write([]byte("\r\n"))
 	log.Println(n, e)
 
