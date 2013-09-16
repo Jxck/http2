@@ -93,12 +93,12 @@ type HeadersFrame struct {
 func (frame *HeadersFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
-	binary.Write(buf, binary.BigEndian, frame.Length)
-	binary.Write(buf, binary.BigEndian, frame.Type)
-	binary.Write(buf, binary.BigEndian, frame.Flags)
-	binary.Write(buf, binary.BigEndian, frame.StreamId)
-	binary.Write(buf, binary.BigEndian, frame.Priority)
-	binary.Write(buf, binary.BigEndian, frame.HeaderBlock)
+	binary.Write(buf, binary.BigEndian, frame.Length)      // err
+	binary.Write(buf, binary.BigEndian, frame.Type)        // err
+	binary.Write(buf, binary.BigEndian, frame.Flags)       // err
+	binary.Write(buf, binary.BigEndian, frame.StreamId)    // err
+	binary.Write(buf, binary.BigEndian, frame.Priority)    // err
+	binary.Write(buf, binary.BigEndian, frame.HeaderBlock) // err
 
 	return buf
 }
@@ -158,12 +158,12 @@ type Setting struct {
 func (frame *SettingsFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
-	binary.Write(buf, binary.BigEndian, frame.Length)
-	binary.Write(buf, binary.BigEndian, frame.Type)
-	binary.Write(buf, binary.BigEndian, frame.Flags)
-	binary.Write(buf, binary.BigEndian, frame.StreamId)
-	binary.Write(buf, binary.BigEndian, frame.Settings[0].SettingsId)
-	binary.Write(buf, binary.BigEndian, frame.Settings[0].Value)
+	binary.Write(buf, binary.BigEndian, frame.Length)                 // err
+	binary.Write(buf, binary.BigEndian, frame.Type)                   // err
+	binary.Write(buf, binary.BigEndian, frame.Flags)                  // err
+	binary.Write(buf, binary.BigEndian, frame.StreamId)               // err
+	binary.Write(buf, binary.BigEndian, frame.Settings[0].SettingsId) // err
+	binary.Write(buf, binary.BigEndian, frame.Settings[0].Value)      // err
 
 	return buf
 }
