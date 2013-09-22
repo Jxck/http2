@@ -64,16 +64,14 @@ func SendHeaders(conn net.Conn) {
 }
 
 func main() {
-	conn, err := net.Dial("tcp", "localhost:8080") // err
+	conn, err := net.Dial("tcp", "106.186.112.116:80") // err
 	log.Println(err)
 
 	conn.Write([]byte("GET / HTTP/1.1\r\n"))                      // err
 	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n")) // err
 	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))          // err
-	//conn.Write([]byte("HTTP2-Settings: " + setting() + "\r\n"))   // err
 	conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD\r\n")) // err
-	conn.Write([]byte("\r\n")) // err
-
+	conn.Write([]byte("\r\n"))                                    // err
 
 	fh := &FrameHeader{}
 	fh.Decode(conn)
