@@ -17,7 +17,8 @@ func init() {
 
 const (
 	// note: 0x08 dosen't used
-	HeadersFrameType      uint8 = 0x1
+	DataFrameType         uint8 = 0x0
+	HeadersFrameType            = 0x1
 	PriorityFrameType           = 0x2
 	RstStreamFrameType          = 0x3
 	SettingsFrameType           = 0x4
