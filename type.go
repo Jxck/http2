@@ -59,16 +59,20 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	binary.Read(buf, binary.BigEndian, &fh.Flags)    // err
 	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
 
+	log.Println(Red("type"), fh.Type)
+
 	b = make([]byte, fh.Length)
-	n, err = conn.Read(b)
-	log.Println(n, err)
+	n, err = conn.Read(b) // err
+	log.Println(n, err)   // TODO: n が Length よりも小さい場合
+
 	buf = bytes.NewBuffer(b)
 
 	switch fh.Type {
-	case 4:
+	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
 		frame.Decode(buf)
 		fmt.Println(&frame)
+	case WindowUpdateFrameType:
 	default:
 		log.Println("other")
 	}

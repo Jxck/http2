@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jxck/hpack"
+	"github.com/jxck/http2"
 	"log"
 	"net"
 )
@@ -42,31 +43,15 @@ func main() {
 		0x0, 0x0, 0xFF,
 	}) // err
 
-	// fh := &http2.FrameHeader{}
-	// fh.Decode(conn)
-	b = make([]byte, 36)
-	conn.Read(b)
+	fh := &http2.FrameHeader{}
+	fh.Decode(conn) // setting
+	// b = make([]byte, 36)
+	// conn.Read(b)
 	// log.Println(b)
-	/*
-	   ====
-	   0 16 4 0 (length=16, type=4, flag=0) Settings Frame
-	   0 0 0 0 (R=0, StreamId=0)
-
-	   0 0 0 4 (Reserved=0, SettingId=4)
-	   0 0 0 100 SETTING_MAX_CONCURRENT_STREAM=100
-
-	   0 0 0 7
-	   0 0 255 255 SETTING_INITIAL_WINDOW_SIZE=65535
-	   ====
-	   0 4 9 0 (length=4, type=9, flag=0) Window Update Frame
-	   0 0 0 0 (StreamId=0)
-	   59 154 202 7
-	   00111011, 10011010, 11001010, 00000111=1000000007
-	   ====
-	*/
-
 	// [MAX_CONCURRENT_STREAMS(4):100]
 	// [INITIAL_WINDOW_SIZE(7):65535]
+
+	fh.Decode(conn) // window update
 
 	// read next header
 	b = make([]byte, 8)
