@@ -14,19 +14,17 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-type FrameType uint8
-
 const (
 	// note: 0x08 dosen't used
-	HeadersFrameType      FrameType = 0x1
-	PriorityFrameType               = 0x2
-	RstStreamFrameType              = 0x3
-	SettingsFrameType               = 0x4
-	PushPrimiseFrameType            = 0x5
-	PingFrameType                   = 0x6
-	GoawayFrameType                 = 0x7
-	WindowUpdateFrameType           = 0x9
-	ContinuationFrameType           = 0xA
+	HeadersFrameType      uint8 = 0x1
+	PriorityFrameType           = 0x2
+	RstStreamFrameType          = 0x3
+	SettingsFrameType           = 0x4
+	PushPrimiseFrameType        = 0x5
+	PingFrameType               = 0x6
+	GoawayFrameType             = 0x7
+	WindowUpdateFrameType       = 0x9
+	ContinuationFrameType       = 0xA
 )
 
 // Frame Header
@@ -68,6 +66,7 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	buf = bytes.NewBuffer(b)
 
 	switch fh.Type {
+	case HeadersFrameType:
 	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
 		frame.Decode(buf)
