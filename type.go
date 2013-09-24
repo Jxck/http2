@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	. "github.com/jxck/color"
+	"github.com/jxck/hpack"
 	"log"
 	"net"
 )
@@ -67,6 +68,9 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 
 	switch fh.Type {
 	case HeadersFrameType:
+		frame := NewHeadersFrame(fh)
+		frame.Decode(buf)
+		fmt.Println(&frame)
 	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
 		frame.Decode(buf)
@@ -93,6 +97,12 @@ type HeadersFrame struct {
 	HeaderBlock []byte
 }
 
+func NewHeadersFrame(fh *FrameHeader) HeadersFrame {
+	frame := HeadersFrame{}
+	frame.FrameHeader = *fh
+	return frame
+}
+
 func (frame *HeadersFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
@@ -105,6 +115,21 @@ func (frame *HeadersFrame) Encode() *bytes.Buffer {
 
 	return buf
 }
+
+func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
+	if frame.Flags == 0x08 {
+		binary.Read(buf, binary.BigEndian, &frame.Priority) // err
+	}
+	b := make([]byte, frame.Length)
+	binary.Read(buf, binary.BigEndian, &b) // err
+
+	frame.HeaderBlock = b // TODO: representation?
+
+	server := hpack.NewResponseContext()
+	server.Decode(b)
+}
+
+// TODO: String()
 
 // PRIORITY
 //

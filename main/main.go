@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/jxck/hpack"
 	"github.com/jxck/http2"
 	"log"
 	"net"
@@ -52,21 +51,7 @@ func main() {
 	// [INITIAL_WINDOW_SIZE(7):65535]
 
 	fh.Decode(conn) // window update
-
-	// read next header
-	b = make([]byte, 8)
-	n, err := conn.Read(b)
-	log.Println(n, err, b)
-
-	// read next payload
-	length := b[1]
-	b = make([]byte, length)
-	n, err = conn.Read(b)
-	log.Println(length, n, err)
-
-	// unpack
-	server := hpack.NewResponseContext()
-	server.Decode(b)
+	fh.Decode(conn) // headers
 
 	var data string
 	var l, m uint64
@@ -74,7 +59,7 @@ func main() {
 	for i := 0; i < 4; i++ {
 		// read next header
 		b = make([]byte, 8)
-		n, err = conn.Read(b)
+		n, err := conn.Read(b)
 		log.Println(n, err)
 
 		if b[3] == 1 {
