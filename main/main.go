@@ -27,9 +27,26 @@ func main() {
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
 
+	//0 16 4 0
+	//0  0 0 0
+	//0  0 0 4
+	//     100
+	//0  0 0 7
+	//   65535
+	// write setting frame
+	conn.Write([]byte{0x0, 0x10, 0x4, 0x0,
+		0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x4,
+		0x0, 0x0, 0x0, 0x64,
+		0x0, 0x0, 0x0, 0x7,
+		0x0, 0x0, 0xFF,
+	}) // err
+
+	// fh := &http2.FrameHeader{}
+	// fh.Decode(conn)
 	b = make([]byte, 36)
 	conn.Read(b)
-	//log.Println(b)
+	// log.Println(b)
 	/*
 	   ====
 	   0 16 4 0 (length=16, type=4, flag=0) Settings Frame
@@ -51,25 +68,10 @@ func main() {
 	// [MAX_CONCURRENT_STREAMS(4):100]
 	// [INITIAL_WINDOW_SIZE(7):65535]
 
-	//0 16 4 0
-	//0  0 0 0
-	//0  0 0 4
-	//     100
-	//0  0 0 7
-	//   65535
-	// write setting frame
-	conn.Write([]byte{0x0, 0x10, 0x4, 0x0,
-		0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x4,
-		0x0, 0x0, 0x0, 0x64,
-		0x0, 0x0, 0x0, 0x7,
-		0x0, 0x0, 0xFF,
-	}) // err
-
 	// read next header
 	b = make([]byte, 8)
 	n, err := conn.Read(b)
-	log.Println(n, err)
+	log.Println(n, err, b)
 
 	// read next payload
 	length := b[1]
@@ -116,7 +118,7 @@ func main() {
 			m = uint64(n)
 		}
 	}
-	log.Println(data)
+	// log.Println(data)
 
 	// TODO: Send GOAWAY
 }
