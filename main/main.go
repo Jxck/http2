@@ -57,6 +57,7 @@ func main() {
 	//     100
 	//0  0 0 7
 	//   65535
+	// write setting frame
 	conn.Write([]byte{0x0, 0x10, 0x4, 0x0,
 		0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x4,
@@ -65,9 +66,57 @@ func main() {
 		0x0, 0x0, 0xFF,
 	}) // err
 
-	b = make([]byte, 2000)
+	// read next header
+	b = make([]byte, 8)
 	n, err := conn.Read(b)
 	log.Println(n, err)
+
+	// read next payload
+	length := b[1]
+	b = make([]byte, length)
+	n, err = conn.Read(b)
+	log.Println(length, n, err)
+
+	// unpack
 	server := hpack.NewResponseContext()
-	server.Decode(b[8:n])
+	server.Decode(b)
+
+	var data string
+	var l, m uint64
+
+	for i := 0; i < 4; i++ {
+		// read next header
+		b = make([]byte, 8)
+		n, err = conn.Read(b)
+		log.Println(n, err)
+
+		if b[3] == 1 {
+			log.Println("last")
+			break
+		}
+
+		l = uint64(b[0])
+		l <<= 8
+		l += uint64(b[1])
+		log.Println("length of data", l)
+
+		// read Data
+		b = make([]byte, l)
+		n, err = conn.Read(b)
+		log.Println(n, err)
+		data += string(b)
+		m = uint64(n)
+
+		for m < l {
+			l -= m
+			b = make([]byte, l)
+			n, err = conn.Read(b)
+			log.Println(n, err)
+			data += string(b)
+			m = uint64(n)
+		}
+	}
+	log.Println(data)
+
+	// TODO: Send GOAWAY
 }
