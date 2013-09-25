@@ -4,6 +4,7 @@ import (
 	"github.com/jxck/http2"
 	"log"
 	"net"
+	"fmt"
 )
 
 func init() {
@@ -52,11 +53,18 @@ func main() {
 
 	log.Println(fh.Decode(conn)) // window update
 	log.Println(fh.Decode(conn)) // headers
-	log.Println(fh.Decode(conn)) // data
-	log.Println(fh.Decode(conn)) // data
-	log.Println(fh.Decode(conn)) // data
 
+	frame := fh.Decode(conn) // data
+	data := frame.(*http2.DataFrame)
+	log.Println(data.FrameHeader.Flags)
 
+	html := string(data.Data)
+	for data.FrameHeader.Flags != 1 {
+		frame = fh.Decode(conn) // data
+		data = frame.(*http2.DataFrame)
+		html += string(data.Data)
+	}
+	fmt.Println(html)
 
 	// TODO: Send GOAWAY
 }
