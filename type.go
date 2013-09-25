@@ -229,6 +229,27 @@ func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
 	return frame
 }
 
+func DefaultSettingsFrame() *SettingsFrame {
+	setting1 := Setting{ // 4:100
+		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
+		Value:      100,
+	}
+	setting2 := Setting{ // 7:65535
+		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
+		Value:      65535,
+	}
+	fh := FrameHeader{
+		Length:   64,
+		Type:     SettingsFrameType,
+		StreamId: 0,
+	}
+	settingsFrame := &SettingsFrame{
+		FrameHeader: fh,
+		Settings:    []Setting{setting1, setting2},
+	}
+	return settingsFrame
+}
+
 type SettingsFrame struct {
 	FrameHeader
 	Settings []Setting

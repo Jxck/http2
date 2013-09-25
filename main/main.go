@@ -33,20 +33,8 @@ func main() {
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
 
-	//0 16 4 0
-	//0  0 0 0
-	//0  0 0 4
-	//     100
-	//0  0 0 7
-	//   65535
-	// write setting frame
-	conn.Write([]byte{0x0, 0x10, 0x4, 0x0,
-		0x0, 0x0, 0x0, 0x0,
-		0x0, 0x0, 0x0, 0x4,
-		0x0, 0x0, 0x0, 0x64,
-		0x0, 0x0, 0x0, 0x7,
-		0x0, 0x0, 0xFF,
-	}) // err
+	settingsFrame := http2.DefaultSettingsFrame()
+	conn.Write(settingsFrame.Encode().Bytes()) // err
 
 	fh := &http2.FrameHeader{}
 	log.Println(fh.Decode(conn)) // setting
