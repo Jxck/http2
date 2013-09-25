@@ -53,43 +53,8 @@ func main() {
 	fh.Decode(conn) // window update
 	fh.Decode(conn) // headers
 	fh.Decode(conn) // data
-
-	var data string
-	var l, m uint64
-
-	for i := 0; i < 4; i++ {
-		// read next header
-		b = make([]byte, 8)
-		n, err := conn.Read(b)
-		log.Println(n, err)
-
-		if b[3] == 1 {
-			log.Println("last")
-			break
-		}
-
-		l = uint64(b[0])
-		l <<= 8
-		l += uint64(b[1])
-		log.Println("length of data", l)
-
-		// read Data
-		b = make([]byte, l)
-		n, err = conn.Read(b)
-		log.Println(n, err)
-		data += string(b)
-		m = uint64(n)
-
-		for m < l {
-			l -= m
-			b = make([]byte, l)
-			n, err = conn.Read(b)
-			log.Println(n, err)
-			data += string(b)
-			m = uint64(n)
-		}
-	}
-	// log.Println(data)
+	fh.Decode(conn) // data
+	fh.Decode(conn) // data
 
 	// TODO: Send GOAWAY
 }
