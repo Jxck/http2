@@ -51,7 +51,7 @@ type FrameHeader struct {
 
 func (fh *FrameHeader) Decode(conn net.Conn) {
 	b := make([]byte, 8)
-	n, err := conn.Read(b)
+	conn.Read(b) // err
 
 	buf := bytes.NewBuffer(b)
 	binary.Read(buf, binary.BigEndian, &fh.Length)   // err
@@ -62,8 +62,17 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	log.Println(Red("type"), fh.Type)
 
 	b = make([]byte, fh.Length)
-	n, err = conn.Read(b) // err
-	log.Println(n, err)   // TODO: n が Length よりも小さい場合
+	var l, n uint16
+	l = fh.Length
+
+	// read until fh.Length
+	for l > 0 {
+		bb := make([]byte, l)
+		nn, _ := conn.Read(bb) // err
+		copy(b[n:], bb[:nn])
+		n += uint16(nn)
+		l -= uint16(nn)
+	}
 
 	buf = bytes.NewBuffer(b)
 

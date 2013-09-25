@@ -52,6 +52,7 @@ func main() {
 
 	fh.Decode(conn) // window update
 	fh.Decode(conn) // headers
+	fh.Decode(conn) // data
 
 	var data string
 	var l, m uint64
