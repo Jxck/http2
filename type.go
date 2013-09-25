@@ -64,9 +64,9 @@ func (fh *FrameHeader) Decode(conn net.Conn) Frame {
 
 	log.Println(Red("type"), fh.Type)
 
-	b = make([]byte, fh.Length)
 	var l, n uint16
 	l = fh.Length
+	b = make([]byte, fh.Length)
 
 	// read until fh.Length
 	for l > 0 {
