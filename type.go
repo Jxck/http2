@@ -77,6 +77,10 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	buf = bytes.NewBuffer(b)
 
 	switch fh.Type {
+	case DataFrameType:
+		frame := NewDataFrame(fh)
+		frame.Decode(buf)
+		log.Println(string(frame.Data))
 	case HeadersFrameType:
 		frame := NewHeadersFrame(fh)
 		frame.Decode(buf)
@@ -89,6 +93,23 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	default:
 		log.Println("other")
 	}
+}
+
+// DATA
+type DataFrame struct {
+	FrameHeader
+	Data []byte
+}
+
+func NewDataFrame(fh *FrameHeader) DataFrame {
+	frame := DataFrame{}
+	frame.FrameHeader = *fh
+	frame.Data = make([]byte, frame.Length)
+	return frame
+}
+
+func (frame *DataFrame) Decode(buf *bytes.Buffer) {
+	binary.Read(buf, binary.BigEndian, &frame.Data) // err
 }
 
 // HEADERS
@@ -131,6 +152,7 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 		binary.Read(buf, binary.BigEndian, &frame.Priority) // err
 	}
 	b := make([]byte, frame.Length)
+	// TODO: Buffer.Read()
 	binary.Read(buf, binary.BigEndian, &b) // err
 
 	frame.HeaderBlock = b // TODO: representation?
