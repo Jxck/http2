@@ -56,5 +56,7 @@ func main() {
 	log.Println(fh.Decode(conn)) // data
 	log.Println(fh.Decode(conn)) // data
 
+
+
 	// TODO: Send GOAWAY
 }

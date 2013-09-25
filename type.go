@@ -118,6 +118,13 @@ func (frame *DataFrame) Decode(buf *bytes.Buffer) {
 	binary.Read(buf, binary.BigEndian, &frame.Data) // err
 }
 
+func (frame *DataFrame) String() string {
+	str := Cyan("DATA")
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>",
+		frame.Length, frame.Flags, frame.StreamId))
+	return str
+}
+
 // HEADERS
 //
 // 0                   1                   2                   3
@@ -167,7 +174,13 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 	server.Decode(b)
 }
 
-// TODO: String()
+func (frame *HeadersFrame) String() string {
+	str := Cyan("HEADERS")
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>",
+		frame.Length, frame.Flags, frame.StreamId))
+	return str
+	return str
+}
 
 // PRIORITY
 //
@@ -248,8 +261,8 @@ func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
 }
 
 func (frame *SettingsFrame) String() string {
-	str := Pink("SETTINGS")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%v, stream_id=%v>\n(niv=%v)",
+	str := Cyan("SETTINGS")
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n(niv=%v)",
 		frame.Length, frame.Flags, frame.StreamId, len(frame.Settings)))
 	for _, s := range frame.Settings {
 		str += White(fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value))
