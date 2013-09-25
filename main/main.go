@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jxck/http2"
 	"log"
 	"net"
-	"fmt"
+	"os"
 )
 
 func init() {
@@ -64,7 +65,10 @@ func main() {
 		data = frame.(*http2.DataFrame)
 		html += string(data.Data)
 	}
-	fmt.Println(html)
+
+	if os.Args[1] != "-n" {
+		fmt.Println(html)
+	}
 
 	// TODO: Send GOAWAY
 }
