@@ -50,12 +50,6 @@ func main() {
 
 	fh := &http2.FrameHeader{}
 	log.Println(fh.Decode(conn)) // setting
-	// b = make([]byte, 36)
-	// conn.Read(b)
-	// log.Println(b)
-	// [MAX_CONCURRENT_STREAMS(4):100]
-	// [INITIAL_WINDOW_SIZE(7):65535]
-
 	log.Println(fh.Decode(conn)) // window update
 	log.Println(fh.Decode(conn)) // headers
 

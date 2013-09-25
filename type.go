@@ -217,6 +217,12 @@ const (
 	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
 )
 
+type Setting struct {
+	Reserved   uint8
+	SettingsId SettingsId
+	Value      uint32
+}
+
 func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
 	frame := &SettingsFrame{}
 	frame.FrameHeader = *fh
@@ -226,12 +232,6 @@ func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
 type SettingsFrame struct {
 	FrameHeader
 	Settings []Setting
-}
-
-type Setting struct {
-	Reserved   uint8
-	SettingsId SettingsId
-	Value      uint32
 }
 
 func (frame *SettingsFrame) Encode() *bytes.Buffer {
