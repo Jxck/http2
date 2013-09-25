@@ -66,7 +66,7 @@ func main() {
 		html += string(data.Data)
 	}
 
-	if os.Args[1] != "-n" {
+	if !(len(os.Args) > 1 && os.Args[1] == "-n") {
 		fmt.Println(html)
 	}
 
