@@ -15,6 +15,9 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+type Frame interface {
+}
+
 const (
 	// note: 0x08 dosen't used
 	DataFrameType         uint8 = 0x0
@@ -49,7 +52,7 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func (fh *FrameHeader) Decode(conn net.Conn) {
+func (fh *FrameHeader) Decode(conn net.Conn) Frame {
 	b := make([]byte, 8)
 	conn.Read(b) // err
 
@@ -80,19 +83,22 @@ func (fh *FrameHeader) Decode(conn net.Conn) {
 	case DataFrameType:
 		frame := NewDataFrame(fh)
 		frame.Decode(buf)
-		log.Println(string(frame.Data))
+		return frame
 	case HeadersFrameType:
 		frame := NewHeadersFrame(fh)
 		frame.Decode(buf)
-		fmt.Println(&frame)
+		return frame
 	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
 		frame.Decode(buf)
-		fmt.Println(&frame)
+		return frame
 	case WindowUpdateFrameType:
+		return nil
 	default:
 		log.Println("other")
+		return nil
 	}
+	return nil
 }
 
 // DATA
