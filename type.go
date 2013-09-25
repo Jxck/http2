@@ -107,8 +107,8 @@ type DataFrame struct {
 	Data []byte
 }
 
-func NewDataFrame(fh *FrameHeader) DataFrame {
-	frame := DataFrame{}
+func NewDataFrame(fh *FrameHeader) *DataFrame {
+	frame := &DataFrame{}
 	frame.FrameHeader = *fh
 	frame.Data = make([]byte, frame.Length)
 	return frame
@@ -134,8 +134,8 @@ type HeadersFrame struct {
 	HeaderBlock []byte
 }
 
-func NewHeadersFrame(fh *FrameHeader) HeadersFrame {
-	frame := HeadersFrame{}
+func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
+	frame := &HeadersFrame{}
 	frame.FrameHeader = *fh
 	return frame
 }
@@ -204,8 +204,8 @@ const (
 	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
 )
 
-func NewSettingsFrame(fh *FrameHeader) SettingsFrame {
-	frame := SettingsFrame{}
+func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
+	frame := &SettingsFrame{}
 	frame.FrameHeader = *fh
 	return frame
 }
