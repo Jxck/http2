@@ -1,15 +1,19 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/jxck/http2"
 	"log"
 	"net"
-	"os"
 )
+
+var nullout bool
 
 func init() {
 	log.SetFlags(log.Lshortfile)
+	flag.BoolVar(&nullout, "n", false, "null output")
+	flag.Parse()
 }
 
 func main() {
@@ -66,7 +70,7 @@ func main() {
 		html += string(data.Data)
 	}
 
-	if !(len(os.Args) > 1 && os.Args[1] == "-n") {
+	if !nullout {
 		fmt.Println(html)
 	}
 
