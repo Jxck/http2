@@ -173,9 +173,11 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 
 	frame.HeaderBlock = b
 
-	server := hpack.NewResponseContext()
-	server.Decode(b)
-	frame.Header = server.EmittedSet.Header
+	client := hpack.NewResponseContext()
+	log.Println(b)
+
+	client.Decode(b)
+	frame.Header = client.EmittedSet.Header
 }
 
 func (frame *HeadersFrame) String() string {
