@@ -39,11 +39,15 @@ func main() {
 	fh := &http2.FrameHeader{}
 	log.Println(fh.Decode(conn)) // setting
 	log.Println(fh.Decode(conn)) // window update
-	log.Println(fh.Decode(conn)) // headers
 
-	frame := fh.Decode(conn) // data
+	// headers
+	frame := fh.Decode(conn)
+	headersFrame := frame.(*http2.HeadersFrame)
+	log.Println(headersFrame.Header)
+
+	// data
+	frame = fh.Decode(conn)
 	data := frame.(*http2.DataFrame)
-	log.Println(data.FrameHeader.Flags)
 
 	html := string(data.Data)
 	for data.FrameHeader.Flags != 1 {

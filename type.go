@@ -9,6 +9,7 @@ import (
 	"github.com/jxck/hpack"
 	"log"
 	"net"
+	"net/http"
 )
 
 func init() {
@@ -139,6 +140,7 @@ type HeadersFrame struct {
 	FrameHeader
 	Priority    uint32
 	HeaderBlock []byte
+	Header      http.Header
 }
 
 func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
@@ -168,10 +170,11 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 	// TODO: Buffer.Read()
 	binary.Read(buf, binary.BigEndian, &b) // err
 
-	frame.HeaderBlock = b // TODO: representation?
+	frame.HeaderBlock = b
 
 	server := hpack.NewResponseContext()
 	server.Decode(b)
+	frame.Header = server.EmittedSet.Header
 }
 
 func (frame *HeadersFrame) String() string {
