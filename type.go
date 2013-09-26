@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 )
 
 func init() {
@@ -179,9 +180,19 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 
 func (frame *HeadersFrame) String() string {
 	str := Cyan("HEADERS")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>",
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n",
 		frame.Length, frame.Flags, frame.StreamId))
-	return str
+
+	if frame.Flags == 0x4 {
+		str += "; END_HEADERS\n"
+	}
+
+	// TODO: ; First response header
+
+	for name, value := range frame.Header {
+		str += fmt.Sprintf("%s: %s\n", Blue(name), strings.Join(value, ","))
+	}
+
 	return str
 }
 

@@ -37,13 +37,13 @@ func main() {
 	conn.Write(settingsFrame.Encode().Bytes()) // err
 
 	fh := &http2.FrameHeader{}
-	log.Println(fh.Decode(conn)) // setting
+	fmt.Println(fh.Decode(conn)) // setting
 	log.Println(fh.Decode(conn)) // window update
 
 	// headers
 	frame := fh.Decode(conn)
 	headersFrame := frame.(*http2.HeadersFrame)
-	log.Println(headersFrame.Header)
+	fmt.Println(headersFrame)
 
 	// data
 	frame = fh.Decode(conn)
