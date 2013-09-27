@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	. "github.com/jxck/color"
+	. "github.com/jxck/debug"
 	"github.com/jxck/http2"
 	"log"
 	"net"
@@ -17,6 +19,7 @@ func init() {
 }
 
 func main() {
+	Debug(Red("init"))
 	conn, _ := net.Dial("tcp", "106.186.112.116:80") // err
 
 	conn.Write([]byte("GET / HTTP/1.1\r\n"))                         // err
