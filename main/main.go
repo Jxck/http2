@@ -52,11 +52,13 @@ func main() {
 	// data
 	frame = fh.Decode(conn)
 	data := frame.(*http2.DataFrame)
+	fmt.Println(data)
 
 	html := string(data.Data)
 	for data.FrameHeader.Flags != 1 {
 		frame = fh.Decode(conn) // data
 		data = frame.(*http2.DataFrame)
+		fmt.Println(data)
 		html += string(data.Data)
 	}
 
