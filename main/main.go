@@ -43,22 +43,22 @@ func main() {
 	framer := &http2.Framer{
 		RW: conn,
 	}
-	fmt.Println(framer.Decode()) // setting
-	fmt.Println(framer.Decode()) // window update
+	fmt.Println(framer.ReadFrame()) // setting
+	fmt.Println(framer.ReadFrame()) // window update
 
 	// headers
-	frame := framer.Decode()
+	frame := framer.ReadFrame()
 	headersFrame := frame.(*http2.HeadersFrame)
 	fmt.Println(headersFrame)
 
 	// data
-	frame = framer.Decode()
+	frame = framer.ReadFrame()
 	data := frame.(*http2.DataFrame)
 	fmt.Println(data)
 
 	html := string(data.Data)
 	for data.FrameHeader.Flags != 1 {
-		frame = framer.Decode() // data
+		frame = framer.ReadFrame() // data
 		data = frame.(*http2.DataFrame)
 		fmt.Println(data)
 		html += string(data.Data)

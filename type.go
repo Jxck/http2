@@ -21,11 +21,14 @@ func init() {
 type Frame interface {
 }
 
+// Framer has 2 funcs
+// ReadFrame() frame
+// WriteFrame(frame)
 type Framer struct {
 	RW io.ReadWriter
 }
 
-func (f *Framer) Decode() Frame {
+func (f *Framer) ReadFrame() Frame {
 	fh := &FrameHeader{}
 	fh.Decode(f.RW)
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
