@@ -274,12 +274,14 @@ type SettingsFrame struct {
 func (frame *SettingsFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
-	binary.Write(buf, binary.BigEndian, frame.Length)                 // err
-	binary.Write(buf, binary.BigEndian, frame.Type)                   // err
-	binary.Write(buf, binary.BigEndian, frame.Flags)                  // err
-	binary.Write(buf, binary.BigEndian, frame.StreamId)               // err
-	binary.Write(buf, binary.BigEndian, frame.Settings[0].SettingsId) // err
-	binary.Write(buf, binary.BigEndian, frame.Settings[0].Value)      // err
+	binary.Write(buf, binary.BigEndian, frame.Length)   // err
+	binary.Write(buf, binary.BigEndian, frame.Type)     // err
+	binary.Write(buf, binary.BigEndian, frame.Flags)    // err
+	binary.Write(buf, binary.BigEndian, frame.StreamId) // err
+	for _, setting := range frame.Settings {
+		binary.Write(buf, binary.BigEndian, setting.SettingsId) // err
+		binary.Write(buf, binary.BigEndian, setting.Value)      // err
+	}
 
 	return buf
 }
