@@ -19,7 +19,7 @@ func init() {
 }
 
 type Frame interface {
-	Encode(rw io.ReadWriter)
+	Write(w io.Writer)
 	Decode(rw io.ReadWriter)
 }
 
@@ -31,7 +31,7 @@ type Framer struct {
 }
 
 func (f *Framer) WriteFrame(frame Frame) { // err
-	frame.Encode(f.RW) // err
+	frame.Write(f.RW) // err
 }
 
 func (f *Framer) ReadFrame() Frame {
@@ -104,11 +104,11 @@ func (fh *FrameHeader) Decode(rw io.ReadWriter) {
 	binary.Read(rw, binary.BigEndian, &fh.StreamId) // err
 }
 
-func (fh *FrameHeader) Encode(rw io.ReadWriter) {
-	binary.Write(rw, binary.BigEndian, fh.Length)   // err
-	binary.Write(rw, binary.BigEndian, fh.Type)     // err
-	binary.Write(rw, binary.BigEndian, fh.Flags)    // err
-	binary.Write(rw, binary.BigEndian, fh.StreamId) // err
+func (fh *FrameHeader) Write(w io.Writer) {
+	binary.Write(w, binary.BigEndian, fh.Length)   // err
+	binary.Write(w, binary.BigEndian, fh.Type)     // err
+	binary.Write(w, binary.BigEndian, fh.Flags)    // err
+	binary.Write(w, binary.BigEndian, fh.StreamId) // err
 }
 
 // DATA
@@ -128,8 +128,8 @@ func (frame *DataFrame) Decode(rw io.ReadWriter) {
 	binary.Read(rw, binary.BigEndian, &frame.Data) // err
 }
 
-func (frame *DataFrame) Encode(rw io.ReadWriter) {
-	binary.Write(rw, binary.BigEndian, frame.Data) // err
+func (frame *DataFrame) Write(w io.Writer) {
+	binary.Write(w, binary.BigEndian, frame.Data) // err
 }
 
 func (frame *DataFrame) String() string {
@@ -162,10 +162,10 @@ func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
 	return frame
 }
 
-func (frame *HeadersFrame) Encode(rw io.ReadWriter) {
-	frame.FrameHeader.Encode(rw)
-	binary.Write(rw, binary.BigEndian, frame.Priority)    // err
-	binary.Write(rw, binary.BigEndian, frame.HeaderBlock) // err
+func (frame *HeadersFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	binary.Write(w, binary.BigEndian, frame.Priority)    // err
+	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
 }
 
 func (frame *HeadersFrame) Decode(rw io.ReadWriter) {
@@ -275,11 +275,11 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func (frame *SettingsFrame) Encode(rw io.ReadWriter) {
-	frame.FrameHeader.Encode(rw)
+func (frame *SettingsFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
 	for _, setting := range frame.Settings {
-		binary.Write(rw, binary.BigEndian, setting.SettingsId) // err
-		binary.Write(rw, binary.BigEndian, setting.Value)      // err
+		binary.Write(w, binary.BigEndian, setting.SettingsId) // err
+		binary.Write(w, binary.BigEndian, setting.Value)      // err
 	}
 }
 
@@ -299,7 +299,7 @@ func (frame *SettingsFrame) Decode(rw io.ReadWriter) {
 // TODO: fixme
 func (frame *SettingsFrame) PayloadBase64URL() string {
 	buf := bytes.NewBuffer([]byte{})
-	frame.Encode(buf)
+	frame.Write(buf)
 	str := base64.URLEncoding.EncodeToString(buf.Bytes()[8:])
 	str = strings.Replace(str, "=", "", -1)
 	return str
@@ -374,9 +374,9 @@ func NewWindowUpdateFrame(fh *FrameHeader) *WindowUpdateFrame {
 	return frame
 }
 
-func (frame *WindowUpdateFrame) Encode(rw io.ReadWriter) {
-	frame.FrameHeader.Encode(rw)
-	binary.Write(rw, binary.BigEndian, frame.WindowSizeIncrement) // err
+func (frame *WindowUpdateFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	binary.Write(w, binary.BigEndian, frame.WindowSizeIncrement) // err
 }
 
 func (frame *WindowUpdateFrame) Decode(rw io.ReadWriter) {
