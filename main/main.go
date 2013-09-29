@@ -46,14 +46,10 @@ func main() {
 
 	fmt.Println(framer.ReadFrame()) // setting
 	fmt.Println(framer.ReadFrame()) // window update
-
-	// headers
-	frame := framer.ReadFrame()
-	headersFrame := frame.(*http2.HeadersFrame)
-	fmt.Println(headersFrame)
+	fmt.Println(framer.ReadFrame()) // headers
 
 	// data
-	frame = framer.ReadFrame()
+	frame := framer.ReadFrame()
 	data := frame.(*http2.DataFrame)
 	fmt.Println(data)
 
