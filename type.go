@@ -299,6 +299,13 @@ func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
 	}
 }
 
+func (frame *SettingsFrame) PayloadBase64URL() string {
+	bytes := frame.Encode().Bytes()
+	str := base64.URLEncoding.EncodeToString(bytes[8:])
+	str = strings.Replace(str, "=", "", -1)
+	return str
+}
+
 func (frame *SettingsFrame) String() string {
 	str := Cyan("SETTINGS")
 	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n(niv=%v)",
