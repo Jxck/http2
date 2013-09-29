@@ -20,7 +20,7 @@ func init() {
 
 type Frame interface {
 	Write(w io.Writer)
-	Decode(rw io.ReadWriter)
+	Read(r io.Reader)
 }
 
 // Framer has 2 funcs
@@ -36,25 +36,25 @@ func (f *Framer) WriteFrame(frame Frame) { // err
 
 func (f *Framer) ReadFrame() Frame {
 	fh := &FrameHeader{} // New
-	fh.Decode(f.RW)      // err
+	fh.Read(f.RW)        // err
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
 	switch fh.Type {
 	case DataFrameType:
 		frame := NewDataFrame(fh)
-		frame.Decode(f.RW)
+		frame.Read(f.RW)
 		return frame
 	case HeadersFrameType:
 		frame := NewHeadersFrame(fh)
-		frame.Decode(f.RW)
+		frame.Read(f.RW)
 		return frame
 	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
-		frame.Decode(f.RW)
+		frame.Read(f.RW)
 		return frame
 	case WindowUpdateFrameType:
 		frame := NewWindowUpdateFrame(fh)
-		frame.Decode(f.RW)
+		frame.Read(f.RW)
 		return frame
 	default:
 		log.Println("other")
@@ -97,11 +97,11 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func (fh *FrameHeader) Decode(rw io.ReadWriter) {
-	binary.Read(rw, binary.BigEndian, &fh.Length)   // err
-	binary.Read(rw, binary.BigEndian, &fh.Type)     // err
-	binary.Read(rw, binary.BigEndian, &fh.Flags)    // err
-	binary.Read(rw, binary.BigEndian, &fh.StreamId) // err
+func (fh *FrameHeader) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &fh.Length)   // err
+	binary.Read(r, binary.BigEndian, &fh.Type)     // err
+	binary.Read(r, binary.BigEndian, &fh.Flags)    // err
+	binary.Read(r, binary.BigEndian, &fh.StreamId) // err
 }
 
 func (fh *FrameHeader) Write(w io.Writer) {
@@ -124,8 +124,8 @@ func NewDataFrame(fh *FrameHeader) *DataFrame {
 	return frame
 }
 
-func (frame *DataFrame) Decode(rw io.ReadWriter) {
-	binary.Read(rw, binary.BigEndian, &frame.Data) // err
+func (frame *DataFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.Data) // err
 }
 
 func (frame *DataFrame) Write(w io.Writer) {
@@ -168,13 +168,13 @@ func (frame *HeadersFrame) Write(w io.Writer) {
 	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
 }
 
-func (frame *HeadersFrame) Decode(rw io.ReadWriter) {
+func (frame *HeadersFrame) Read(r io.Reader) {
 	if frame.Flags == 0x08 {
-		binary.Read(rw, binary.BigEndian, &frame.Priority) // err
+		binary.Read(r, binary.BigEndian, &frame.Priority) // err
 	}
 	b := make([]byte, frame.Length)
 	// TODO: Buffer.Read()
-	binary.Read(rw, binary.BigEndian, &b) // err
+	binary.Read(r, binary.BigEndian, &b) // err
 
 	frame.HeaderBlock = b
 
@@ -283,15 +283,15 @@ func (frame *SettingsFrame) Write(w io.Writer) {
 	}
 }
 
-func (frame *SettingsFrame) Decode(rw io.ReadWriter) {
+func (frame *SettingsFrame) Read(r io.Reader) {
 	for niv := frame.Length / 8; niv > 0; niv-- {
 		s := Setting{}
 
 		var firstByte uint32
-		binary.Read(rw, binary.BigEndian, &firstByte) // err
+		binary.Read(r, binary.BigEndian, &firstByte) // err
 		s.SettingsId = SettingsId(firstByte & 0xFFFFFF)
 		s.Reserved = uint8(firstByte >> 24)
-		binary.Read(rw, binary.BigEndian, &s.Value) // err
+		binary.Read(r, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
 	}
 }
@@ -379,8 +379,8 @@ func (frame *WindowUpdateFrame) Write(w io.Writer) {
 	binary.Write(w, binary.BigEndian, frame.WindowSizeIncrement) // err
 }
 
-func (frame *WindowUpdateFrame) Decode(rw io.ReadWriter) {
-	binary.Read(rw, binary.BigEndian, &frame.WindowSizeIncrement) // err
+func (frame *WindowUpdateFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement) // err
 }
 
 func (frame *WindowUpdateFrame) String() string {
