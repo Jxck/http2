@@ -2,7 +2,7 @@ package http2
 
 import (
 	"bytes"
-	_ "encoding/base64"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	. "github.com/jxck/color"

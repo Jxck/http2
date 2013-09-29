@@ -40,9 +40,11 @@ func main() {
 	settingsFrame := http2.DefaultSettingsFrame()
 	conn.Write(settingsFrame.Encode().Bytes()) // err
 
+	log.Println(settingsFrame.PayloadBase64URL())
+
 	fh := &http2.FrameHeader{}
 	fmt.Println(fh.Decode(conn)) // setting
-	log.Println(fh.Decode(conn)) // window update
+	fmt.Println(fh.Decode(conn)) // window update
 
 	// headers
 	frame := fh.Decode(conn)
