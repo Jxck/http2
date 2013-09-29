@@ -186,7 +186,7 @@ func (frame *HeadersFrame) String() string {
 		frame.Length, frame.Flags, frame.StreamId))
 
 	if frame.Flags == 0x4 {
-		str += "; END_HEADERS\n"
+		str += White("; END_HEADERS\n")
 	}
 
 	// TODO: ; First response header
