@@ -18,6 +18,20 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+const (
+	// note: 0x08 dosen't used
+	DataFrameType         uint8 = 0x0
+	HeadersFrameType            = 0x1
+	PriorityFrameType           = 0x2
+	RstStreamFrameType          = 0x3
+	SettingsFrameType           = 0x4
+	PushPrimiseFrameType        = 0x5
+	PingFrameType               = 0x6
+	GoawayFrameType             = 0x7
+	WindowUpdateFrameType       = 0x9
+	ContinuationFrameType       = 0xA
+)
+
 type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
@@ -57,25 +71,11 @@ func (f *Framer) ReadFrame() Frame {
 		frame.Read(f.RW)
 		return frame
 	default:
-		log.Println("other")
+		log.Printf("unknown type: %v", fh.Type)
 		return nil
 	}
 	return nil
 }
-
-const (
-	// note: 0x08 dosen't used
-	DataFrameType         uint8 = 0x0
-	HeadersFrameType            = 0x1
-	PriorityFrameType           = 0x2
-	RstStreamFrameType          = 0x3
-	SettingsFrameType           = 0x4
-	PushPrimiseFrameType        = 0x5
-	PingFrameType               = 0x6
-	GoawayFrameType             = 0x7
-	WindowUpdateFrameType       = 0x9
-	ContinuationFrameType       = 0xA
-)
 
 // Frame Header
 //
@@ -93,7 +93,7 @@ type FrameHeader struct {
 	Length   uint16
 	Type     uint8
 	Flags    uint8
-	R        uint8
+	R        uint8 // not care
 	StreamId uint32
 }
 
@@ -109,6 +109,14 @@ func (fh *FrameHeader) Write(w io.Writer) {
 	binary.Write(w, binary.BigEndian, fh.Type)     // err
 	binary.Write(w, binary.BigEndian, fh.Flags)    // err
 	binary.Write(w, binary.BigEndian, fh.StreamId) // err
+}
+
+func (fh *FrameHeader) String() string {
+	str := fmt.Sprintf(
+		" frame <length=%v, flags=%#x, stream_id=%v>",
+		fh.Length, fh.Flags, fh.StreamId,
+	)
+	return White(str)
 }
 
 // DATA
@@ -134,8 +142,7 @@ func (frame *DataFrame) Write(w io.Writer) {
 
 func (frame *DataFrame) String() string {
 	str := Cyan("DATA")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>",
-		frame.Length, frame.Flags, frame.StreamId))
+	str += frame.FrameHeader.String()
 	return str
 }
 
@@ -186,17 +193,16 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 
 func (frame *HeadersFrame) String() string {
 	str := Cyan("HEADERS")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n",
-		frame.Length, frame.Flags, frame.StreamId))
+	str += frame.FrameHeader.String()
 
 	if frame.Flags == 0x4 {
-		str += White("; END_HEADERS\n")
+		str += White("\n; END_HEADERS")
 	}
 
 	// TODO: ; First response header
 
 	for name, value := range frame.Header {
-		str += fmt.Sprintf("%s: %s\n", Blue(name), strings.Join(value, ","))
+		str += fmt.Sprintf("\n%s: %s", Blue(name), strings.Join(value, ","))
 	}
 
 	return str
@@ -307,8 +313,8 @@ func (frame *SettingsFrame) PayloadBase64URL() string {
 
 func (frame *SettingsFrame) String() string {
 	str := Cyan("SETTINGS")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n(niv=%v)",
-		frame.Length, frame.Flags, frame.StreamId, len(frame.Settings)))
+	str += frame.FrameHeader.String()
+	str += White(fmt.Sprintf("\n(niv=%v)", len(frame.Settings)))
 	for _, s := range frame.Settings {
 		str += White(fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value))
 	}
@@ -385,10 +391,8 @@ func (frame *WindowUpdateFrame) Read(r io.Reader) {
 
 func (frame *WindowUpdateFrame) String() string {
 	str := Cyan("WINDOW_UPDATE")
-	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n",
-		frame.Length, frame.Flags, frame.StreamId))
-
-	str += White(fmt.Sprintf("(window_size_increment=%d)", frame.WindowSizeIncrement))
+	str += frame.FrameHeader.String()
+	str += White(fmt.Sprintf("\n(window_size_increment=%d)", frame.WindowSizeIncrement))
 	return str
 }
 
