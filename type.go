@@ -111,23 +111,17 @@ type FrameHeader struct {
 }
 
 func (fh *FrameHeader) Decode(rw io.ReadWriter) {
-	b := make([]byte, 8)
-	rw.Read(b) // err
-
-	buf := bytes.NewBuffer(b)
-	binary.Read(buf, binary.BigEndian, &fh.Length)   // err
-	binary.Read(buf, binary.BigEndian, &fh.Type)     // err
-	binary.Read(buf, binary.BigEndian, &fh.Flags)    // err
-	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
-
-	Debug(fmt.Sprintf("Type: %v", fh.Type))
+	binary.Read(rw, binary.BigEndian, &fh.Length)   // err
+	binary.Read(rw, binary.BigEndian, &fh.Type)     // err
+	binary.Read(rw, binary.BigEndian, &fh.Flags)    // err
+	binary.Read(rw, binary.BigEndian, &fh.StreamId) // err
 }
 
-func (fh *FrameHeader) Encode(buf *bytes.Buffer) {
-	binary.Write(buf, binary.BigEndian, fh.Length)   // err
-	binary.Write(buf, binary.BigEndian, fh.Type)     // err
-	binary.Write(buf, binary.BigEndian, fh.Flags)    // err
-	binary.Write(buf, binary.BigEndian, fh.StreamId) // err
+func (fh *FrameHeader) Encode(rw io.ReadWriter) {
+	binary.Write(rw, binary.BigEndian, fh.Length)   // err
+	binary.Write(rw, binary.BigEndian, fh.Type)     // err
+	binary.Write(rw, binary.BigEndian, fh.Flags)    // err
+	binary.Write(rw, binary.BigEndian, fh.StreamId) // err
 }
 
 // DATA
