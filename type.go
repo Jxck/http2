@@ -280,7 +280,7 @@ func DefaultSettingsFrame() *SettingsFrame {
 		Value:      65535,
 	}
 	fh := FrameHeader{
-		Length:   64,
+		Length:   16,
 		Type:     SettingsFrameType,
 		StreamId: 0,
 	}
