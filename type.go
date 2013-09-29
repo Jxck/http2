@@ -39,18 +39,8 @@ func (f *Framer) ReadFrame() Frame {
 	fh.Decode(f.RW)
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
-	var l, n uint16
-	l = fh.Length
 	b := make([]byte, fh.Length)
-
-	// read until fh.Length
-	for l > 0 {
-		bb := make([]byte, l)
-		nn, _ := f.RW.Read(bb) // err
-		copy(b[n:], bb[:nn])
-		n += uint16(nn)
-		l -= uint16(nn)
-	}
+	binary.Read(f.RW, binary.BigEndian, b) // err
 
 	buf := bytes.NewBuffer(b)
 
