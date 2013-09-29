@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	. "github.com/jxck/color"
+	. "github.com/jxck/debug"
 	"github.com/jxck/hpack"
 	"log"
 	"net"
@@ -64,7 +65,7 @@ func (fh *FrameHeader) Decode(conn net.Conn) Frame {
 	binary.Read(buf, binary.BigEndian, &fh.Flags)    // err
 	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
 
-	log.Println(Red("type"), fh.Type)
+	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
 	var l, n uint16
 	l = fh.Length
@@ -174,7 +175,6 @@ func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
 	frame.HeaderBlock = b
 
 	client := hpack.NewResponseContext()
-	log.Println(b)
 
 	client.Decode(b)
 	frame.Header = client.EmittedSet.Header
