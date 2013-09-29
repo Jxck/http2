@@ -40,23 +40,25 @@ func main() {
 
 	conn.Write(settingsFrame.Encode().Bytes()) // err
 
-	fh := &http2.FrameHeader{}
-	fmt.Println(fh.Decode(conn)) // setting
-	fmt.Println(fh.Decode(conn)) // window update
+	framer := &http2.Framer{
+		RW: conn,
+	}
+	fmt.Println(framer.Decode()) // setting
+	fmt.Println(framer.Decode()) // window update
 
 	// headers
-	frame := fh.Decode(conn)
+	frame := framer.Decode()
 	headersFrame := frame.(*http2.HeadersFrame)
 	fmt.Println(headersFrame)
 
 	// data
-	frame = fh.Decode(conn)
+	frame = framer.Decode()
 	data := frame.(*http2.DataFrame)
 	fmt.Println(data)
 
 	html := string(data.Data)
 	for data.FrameHeader.Flags != 1 {
-		frame = fh.Decode(conn) // data
+		frame = framer.Decode() // data
 		data = frame.(*http2.DataFrame)
 		fmt.Println(data)
 		html += string(data.Data)

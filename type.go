@@ -21,6 +21,52 @@ func init() {
 type Frame interface {
 }
 
+type Framer struct {
+	RW net.Conn
+}
+
+func (f *Framer) Decode() Frame {
+	fh := &FrameHeader{}
+	fh.Decode(f.RW)
+	Debug(fmt.Sprintf("Type: %v", fh.Type))
+
+	var l, n uint16
+	l = fh.Length
+	b := make([]byte, fh.Length)
+
+	// read until fh.Length
+	for l > 0 {
+		bb := make([]byte, l)
+		nn, _ := f.RW.Read(bb) // err
+		copy(b[n:], bb[:nn])
+		n += uint16(nn)
+		l -= uint16(nn)
+	}
+
+	buf := bytes.NewBuffer(b)
+
+	switch fh.Type {
+	case DataFrameType:
+		frame := NewDataFrame(fh)
+		frame.Decode(buf)
+		return frame
+	case HeadersFrameType:
+		frame := NewHeadersFrame(fh)
+		frame.Decode(buf)
+		return frame
+	case SettingsFrameType:
+		frame := NewSettingsFrame(fh)
+		frame.Decode(buf)
+		return frame
+	case WindowUpdateFrameType:
+		return nil
+	default:
+		log.Println("other")
+		return nil
+	}
+	return nil
+}
+
 const (
 	// note: 0x08 dosen't used
 	DataFrameType         uint8 = 0x0
@@ -55,7 +101,7 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func (fh *FrameHeader) Decode(conn net.Conn) Frame {
+func (fh *FrameHeader) Decode(conn net.Conn) {
 	b := make([]byte, 8)
 	conn.Read(b) // err
 
@@ -66,42 +112,6 @@ func (fh *FrameHeader) Decode(conn net.Conn) Frame {
 	binary.Read(buf, binary.BigEndian, &fh.StreamId) // err
 
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
-
-	var l, n uint16
-	l = fh.Length
-	b = make([]byte, fh.Length)
-
-	// read until fh.Length
-	for l > 0 {
-		bb := make([]byte, l)
-		nn, _ := conn.Read(bb) // err
-		copy(b[n:], bb[:nn])
-		n += uint16(nn)
-		l -= uint16(nn)
-	}
-
-	buf = bytes.NewBuffer(b)
-
-	switch fh.Type {
-	case DataFrameType:
-		frame := NewDataFrame(fh)
-		frame.Decode(buf)
-		return frame
-	case HeadersFrameType:
-		frame := NewHeadersFrame(fh)
-		frame.Decode(buf)
-		return frame
-	case SettingsFrameType:
-		frame := NewSettingsFrame(fh)
-		frame.Decode(buf)
-		return frame
-	case WindowUpdateFrameType:
-		return nil
-	default:
-		log.Println("other")
-		return nil
-	}
-	return nil
 }
 
 // DATA
