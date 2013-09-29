@@ -30,9 +30,10 @@ func main() {
 	conn.Write([]byte("Accept: */*\r\n"))                            // err
 	conn.Write([]byte("\r\n"))                                       // err
 
-	b := make([]byte, 76)
+	b := make([]byte, 85)
 	conn.Read(b)
-	// Upgrade Success :)
+	Debug(Blue(string(b)))
+	Debug(Red("Upgrade Success :)"))
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
 
