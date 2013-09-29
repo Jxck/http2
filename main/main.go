@@ -38,11 +38,12 @@ func main() {
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
 
-	conn.Write(settingsFrame.Encode().Bytes()) // err
-
 	framer := &http2.Framer{
 		RW: conn,
 	}
+
+	framer.WriteFrame(settingsFrame) // err
+
 	fmt.Println(framer.ReadFrame()) // setting
 	fmt.Println(framer.ReadFrame()) // window update
 

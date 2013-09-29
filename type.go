@@ -30,6 +30,10 @@ type Framer struct {
 	RW io.ReadWriter
 }
 
+func (f *Framer) WriteFrame(frame Frame) { // err
+	f.RW.Write(frame.Encode().Bytes()) // err
+}
+
 func (f *Framer) ReadFrame() Frame {
 	fh := &FrameHeader{}
 	fh.Decode(f.RW)
