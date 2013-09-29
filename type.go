@@ -20,7 +20,7 @@ func init() {
 
 type Frame interface {
 	Encode() *bytes.Buffer
-	Decode(buf *bytes.Buffer)
+	Decode(rw io.ReadWriter)
 }
 
 // Framer has 2 funcs
@@ -35,29 +35,28 @@ func (f *Framer) WriteFrame(frame Frame) { // err
 }
 
 func (f *Framer) ReadFrame() Frame {
-	fh := &FrameHeader{}
-	fh.Decode(f.RW)
+	fh := &FrameHeader{} // New
+	fh.Decode(f.RW)      // err
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
-
-	b := make([]byte, fh.Length)
-	binary.Read(f.RW, binary.BigEndian, b) // err
-
-	buf := bytes.NewBuffer(b)
 
 	switch fh.Type {
 	case DataFrameType:
 		frame := NewDataFrame(fh)
-		frame.Decode(buf)
+		frame.Decode(f.RW)
 		return frame
 	case HeadersFrameType:
 		frame := NewHeadersFrame(fh)
-		frame.Decode(buf)
+		frame.Decode(f.RW)
 		return frame
 	case SettingsFrameType:
 		frame := NewSettingsFrame(fh)
-		frame.Decode(buf)
+		frame.Decode(f.RW)
 		return frame
 	case WindowUpdateFrameType:
+		b := make([]byte, fh.Length)
+		binary.Read(f.RW, binary.BigEndian, b) // err
+		log.Println("read for windo update", len(b))
+
 		return nil
 	default:
 		log.Println("other")
@@ -127,8 +126,8 @@ func NewDataFrame(fh *FrameHeader) *DataFrame {
 	return frame
 }
 
-func (frame *DataFrame) Decode(buf *bytes.Buffer) {
-	binary.Read(buf, binary.BigEndian, &frame.Data) // err
+func (frame *DataFrame) Decode(rw io.ReadWriter) {
+	binary.Read(rw, binary.BigEndian, &frame.Data) // err
 }
 
 func (frame *DataFrame) Encode() *bytes.Buffer {
@@ -177,13 +176,13 @@ func (frame *HeadersFrame) Encode() *bytes.Buffer {
 	return buf
 }
 
-func (frame *HeadersFrame) Decode(buf *bytes.Buffer) {
+func (frame *HeadersFrame) Decode(rw io.ReadWriter) {
 	if frame.Flags == 0x08 {
-		binary.Read(buf, binary.BigEndian, &frame.Priority) // err
+		binary.Read(rw, binary.BigEndian, &frame.Priority) // err
 	}
 	b := make([]byte, frame.Length)
 	// TODO: Buffer.Read()
-	binary.Read(buf, binary.BigEndian, &b) // err
+	binary.Read(rw, binary.BigEndian, &b) // err
 
 	frame.HeaderBlock = b
 
@@ -296,15 +295,15 @@ func (frame *SettingsFrame) Encode() *bytes.Buffer {
 	return buf
 }
 
-func (frame *SettingsFrame) Decode(buf *bytes.Buffer) {
+func (frame *SettingsFrame) Decode(rw io.ReadWriter) {
 	for niv := frame.Length / 8; niv > 0; niv-- {
 		s := Setting{}
 
 		var firstByte uint32
-		binary.Read(buf, binary.BigEndian, &firstByte) // err
+		binary.Read(rw, binary.BigEndian, &firstByte) // err
 		s.SettingsId = SettingsId(firstByte & 0xFFFFFF)
 		s.Reserved = uint8(firstByte >> 24)
-		binary.Read(buf, binary.BigEndian, &s.Value) // err
+		binary.Read(rw, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
 	}
 }
