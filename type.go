@@ -53,11 +53,9 @@ func (f *Framer) ReadFrame() Frame {
 		frame.Decode(f.RW)
 		return frame
 	case WindowUpdateFrameType:
-		b := make([]byte, fh.Length)
-		binary.Read(f.RW, binary.BigEndian, b) // err
-		log.Println("read for windo update", len(b))
-
-		return nil
+		frame := NewWindowUpdateFrame(fh)
+		frame.Decode(f.RW)
+		return frame
 	default:
 		log.Println("other")
 		return nil
@@ -372,9 +370,39 @@ func (frame *SettingsFrame) String() string {
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |X|              Window Size Increment (31)                     |
 // +-+-------------------------------------------------------------+
-//
-//
-//
+
+type WindowUpdateFrame struct {
+	FrameHeader
+	WindowSizeIncrement uint32
+}
+
+func NewWindowUpdateFrame(fh *FrameHeader) *WindowUpdateFrame {
+	frame := &WindowUpdateFrame{}
+	frame.FrameHeader = *fh
+	return frame
+}
+
+func (frame *WindowUpdateFrame) Encode() *bytes.Buffer {
+	buf := bytes.NewBuffer([]byte{})
+
+	frame.FrameHeader.Encode(buf)
+	binary.Write(buf, binary.BigEndian, frame.WindowSizeIncrement) // err
+	return buf
+}
+
+func (frame *WindowUpdateFrame) Decode(rw io.ReadWriter) {
+	binary.Read(rw, binary.BigEndian, &frame.WindowSizeIncrement) // err
+}
+
+func (frame *WindowUpdateFrame) String() string {
+	str := Cyan("WINDOW_UPDATE")
+	str += White(fmt.Sprintf(" frame <length=%v, flags=%#x, stream_id=%v>\n",
+		frame.Length, frame.Flags, frame.StreamId))
+
+	str += White(fmt.Sprintf("(window_size_increment=%d)", frame.WindowSizeIncrement))
+	return str
+}
+
 // CONTINUATION
 //
 // 0                   1                   2                   3
