@@ -119,6 +119,13 @@ func (fh *FrameHeader) Decode(rw io.ReadWriter) {
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 }
 
+func (fh *FrameHeader) Encode(buf *bytes.Buffer) {
+	binary.Write(buf, binary.BigEndian, fh.Length)   // err
+	binary.Write(buf, binary.BigEndian, fh.Type)     // err
+	binary.Write(buf, binary.BigEndian, fh.Flags)    // err
+	binary.Write(buf, binary.BigEndian, fh.StreamId) // err
+}
+
 // DATA
 type DataFrame struct {
 	FrameHeader
@@ -175,10 +182,7 @@ func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
 func (frame *HeadersFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
-	binary.Write(buf, binary.BigEndian, frame.Length)      // err
-	binary.Write(buf, binary.BigEndian, frame.Type)        // err
-	binary.Write(buf, binary.BigEndian, frame.Flags)       // err
-	binary.Write(buf, binary.BigEndian, frame.StreamId)    // err
+	frame.FrameHeader.Encode(buf)
 	binary.Write(buf, binary.BigEndian, frame.Priority)    // err
 	binary.Write(buf, binary.BigEndian, frame.HeaderBlock) // err
 
@@ -295,10 +299,7 @@ type SettingsFrame struct {
 func (frame *SettingsFrame) Encode() *bytes.Buffer {
 	buf := bytes.NewBuffer([]byte{})
 
-	binary.Write(buf, binary.BigEndian, frame.Length)   // err
-	binary.Write(buf, binary.BigEndian, frame.Type)     // err
-	binary.Write(buf, binary.BigEndian, frame.Flags)    // err
-	binary.Write(buf, binary.BigEndian, frame.StreamId) // err
+	frame.FrameHeader.Encode(buf)
 	for _, setting := range frame.Settings {
 		binary.Write(buf, binary.BigEndian, setting.SettingsId) // err
 		binary.Write(buf, binary.BigEndian, setting.Value)      // err
