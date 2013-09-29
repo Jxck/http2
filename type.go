@@ -296,6 +296,7 @@ func (frame *SettingsFrame) Decode(rw io.ReadWriter) {
 	}
 }
 
+// TODO: fixme
 func (frame *SettingsFrame) PayloadBase64URL() string {
 	buf := bytes.NewBuffer([]byte{})
 	frame.Encode(buf)
