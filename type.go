@@ -19,6 +19,8 @@ func init() {
 }
 
 type Frame interface {
+	Encode() *bytes.Buffer
+	Decode(buf *bytes.Buffer)
 }
 
 // Framer has 2 funcs
@@ -132,6 +134,12 @@ func NewDataFrame(fh *FrameHeader) *DataFrame {
 
 func (frame *DataFrame) Decode(buf *bytes.Buffer) {
 	binary.Read(buf, binary.BigEndian, &frame.Data) // err
+}
+
+func (frame *DataFrame) Encode() *bytes.Buffer {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, frame.Data) // err
+	return buf
 }
 
 func (frame *DataFrame) String() string {
