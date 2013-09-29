@@ -8,8 +8,8 @@ import (
 	. "github.com/jxck/color"
 	. "github.com/jxck/debug"
 	"github.com/jxck/hpack"
+	"io"
 	"log"
-	"net"
 	"net/http"
 	"strings"
 )
@@ -22,7 +22,7 @@ type Frame interface {
 }
 
 type Framer struct {
-	RW net.Conn
+	RW io.ReadWriter
 }
 
 func (f *Framer) Decode() Frame {
@@ -101,9 +101,9 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func (fh *FrameHeader) Decode(conn net.Conn) {
+func (fh *FrameHeader) Decode(rw io.ReadWriter) {
 	b := make([]byte, 8)
-	conn.Read(b) // err
+	rw.Read(b) // err
 
 	buf := bytes.NewBuffer(b)
 	binary.Read(buf, binary.BigEndian, &fh.Length)   // err
