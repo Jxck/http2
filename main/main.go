@@ -19,16 +19,17 @@ func init() {
 }
 
 func main() {
-	Debug(Red("init"))
+	settingsFrame := http2.DefaultSettingsFrame()
+
 	conn, _ := net.Dial("tcp", "106.186.112.116:80") // err
 
-	conn.Write([]byte("GET / HTTP/1.1\r\n"))                         // err
-	conn.Write([]byte("Host: 106.186.112.116:80\r\n"))               // err
-	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n"))    // err
-	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))             // err
-	conn.Write([]byte("HTTP2-Settings: AAAABAAAAGQAAAAHAAD__w\r\n")) // err
-	conn.Write([]byte("Accept: */*\r\n"))                            // err
-	conn.Write([]byte("\r\n"))                                       // err
+	conn.Write([]byte("GET / HTTP/1.1\r\n"))                                           // err
+	conn.Write([]byte("Host: 106.186.112.116:80\r\n"))                                 // err
+	conn.Write([]byte("Connection: Upgrade, HTTP2-Settings\r\n"))                      // err
+	conn.Write([]byte("Upgrade: HTTP-draft-06/2.0\r\n"))                               // err
+	conn.Write([]byte("HTTP2-Settings: " + settingsFrame.PayloadBase64URL() + "\r\n")) // err
+	conn.Write([]byte("Accept: */*\r\n"))                                              // err
+	conn.Write([]byte("\r\n"))                                                         // err
 
 	b := make([]byte, 85)
 	conn.Read(b)
@@ -37,10 +38,7 @@ func main() {
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
 
-	settingsFrame := http2.DefaultSettingsFrame()
 	conn.Write(settingsFrame.Encode().Bytes()) // err
-
-	log.Println(settingsFrame.PayloadBase64URL())
 
 	fh := &http2.FrameHeader{}
 	fmt.Println(fh.Decode(conn)) // setting
