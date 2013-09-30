@@ -160,7 +160,7 @@ type HeadersFrame struct {
 	FrameHeader
 	Priority    uint32
 	HeaderBlock []byte
-	Header      http.Header
+	Headers     http.Header
 }
 
 func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
@@ -188,7 +188,7 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 	client := hpack.NewResponseContext()
 
 	client.Decode(b)
-	frame.Header = client.EmittedSet.Header
+	frame.Headers = client.EmittedSet.Header
 }
 
 func (frame *HeadersFrame) String() string {
@@ -201,7 +201,7 @@ func (frame *HeadersFrame) String() string {
 
 	// TODO: ; First response header
 
-	for name, value := range frame.Header {
+	for name, value := range frame.Headers {
 		str += fmt.Sprintf("\n%s: %s", Blue(name), strings.Join(value, ","))
 	}
 
