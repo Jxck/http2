@@ -11,4 +11,6 @@ func init() {
 
 func main() {
 	http2.Get("http://106.186.112.116:80/")
+	//http2.Get("http://106.186.112.116:80/package_README.html")
+	//http2.Get("http://106.186.112.116:80/apiref.html")
 }
