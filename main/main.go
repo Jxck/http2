@@ -21,17 +21,20 @@ func init() {
 }
 
 func main() {
+	Host := "106.186.112.116:80"
+	Version := "HTTP-draft-06/2.0"
+	MagicString := "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 	settingsFrame := http2.DefaultSettingsFrame()
 
-	conn, _ := net.Dial("tcp", "106.186.112.116:80") // err
+	conn, _ := net.Dial("tcp", Host) // err
 
 	bw := bufio.NewWriter(conn)
 	br := bufio.NewReader(conn)
 
 	bw.WriteString("GET / HTTP/1.1\r\n")                                           // err
-	bw.WriteString("Host: 106.186.112.116:80\r\n")                                 // err
+	bw.WriteString("Host: " + Host + "\r\n")                                       // err
 	bw.WriteString("Connection: Upgrade, HTTP2-Settings\r\n")                      // err
-	bw.WriteString("Upgrade: HTTP-draft-06/2.0\r\n")                               // err
+	bw.WriteString("Upgrade: " + Version + "\r\n")                                 // err
 	bw.WriteString("HTTP2-Settings: " + settingsFrame.PayloadBase64URL() + "\r\n") // err
 	bw.WriteString("Accept: */*\r\n")                                              // err
 	bw.WriteString("\r\n\r\n")                                                     // err
@@ -42,8 +45,8 @@ func main() {
 	fmt.Println(Green(http2.ResponseString(res)))
 	Debug(Red("Upgrade Success :)"))
 
-	bw.WriteString("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n") // err
-	bw.Flush()                                         // err
+	bw.WriteString(MagicString) // err
+	bw.Flush()                  // err
 
 	framer := &http2.Framer{
 		RW: conn,
