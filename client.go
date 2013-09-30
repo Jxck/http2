@@ -66,19 +66,22 @@ func Get(url string) {
 
 	framer.WriteFrame(defaultSetting) // err
 
-	count := 0
+	html := ""
 	for {
 		frame := framer.ReadFrame()
 		fmt.Println(frame)
-		fmt.Println(frame.Header())
-		if count > 20 {
+		frameHeader := frame.Header()
+		if frameHeader.Type == DataFrameType {
+			dataFrame := frame.(*DataFrame)
+			html += string(dataFrame.Data)
+		}
+		if frameHeader.Flags == 0x1 {
 			break
 		}
-		count++
 	}
 
 	if !nullout {
-		fmt.Println("html")
+		fmt.Println(html)
 	}
 
 	// TODO: Send GOAWAY
