@@ -20,10 +20,10 @@ func init() {
 	flag.Parse()
 }
 
-func main() {
-	Host := "106.186.112.116:80"
-	Version := "HTTP-draft-06/2.0"
-	MagicString := "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+var Version string = "HTTP-draft-06/2.0"
+var MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
+func Get(Host string) {
 	settingsFrame := http2.DefaultSettingsFrame()
 
 	conn, _ := net.Dial("tcp", Host) // err
@@ -76,4 +76,9 @@ func main() {
 	}
 
 	// TODO: Send GOAWAY
+}
+
+func main() {
+	Host := "106.186.112.116:80"
+	Get(Host)
 }
