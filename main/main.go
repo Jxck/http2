@@ -10,6 +10,5 @@ func init() {
 }
 
 func main() {
-	Host := "106.186.112.116:80"
-	http2.Get(Host)
+	http2.Get("http://106.186.112.116:80/")
 }

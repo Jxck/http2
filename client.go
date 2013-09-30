@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	urllib "net/url"
 )
 
 const Version string = "HTTP-draft-06/2.0"
@@ -24,14 +25,26 @@ func init() {
 	flag.Parse()
 }
 
-func Get(Host string) {
-	conn, _ := net.Dial("tcp", Host) // err
+func URLParse(url string) (scheme string, host string, path string) {
+	u, _ := urllib.Parse(url) // err
+	return u.Scheme, u.Host, u.Path
+}
+
+func Get(url string) {
+	scheme, host, path := URLParse(url)
+
+	var conn net.Conn
+	if scheme == "http" {
+		conn, _ = net.Dial("tcp", host) // err
+	} else {
+		log.Fatal("not support yet")
+	}
 
 	bw := bufio.NewWriter(conn)
 	br := bufio.NewReader(conn)
 
-	bw.WriteString("GET / HTTP/1.1\r\n")                                            // err
-	bw.WriteString("Host: " + Host + "\r\n")                                        // err
+	bw.WriteString("GET " + path + " HTTP/1.1\r\n")                                 // err
+	bw.WriteString("Host: " + host + "\r\n")                                        // err
 	bw.WriteString("Connection: Upgrade, HTTP2-Settings\r\n")                       // err
 	bw.WriteString("Upgrade: " + Version + "\r\n")                                  // err
 	bw.WriteString("HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n") // err
