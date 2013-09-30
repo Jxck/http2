@@ -11,20 +11,20 @@ import (
 	"net/http"
 )
 
+const Version string = "HTTP-draft-06/2.0"
+const MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+
 var nullout bool
+var defaultSetting *SettingsFrame
 
 func init() {
 	log.SetFlags(log.Lshortfile)
+	defaultSetting = DefaultSettingsFrame()
 	flag.BoolVar(&nullout, "n", false, "null output")
 	flag.Parse()
 }
 
-var Version string = "HTTP-draft-06/2.0"
-var MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-
 func Get(Host string) {
-	defaultSetting := DefaultSettingsFrame()
-
 	conn, _ := net.Dial("tcp", Host) // err
 
 	bw := bufio.NewWriter(conn)
