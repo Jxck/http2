@@ -35,6 +35,7 @@ const (
 type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
+	Header() *FrameHeader
 }
 
 // Framer has 2 funcs
@@ -121,13 +122,13 @@ func (fh *FrameHeader) String() string {
 
 // DATA
 type DataFrame struct {
-	FrameHeader
+	*FrameHeader
 	Data []byte
 }
 
 func NewDataFrame(fh *FrameHeader) *DataFrame {
 	frame := &DataFrame{}
-	frame.FrameHeader = *fh
+	frame.FrameHeader = fh
 	frame.Data = make([]byte, frame.Length)
 	return frame
 }
@@ -138,6 +139,10 @@ func (frame *DataFrame) Read(r io.Reader) {
 
 func (frame *DataFrame) Write(w io.Writer) {
 	binary.Write(w, binary.BigEndian, frame.Data) // err
+}
+
+func (frame *DataFrame) Header() *FrameHeader {
+	return frame.FrameHeader
 }
 
 func (frame *DataFrame) String() string {
@@ -157,7 +162,7 @@ func (frame *DataFrame) String() string {
 // +---------------------------------------------------------------+
 
 type HeadersFrame struct {
-	FrameHeader
+	*FrameHeader
 	Priority    uint32
 	HeaderBlock []byte
 	Headers     http.Header
@@ -165,7 +170,7 @@ type HeadersFrame struct {
 
 func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
 	frame := &HeadersFrame{}
-	frame.FrameHeader = *fh
+	frame.FrameHeader = fh
 	return frame
 }
 
@@ -189,6 +194,10 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 
 	client.Decode(b)
 	frame.Headers = client.EmittedSet.Header
+}
+
+func (frame *HeadersFrame) Header() *FrameHeader {
+	return frame.FrameHeader
 }
 
 func (frame *HeadersFrame) String() string {
@@ -249,9 +258,14 @@ type Setting struct {
 	Value      uint32
 }
 
+type SettingsFrame struct {
+	*FrameHeader
+	Settings []Setting
+}
+
 func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
 	frame := &SettingsFrame{}
-	frame.FrameHeader = *fh
+	frame.FrameHeader = fh
 	return frame
 }
 
@@ -264,7 +278,7 @@ func DefaultSettingsFrame() *SettingsFrame {
 		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
 		Value:      65535,
 	}
-	fh := FrameHeader{
+	fh := &FrameHeader{
 		Length:   16,
 		Type:     SettingsFrameType,
 		StreamId: 0,
@@ -274,11 +288,6 @@ func DefaultSettingsFrame() *SettingsFrame {
 		Settings:    []Setting{setting1, setting2},
 	}
 	return settingsFrame
-}
-
-type SettingsFrame struct {
-	FrameHeader
-	Settings []Setting
 }
 
 func (frame *SettingsFrame) Write(w io.Writer) {
@@ -309,6 +318,10 @@ func (frame *SettingsFrame) PayloadBase64URL() string {
 	str := base64.URLEncoding.EncodeToString(buf.Bytes()[8:])
 	str = strings.Replace(str, "=", "", -1)
 	return str
+}
+
+func (frame *SettingsFrame) Header() *FrameHeader {
+	return frame.FrameHeader
 }
 
 func (frame *SettingsFrame) String() string {
@@ -370,13 +383,13 @@ func (frame *SettingsFrame) String() string {
 // +-+-------------------------------------------------------------+
 
 type WindowUpdateFrame struct {
-	FrameHeader
+	*FrameHeader
 	WindowSizeIncrement uint32
 }
 
 func NewWindowUpdateFrame(fh *FrameHeader) *WindowUpdateFrame {
 	frame := &WindowUpdateFrame{}
-	frame.FrameHeader = *fh
+	frame.FrameHeader = fh
 	return frame
 }
 
@@ -387,6 +400,10 @@ func (frame *WindowUpdateFrame) Write(w io.Writer) {
 
 func (frame *WindowUpdateFrame) Read(r io.Reader) {
 	binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement) // err
+}
+
+func (frame *WindowUpdateFrame) Header() *FrameHeader {
+	return frame.FrameHeader
 }
 
 func (frame *WindowUpdateFrame) String() string {

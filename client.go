@@ -70,10 +70,11 @@ func Get(url string) {
 	for {
 		frame := framer.ReadFrame()
 		fmt.Println(frame)
+		fmt.Println(frame.Header())
 		if count > 20 {
 			break
 		}
-		count ++
+		count++
 	}
 
 	if !nullout {
