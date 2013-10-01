@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	. "github.com/jxck/color"
@@ -8,6 +9,7 @@ import (
 	"github.com/jxck/http2"
 	"log"
 	"net"
+	"net/http"
 )
 
 var nullout bool
@@ -31,9 +33,9 @@ func main() {
 	conn.Write([]byte("Accept: */*\r\n"))                                              // err
 	conn.Write([]byte("\r\n"))                                                         // err
 
-	b := make([]byte, 85)
-	conn.Read(b)
-	Debug(Blue(string(b)))
+	br := bufio.NewReader(conn)
+	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
+
 	Debug(Red("Upgrade Success :)"))
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
