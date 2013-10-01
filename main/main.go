@@ -36,6 +36,7 @@ func main() {
 	br := bufio.NewReader(conn)
 	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
+	fmt.Println(Green(http2.ResponseString(res)))
 	Debug(Red("Upgrade Success :)"))
 
 	conn.Write([]byte("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")) // err
