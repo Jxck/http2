@@ -52,14 +52,17 @@ func Get(url string) {
 	bw := bufio.NewWriter(conn)
 	br := bufio.NewReader(conn)
 
-	bw.WriteString("GET " + path + " HTTP/1.1\r\n")                                 // err
-	bw.WriteString("Host: " + host + "\r\n")                                        // err
-	bw.WriteString("Connection: Upgrade, HTTP2-Settings\r\n")                       // err
-	bw.WriteString("Upgrade: " + Version + "\r\n")                                  // err
-	bw.WriteString("HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n") // err
-	bw.WriteString("Accept: */*\r\n")                                               // err
-	bw.WriteString("\r\n\r\n")                                                      // err
-	bw.Flush()                                                                      // err
+	upgrade := "" +
+		"GET " + path + " HTTP/1.1\r\n" +
+		"Host: " + host + "\r\n" +
+		"Connection: Upgrade, HTTP2-Settings\r\n" +
+		"Upgrade: " + Version + "\r\n" +
+		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
+		"Accept: */*\r\n" +
+		"\r\n\r\n"
+	bw.WriteString(upgrade) // err
+	bw.Flush()              // err
+	fmt.Println(Green(upgrade))
 
 	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
