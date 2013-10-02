@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	. "github.com/jxck/color"
-	. "github.com/jxck/debug"
+	_ "github.com/jxck/debug"
 	"log"
 	"net"
 	"net/http"
@@ -64,12 +64,12 @@ func Get(url string) {
 		"\r\n"
 	bw.WriteString(upgrade) // err
 	bw.Flush()              // err
-	fmt.Println(Green(upgrade))
+	fmt.Println(Blue(upgrade))
 
 	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
-	fmt.Println(Green(ResponseString(res)))
-	fmt.Println(Red("HTTP Upgrade Success :)"))
+	fmt.Println(Blue(ResponseString(res)))
+	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 
 	framer := &Framer{
 		RW: conn,
