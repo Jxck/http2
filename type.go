@@ -46,7 +46,6 @@ type Framer struct {
 }
 
 func (f *Framer) WriteFrame(frame Frame) { // err
-	fmt.Println(Red("send"), frame)
 	frame.Write(f.RW) // err
 }
 
@@ -71,7 +70,6 @@ func (f *Framer) ReadFrame() (frame Frame) {
 	default:
 		log.Printf("unknown type: %v", fh.Type)
 	}
-	fmt.Println(Green("recv"), frame)
 	return
 }
 

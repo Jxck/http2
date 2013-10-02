@@ -93,12 +93,15 @@ func (client *Client) SendMagic() {
 
 // TODO: *Frame
 func (client *Client) Send(frame Frame) {
+	fmt.Println(Red("send"), frame)
 	client.framer.WriteFrame(frame) // err
 }
 
 // TODO: *Frame
 func (client *Client) Recv() Frame {
-	return client.framer.ReadFrame()
+	frame := client.framer.ReadFrame()
+	fmt.Println(Green("recv"), frame)
+	return frame
 }
 
 func Get(url string) string {
