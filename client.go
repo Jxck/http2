@@ -91,10 +91,12 @@ func (client *Client) SendMagic() {
 	client.bw.Flush()                  // err
 }
 
+// TODO: *Frame
 func (client *Client) Send(frame Frame) {
 	client.framer.WriteFrame(frame) // err
 }
 
+// TODO: *Frame
 func (client *Client) Recv() Frame {
 	return client.framer.ReadFrame()
 }
