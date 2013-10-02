@@ -26,7 +26,7 @@ func init() {
 	flag.Parse()
 }
 
-func URLParse(url string) (scheme string, host string, path string, port string) {
+func URLParse(url string) (scheme, host, path, port string) {
 	u, _ := urllib.Parse(url) // err
 	scheme = u.Scheme
 	path = u.Path
@@ -34,6 +34,8 @@ func URLParse(url string) (scheme string, host string, path string, port string)
 	if len(tmp) > 1 {
 		host, port = tmp[0], tmp[1]
 	} else {
+		// TODO: fixme about default port
+		// from scheme
 		host, port = tmp[0], "80"
 	}
 	return
