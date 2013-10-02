@@ -61,7 +61,7 @@ func Get(url string) {
 		"Upgrade: " + Version + "\r\n" +
 		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
 		"Accept: */*\r\n" +
-		"\r\n\r\n"
+		"\r\n"
 	bw.WriteString(upgrade) // err
 	bw.Flush()              // err
 	fmt.Println(Green(upgrade))
@@ -69,7 +69,7 @@ func Get(url string) {
 	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Green(ResponseString(res)))
-	Debug(Red("Upgrade Success :)"))
+	fmt.Println(Red("HTTP Upgrade Success :)"))
 
 	framer := &Framer{
 		RW: conn,
