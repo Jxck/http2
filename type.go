@@ -114,7 +114,7 @@ func (fh *FrameHeader) String() string {
 		" frame <length=%v, flags=%#x, stream_id=%v>",
 		fh.Length, fh.Flags, fh.StreamId,
 	)
-	return White(str)
+	return str
 }
 
 // DATA
@@ -202,7 +202,7 @@ func (frame *HeadersFrame) String() string {
 	str += frame.FrameHeader.String()
 
 	if frame.Flags == 0x4 {
-		str += White("\n; END_HEADERS")
+		str += "\n; END_HEADERS"
 	}
 
 	// TODO: ; First response header
@@ -324,9 +324,9 @@ func (frame *SettingsFrame) Header() *FrameHeader {
 func (frame *SettingsFrame) String() string {
 	str := Cyan("SETTINGS")
 	str += frame.FrameHeader.String()
-	str += White(fmt.Sprintf("\n(niv=%v)", len(frame.Settings)))
+	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
-		str += White(fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value))
+		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
 	}
 	return str
 }
@@ -406,7 +406,7 @@ func (frame *WindowUpdateFrame) Header() *FrameHeader {
 func (frame *WindowUpdateFrame) String() string {
 	str := Cyan("WINDOW_UPDATE")
 	str += frame.FrameHeader.String()
-	str += White(fmt.Sprintf("\n(window_size_increment=%d)", frame.WindowSizeIncrement))
+	str += fmt.Sprintf("\n(window_size_increment=%d)", frame.WindowSizeIncrement)
 	return str
 }
 
