@@ -75,8 +75,7 @@ func Get(url string) {
 		RW: conn,
 	}
 
-	frame := framer.ReadFrame()
-	fmt.Println(frame)
+	framer.ReadFrame()
 
 	//	bw.WriteString(MagicString) // err
 	//	bw.Flush()                  // err
@@ -87,7 +86,6 @@ func Get(url string) {
 	html := ""
 	for {
 		frame := framer.ReadFrame()
-		fmt.Println(frame)
 		frameHeader := frame.Header()
 		if frameHeader.Type == DataFrameType {
 			dataFrame := frame.(*DataFrame)

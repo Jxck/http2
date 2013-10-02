@@ -46,36 +46,33 @@ type Framer struct {
 }
 
 func (f *Framer) WriteFrame(frame Frame) { // err
+	fmt.Println("send", frame)
 	frame.Write(f.RW) // err
 }
 
-func (f *Framer) ReadFrame() Frame {
+func (f *Framer) ReadFrame() (frame Frame) {
 	fh := &FrameHeader{} // New
 	fh.Read(f.RW)        // err
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
 	switch fh.Type {
 	case DataFrameType:
-		frame := NewDataFrame(fh)
+		frame = NewDataFrame(fh)
 		frame.Read(f.RW)
-		return frame
 	case HeadersFrameType:
-		frame := NewHeadersFrame(fh)
+		frame = NewHeadersFrame(fh)
 		frame.Read(f.RW)
-		return frame
 	case SettingsFrameType:
-		frame := NewSettingsFrame(fh)
+		frame = NewSettingsFrame(fh)
 		frame.Read(f.RW)
-		return frame
 	case WindowUpdateFrameType:
-		frame := NewWindowUpdateFrame(fh)
+		frame = NewWindowUpdateFrame(fh)
 		frame.Read(f.RW)
-		return frame
 	default:
 		log.Printf("unknown type: %v", fh.Type)
-		return nil
 	}
-	return nil
+	fmt.Println("recv", frame)
+	return
 }
 
 // Frame Header
