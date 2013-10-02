@@ -279,18 +279,26 @@ func DefaultSettingsFrame() *SettingsFrame {
 }
 
 func NoFlowSettingsFrame() *SettingsFrame {
-	setting := Setting{ // 4:100
+	setting1 := Setting{ // 4:100
+		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
+		Value:      100,
+	}
+	setting2 := Setting{ // 7:65535
+		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
+		Value:      65535,
+	}
+	setting3 := Setting{ // 10:1
 		SettingsId: SETTINGS_FLOW_CONTROL_OPTIONS,
 		Value:      1,
 	}
 	fh := &FrameHeader{
-		Length:   8,
+		Length:   24,
 		Type:     SettingsFrameType,
 		StreamId: 0,
 	}
 	settingsFrame := &SettingsFrame{
 		FrameHeader: fh,
-		Settings:    []Setting{setting},
+		Settings:    []Setting{setting1, setting2, setting3},
 	}
 	return settingsFrame
 }
