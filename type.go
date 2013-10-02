@@ -46,6 +46,10 @@ type Framer struct {
 }
 
 func (f *Framer) WriteFrame(frame Frame) { // err
+	buf := bytes.NewBuffer([]byte{})
+	frame.Write(buf)
+	log.Println(buf.Bytes())
+
 	frame.Write(f.RW) // err
 }
 
