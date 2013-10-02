@@ -49,28 +49,38 @@ func (f *Framer) WriteFrame(frame Frame) { // err
 	frame.Write(f.RW) // err
 }
 
-func (f *Framer) ReadFrame() (frame Frame) {
+func (f *Framer) ReadFrame() Frame {
 	fh := &FrameHeader{} // New
 	fh.Read(f.RW)        // err
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
 	switch fh.Type {
 	case DataFrameType:
-		frame = NewDataFrame(fh)
+		frame := &DataFrame{}
+		frame.FrameHeader = fh
+		frame.Data = make([]byte, frame.Length)
 		frame.Read(f.RW)
+		return frame
 	case HeadersFrameType:
-		frame = NewHeadersFrame(fh)
+		frame := &HeadersFrame{}
+		frame.FrameHeader = fh
 		frame.Read(f.RW)
+		return frame
 	case SettingsFrameType:
-		frame = NewSettingsFrame(fh)
+		frame := &SettingsFrame{}
+		frame.FrameHeader = fh
 		frame.Read(f.RW)
+		return frame
 	case WindowUpdateFrameType:
-		frame = NewWindowUpdateFrame(fh)
+		frame := &WindowUpdateFrame{}
+		frame.FrameHeader = fh
 		frame.Read(f.RW)
+		return frame
 	default:
 		log.Printf("unknown type: %v", fh.Type)
+		return nil
 	}
-	return
+	return nil
 }
 
 // Frame Header
@@ -121,13 +131,6 @@ type DataFrame struct {
 	Data []byte
 }
 
-func NewDataFrame(fh *FrameHeader) *DataFrame {
-	frame := &DataFrame{}
-	frame.FrameHeader = fh
-	frame.Data = make([]byte, frame.Length)
-	return frame
-}
-
 func (frame *DataFrame) Read(r io.Reader) {
 	binary.Read(r, binary.BigEndian, &frame.Data) // err
 }
@@ -161,12 +164,6 @@ type HeadersFrame struct {
 	Priority    uint32
 	HeaderBlock []byte
 	Headers     http.Header
-}
-
-func NewHeadersFrame(fh *FrameHeader) *HeadersFrame {
-	frame := &HeadersFrame{}
-	frame.FrameHeader = fh
-	return frame
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) {
@@ -256,12 +253,6 @@ type Setting struct {
 type SettingsFrame struct {
 	*FrameHeader
 	Settings []Setting
-}
-
-func NewSettingsFrame(fh *FrameHeader) *SettingsFrame {
-	frame := &SettingsFrame{}
-	frame.FrameHeader = fh
-	return frame
 }
 
 func DefaultSettingsFrame() *SettingsFrame {
@@ -397,12 +388,6 @@ func (frame *SettingsFrame) String() string {
 type WindowUpdateFrame struct {
 	*FrameHeader
 	WindowSizeIncrement uint32
-}
-
-func NewWindowUpdateFrame(fh *FrameHeader) *WindowUpdateFrame {
-	frame := &WindowUpdateFrame{}
-	frame.FrameHeader = fh
-	return frame
 }
 
 func CreateWindowUpdateFrame(size, streamId uint32) *WindowUpdateFrame {
