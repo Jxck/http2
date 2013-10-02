@@ -75,12 +75,11 @@ func Get(url string) {
 		RW: conn,
 	}
 
+	framer.WriteFrame(defaultSetting) // err
 	framer.ReadFrame()
 
 	//	bw.WriteString(MagicString) // err
 	//	bw.Flush()                  // err
-
-	framer.WriteFrame(defaultSetting) // err
 
 	c := 0
 	html := ""
