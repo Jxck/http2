@@ -390,6 +390,18 @@ func NewWindowUpdateFrame(fh *FrameHeader) *WindowUpdateFrame {
 	return frame
 }
 
+func CreateWindowUpdateFrame(size, streamId uint32) *WindowUpdateFrame {
+	fh := &FrameHeader{
+		Length:   4,
+		Type:     WindowUpdateFrameType,
+		StreamId: streamId,
+	}
+	frame := &WindowUpdateFrame{}
+	frame.FrameHeader = fh
+	frame.WindowSizeIncrement = size
+	return frame
+}
+
 func (frame *WindowUpdateFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	binary.Write(w, binary.BigEndian, frame.WindowSizeIncrement) // err
