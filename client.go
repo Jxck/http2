@@ -1,14 +1,12 @@
 package http2
 
 import (
-	//"bufio"
-	"flag"
+	"bufio"
 	"fmt"
-	//. "github.com/jxck/color"
-	_ "github.com/jxck/debug"
+	. "github.com/jxck/color"
 	"log"
 	"net"
-	//"net/http"
+	"net/http"
 	urllib "net/url"
 	"strings"
 )
@@ -16,14 +14,11 @@ import (
 const Version string = "HTTP-draft-06/2.0"
 const MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 
-var nullout bool
 var defaultSetting *SettingsFrame
 
 func init() {
 	log.SetFlags(log.Lshortfile)
 	defaultSetting = DefaultSettingsFrame()
-	flag.BoolVar(&nullout, "n", false, "null output")
-	flag.Parse()
 }
 
 func URLParse(url string) (scheme, host, path, port string) {
@@ -41,8 +36,8 @@ func URLParse(url string) (scheme, host, path, port string) {
 	return
 }
 
-func Get(url string) {
-	scheme, host, _, port := URLParse(url)
+func Get(url string) string {
+	scheme, host, path, port := URLParse(url)
 
 	var conn net.Conn
 	if scheme == "http" {
@@ -51,25 +46,25 @@ func Get(url string) {
 		log.Fatal("not support yet")
 	}
 
-	// bw := bufio.NewWriter(conn)
-	// br := bufio.NewReader(conn)
+	bw := bufio.NewWriter(conn)
+	br := bufio.NewReader(conn)
 
-	// upgrade := "" +
-	// 	"GET " + path + " HTTP/1.1\r\n" +
-	// 	"Host: " + host + "\r\n" +
-	// 	"Connection: Upgrade, HTTP2-Settings\r\n" +
-	// 	"Upgrade: " + Version + "\r\n" +
-	// 	"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
-	// 	"Accept: */*\r\n" +
-	// 	"\r\n"
-	// bw.WriteString(upgrade) // err
-	// bw.Flush()              // err
-	// fmt.Println(Blue(upgrade))
+	upgrade := "" +
+		"GET " + path + " HTTP/1.1\r\n" +
+		"Host: " + host + "\r\n" +
+		"Connection: Upgrade, HTTP2-Settings\r\n" +
+		"Upgrade: " + Version + "\r\n" +
+		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
+		"Accept: */*\r\n" +
+		"\r\n"
+	bw.WriteString(upgrade) // err
+	bw.Flush()              // err
+	fmt.Println(Blue(upgrade))
 
-	// res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
+	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
-	// fmt.Println(Blue(ResponseString(res)))
-	// fmt.Println(Yellow("HTTP Upgrade Success :)"))
+	fmt.Println(Blue(ResponseString(res)))
+	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 
 	framer := &Framer{
 		RW: conn,
@@ -78,8 +73,8 @@ func Get(url string) {
 	framer.WriteFrame(NoFlowSettingsFrame()) // err
 	framer.ReadFrame()
 
-	//	bw.WriteString(MagicString) // err
-	//	bw.Flush()                  // err
+	bw.WriteString(MagicString) // err
+	bw.Flush()                  // err
 
 	c := 0
 	html := ""
@@ -99,9 +94,7 @@ func Get(url string) {
 		c++
 	}
 
-	if !nullout {
-		fmt.Println(html)
-	}
+	return html
 
 	// TODO: Send GOAWAY
 }
