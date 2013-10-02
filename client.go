@@ -21,7 +21,7 @@ func init() {
 	defaultSetting = DefaultSettingsFrame()
 }
 
-func URLParse(url string) (scheme, host, path, port string) {
+func URLParse(url string) (scheme, host, port, path string) {
 	u, _ := urllib.Parse(url) // err
 	scheme = u.Scheme
 	path = u.Path
@@ -36,50 +36,80 @@ func URLParse(url string) (scheme, host, path, port string) {
 	return
 }
 
-func Get(url string) string {
-	scheme, host, path, port := URLParse(url)
+type Client struct {
+	scheme string
+	host   string
+	port   string
+	path   string
+	conn   net.Conn
+	bw     *bufio.Writer
+	br     *bufio.Reader
+	framer *Framer
+}
 
-	var conn net.Conn
-	if scheme == "http" {
-		conn, _ = net.Dial("tcp", host+":"+port) // err
+func NewClient(url string) *Client {
+	client := &Client{}
+
+	client.scheme, client.host, client.port, client.path = URLParse(url)
+
+	if client.scheme == "http" {
+		client.conn, _ = net.Dial("tcp", client.host+":"+client.port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
 
-	bw := bufio.NewWriter(conn)
-	br := bufio.NewReader(conn)
+	client.bw = bufio.NewWriter(client.conn)
+	client.br = bufio.NewReader(client.conn)
+	client.framer = &Framer{
+		RW: client.conn,
+	}
 
+	return client
+}
+
+func (client *Client) Upgrade() {
 	upgrade := "" +
-		"GET " + path + " HTTP/1.1\r\n" +
-		"Host: " + host + "\r\n" +
+		"GET " + client.path + " HTTP/1.1\r\n" +
+		"Host: " + client.host + "\r\n" +
 		"Connection: Upgrade, HTTP2-Settings\r\n" +
 		"Upgrade: " + Version + "\r\n" +
 		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
 		"Accept: */*\r\n" +
 		"\r\n"
-	bw.WriteString(upgrade) // err
-	bw.Flush()              // err
+	client.bw.WriteString(upgrade) // err
+	client.bw.Flush()              // err
 	fmt.Println(Blue(upgrade))
 
-	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
+	res, _ := http.ReadResponse(client.br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Blue(ResponseString(res)))
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
+}
 
-	framer := &Framer{
-		RW: conn,
-	}
+func (client *Client) SendMagic() {
+	client.bw.WriteString(MagicString) // err
+	client.bw.Flush()                  // err
+}
 
-	framer.WriteFrame(NoFlowSettingsFrame()) // err
-	framer.ReadFrame()
+func (client *Client) Send(frame Frame) {
+	client.framer.WriteFrame(frame) // err
+}
 
-	bw.WriteString(MagicString) // err
-	bw.Flush()                  // err
+func (client *Client) Recv() Frame {
+	return client.framer.ReadFrame()
+}
+
+func Get(url string) string {
+	client := NewClient(url)
+	client.Upgrade()
+
+	client.Send(NoFlowSettingsFrame()) // err
+	client.Recv()
 
 	c := 0
 	html := ""
 	for {
-		frame := framer.ReadFrame()
+		frame := client.Recv()
 		frameHeader := frame.Header()
 		if frameHeader.Type == DataFrameType {
 			dataFrame := frame.(*DataFrame)
