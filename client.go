@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	. "github.com/jxck/color"
+	"github.com/jxck/hpack"
 	"log"
 	"net"
 	"net/http"
@@ -104,11 +105,44 @@ func (client *Client) Recv() Frame {
 	return frame
 }
 
+func GetHeadersFrame(host, path string) *HeadersFrame {
+	// send HEADERS frame <length=59, flags=0x05, stream_id=1>
+	// ; END_STREAM | END_HEADERS
+	// ; Open new stream
+	header := http.Header{}
+	header.Add("host", host)
+	header.Add("method", "GET")
+	header.Add("path", path)
+	header.Add("scheme", "http")
+	header.Add("accept", "*/*")
+
+	req := hpack.NewRequestContext()
+	headerBlock := req.Encode(header)
+
+	fh := &FrameHeader{
+		Length:   uint16(len(headerBlock)),
+		Type:     HeadersFrameType,
+		Flags:    0x05,
+		StreamId: 1,
+	}
+
+	headersFrame := &HeadersFrame{
+		Headers:     header,
+		HeaderBlock: headerBlock,
+		FrameHeader: fh,
+	}
+
+	return headersFrame
+}
+
 func Get(url string) string {
 	client := NewClient(url)
 	client.Upgrade()
 
 	client.Send(NoFlowSettingsFrame()) // err
+
+	client.Send(GetHeadersFrame(client.host, client.path)) // err
+
 	client.Recv()
 
 	c := 0
