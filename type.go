@@ -168,7 +168,9 @@ type HeadersFrame struct {
 
 func (frame *HeadersFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	binary.Write(w, binary.BigEndian, frame.Priority)    // err
+	if frame.Flags == 0x08 {
+		binary.Write(w, binary.BigEndian, frame.Priority) // err
+	}
 	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
 }
 
