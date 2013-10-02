@@ -75,7 +75,7 @@ func Get(url string) {
 		RW: conn,
 	}
 
-	framer.WriteFrame(defaultSetting) // err
+	framer.WriteFrame(NoFlowSettingsFrame()) // err
 	framer.ReadFrame()
 
 	//	bw.WriteString(MagicString) // err

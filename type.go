@@ -287,6 +287,23 @@ func DefaultSettingsFrame() *SettingsFrame {
 	return settingsFrame
 }
 
+func NoFlowSettingsFrame() *SettingsFrame {
+	setting := Setting{ // 4:100
+		SettingsId: SETTINGS_FLOW_CONTROL_OPTIONS,
+		Value:      1,
+	}
+	fh := &FrameHeader{
+		Length:   8,
+		Type:     SettingsFrameType,
+		StreamId: 0,
+	}
+	settingsFrame := &SettingsFrame{
+		FrameHeader: fh,
+		Settings:    []Setting{setting},
+	}
+	return settingsFrame
+}
+
 func (frame *SettingsFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	for _, setting := range frame.Settings {
