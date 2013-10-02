@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	urllib "net/url"
+	"strings"
 )
 
 const Version string = "HTTP-draft-06/2.0"
@@ -25,17 +26,25 @@ func init() {
 	flag.Parse()
 }
 
-func URLParse(url string) (scheme string, host string, path string) {
+func URLParse(url string) (scheme string, host string, path string, port string) {
 	u, _ := urllib.Parse(url) // err
-	return u.Scheme, u.Host, u.Path
+	scheme = u.Scheme
+	path = u.Path
+	tmp := strings.Split(u.Host, ":")
+	if len(tmp) > 1 {
+		host, port = tmp[0], tmp[1]
+	} else {
+		host, port = tmp[0], "80"
+	}
+	return
 }
 
 func Get(url string) {
-	scheme, host, path := URLParse(url)
+	scheme, host, path, port := URLParse(url)
 
 	var conn net.Conn
 	if scheme == "http" {
-		conn, _ = net.Dial("tcp", host) // err
+		conn, _ = net.Dial("tcp", host+":"+port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
@@ -57,15 +66,19 @@ func Get(url string) {
 	fmt.Println(Green(ResponseString(res)))
 	Debug(Red("Upgrade Success :)"))
 
-	bw.WriteString(MagicString) // err
-	bw.Flush()                  // err
-
 	framer := &Framer{
 		RW: conn,
 	}
 
+	frame := framer.ReadFrame()
+	fmt.Println(frame)
+
+	//	bw.WriteString(MagicString) // err
+	//	bw.Flush()                  // err
+
 	framer.WriteFrame(defaultSetting) // err
 
+	c := 0
 	html := ""
 	for {
 		frame := framer.ReadFrame()
@@ -78,6 +91,10 @@ func Get(url string) {
 		if frameHeader.Flags == 0x1 {
 			break
 		}
+		if c > 10 {
+			break
+		}
+		c++
 	}
 
 	if !nullout {
