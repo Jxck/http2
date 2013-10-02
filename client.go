@@ -1,14 +1,14 @@
 package http2
 
 import (
-	"bufio"
+	//"bufio"
 	"flag"
 	"fmt"
-	. "github.com/jxck/color"
+	//. "github.com/jxck/color"
 	_ "github.com/jxck/debug"
 	"log"
 	"net"
-	"net/http"
+	//"net/http"
 	urllib "net/url"
 	"strings"
 )
@@ -42,7 +42,7 @@ func URLParse(url string) (scheme, host, path, port string) {
 }
 
 func Get(url string) {
-	scheme, host, path, port := URLParse(url)
+	scheme, host, _, port := URLParse(url)
 
 	var conn net.Conn
 	if scheme == "http" {
@@ -51,25 +51,25 @@ func Get(url string) {
 		log.Fatal("not support yet")
 	}
 
-	bw := bufio.NewWriter(conn)
-	br := bufio.NewReader(conn)
+	// bw := bufio.NewWriter(conn)
+	// br := bufio.NewReader(conn)
 
-	upgrade := "" +
-		"GET " + path + " HTTP/1.1\r\n" +
-		"Host: " + host + "\r\n" +
-		"Connection: Upgrade, HTTP2-Settings\r\n" +
-		"Upgrade: " + Version + "\r\n" +
-		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
-		"Accept: */*\r\n" +
-		"\r\n"
-	bw.WriteString(upgrade) // err
-	bw.Flush()              // err
-	fmt.Println(Blue(upgrade))
+	// upgrade := "" +
+	// 	"GET " + path + " HTTP/1.1\r\n" +
+	// 	"Host: " + host + "\r\n" +
+	// 	"Connection: Upgrade, HTTP2-Settings\r\n" +
+	// 	"Upgrade: " + Version + "\r\n" +
+	// 	"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
+	// 	"Accept: */*\r\n" +
+	// 	"\r\n"
+	// bw.WriteString(upgrade) // err
+	// bw.Flush()              // err
+	// fmt.Println(Blue(upgrade))
 
-	res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
+	// res, _ := http.ReadResponse(br, &http.Request{Method: "GET"}) // err
 
-	fmt.Println(Blue(ResponseString(res)))
-	fmt.Println(Yellow("HTTP Upgrade Success :)"))
+	// fmt.Println(Blue(ResponseString(res)))
+	// fmt.Println(Yellow("HTTP Upgrade Success :)"))
 
 	framer := &Framer{
 		RW: conn,
