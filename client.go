@@ -139,6 +139,7 @@ func Get(url string) string {
 	client := NewClient(url)
 	//client.Upgrade()
 
+	client.SendMagic()
 
 	client.Send(NoFlowSettingsFrame()) // err
 
