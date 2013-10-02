@@ -137,7 +137,8 @@ func GetHeadersFrame(host, path string) *HeadersFrame {
 
 func Get(url string) string {
 	client := NewClient(url)
-	client.Upgrade()
+	//client.Upgrade()
+
 
 	client.Send(NoFlowSettingsFrame()) // err
 
