@@ -157,7 +157,7 @@ func Get(url string) string {
 		if frameHeader.Flags == 0x1 {
 			break
 		}
-		if c > 10 {
+		if c > 50 {
 			break
 		}
 		c++
