@@ -106,15 +106,12 @@ func (client *Client) Recv() Frame {
 }
 
 func GetHeadersFrame(host, path string) *HeadersFrame {
-	// send HEADERS frame <length=59, flags=0x05, stream_id=1>
-	// ; END_STREAM | END_HEADERS
-	// ; Open new stream
 	header := http.Header{}
 	header.Add("host", host)
 	header.Add("method", "GET")
 	header.Add("path", path)
 	header.Add("scheme", "http")
-	header.Add("accept", "*/*")
+	// header.Add("accept", "*/*")
 
 	req := hpack.NewRequestContext()
 	headerBlock := req.Encode(header)
@@ -127,9 +124,9 @@ func GetHeadersFrame(host, path string) *HeadersFrame {
 	}
 
 	headersFrame := &HeadersFrame{
-		Headers:     header,
-		HeaderBlock: headerBlock,
 		FrameHeader: fh,
+		HeaderBlock: headerBlock,
+		Headers:     header,
 	}
 
 	return headersFrame
