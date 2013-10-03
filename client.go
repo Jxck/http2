@@ -111,7 +111,8 @@ func GetHeadersFrame(host, path string) *HeadersFrame {
 	header.Add("method", "GET")
 	header.Add("path", path)
 	header.Add("scheme", "http")
-	// header.Add("accept", "*/*")
+	header.Add("accept", "*/*")
+	header.Add("x-http2-version", Version)
 
 	req := hpack.NewRequestContext()
 	headerBlock := req.Encode(header)
