@@ -63,7 +63,6 @@ func (f *Framer) ReadFrame() Frame {
 	case DataFrameType:
 		frame := &DataFrame{}
 		frame.FrameHeader = fh
-		frame.Data = make([]byte, frame.Length)
 		frame.Read(f.RW)
 		return frame
 	case HeadersFrameType:
@@ -137,6 +136,7 @@ type DataFrame struct {
 }
 
 func (frame *DataFrame) Read(r io.Reader) {
+	frame.Data = make([]byte, frame.Length)
 	binary.Read(r, binary.BigEndian, &frame.Data) // err
 }
 
