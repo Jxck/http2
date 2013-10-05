@@ -28,9 +28,7 @@ type Client struct {
 	framer *Framer
 }
 
-func NewClient(url string) *Client {
-	client := &Client{}
-
+func (client *Client) Connect(url string) {
 	client.url, _ = NewURL(url) // err
 
 	if client.url.Scheme == "http" {
@@ -44,8 +42,6 @@ func NewClient(url string) *Client {
 	client.framer = &Framer{
 		RW: client.conn,
 	}
-
-	return client
 }
 
 func (client *Client) Upgrade() {
@@ -133,7 +129,9 @@ func NoEerrorGoAwayFrame() *GoAwayFrame {
 }
 
 func Get(url string) string {
-	client := NewClient(url)
+	client := &Client{}
+	client.Connect(url)
+
 	// client.Upgrade()
 
 	client.SendMagic()
