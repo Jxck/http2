@@ -84,7 +84,7 @@ func (client *Client) Recv() Frame {
 	return frame
 }
 
-func GetHeadersFrame(host, path string) *HeadersFrame {
+func NewHeader(host, path string) http.Header {
 	header := http.Header{}
 	header.Add("host", host)
 	header.Add("method", "GET")
@@ -92,7 +92,10 @@ func GetHeadersFrame(host, path string) *HeadersFrame {
 	header.Add("scheme", "http")
 	header.Add("accept", "*/*")
 	header.Add("x-http2-version", Version)
+	return header
+}
 
+func GetHeadersFrame(header http.Header) *HeadersFrame {
 	req := hpack.NewRequestContext()
 	headerBlock := req.Encode(header)
 
@@ -137,7 +140,8 @@ func Get(url string) string {
 
 	client.Send(NoFlowSettingsFrame()) // err
 
-	client.Send(GetHeadersFrame(client.url.Host, client.url.Path)) // err
+	header := NewHeader(client.url.Host, client.url.Path)
+	client.Send(GetHeadersFrame(header)) // err
 
 	client.Recv()
 
