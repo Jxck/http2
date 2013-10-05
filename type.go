@@ -54,8 +54,6 @@ func (f *Framer) WriteFrame(frame Frame) { // err
 	frame.Write(f.RW) // err
 }
 
-
-
 func (f *Framer) ReadFrame() Frame {
 	fh := &FrameHeader{} // New
 	fh.Read(f.RW)        // err
@@ -390,7 +388,51 @@ func (frame *SettingsFrame) String() string {
 // +---------------------------------------------------------------+
 // |                  Additional Debug Data (*)                    |
 // +---------------------------------------------------------------+
-//
+
+type ErrorCode uint32
+
+const (
+	NO_ERROR           ErrorCode = 0
+	PROTOCOL_ERROR               = 1
+	INTERNAL_ERROR               = 2
+	FLOW_CONTROL_ERROR           = 3
+	STREAM_CLOSED                = 5
+	FRAME_TOO_LARGE              = 6
+	REFUSED_STREAM               = 7
+	CANCEL                       = 8
+	COMPRESSION_ERROR            = 9
+)
+
+type GoAwayFrame struct {
+	*FrameHeader
+	LastStreamID        uint32
+	ErrorCode           ErrorCode
+	AdditionalDebugData []byte // unsupported
+}
+
+func (frame *GoAwayFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	binary.Write(w, binary.BigEndian, frame.LastStreamID) // err
+	binary.Write(w, binary.BigEndian, frame.ErrorCode)    // err
+}
+
+func (frame *GoAwayFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.LastStreamID) // err
+	binary.Read(r, binary.BigEndian, &frame.ErrorCode)    // err
+}
+
+func (frame *GoAwayFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *GoAwayFrame) String() string {
+	str := Cyan("GOAWAY")
+	str += frame.FrameHeader.String()
+	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%d, opaque_data(unsupported))",
+		frame.LastStreamID, frame.ErrorCode)
+	return str
+}
+
 //
 //
 //
