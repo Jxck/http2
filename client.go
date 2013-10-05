@@ -128,11 +128,13 @@ func NoEerrorGoAwayFrame() *GoAwayFrame {
 	return goAwayFrame
 }
 
-func Get(url string) string {
+func Get(url string, upgrade bool) string {
 	client := &Client{}
 	client.Connect(url)
 
-	// client.Upgrade()
+	if upgrade {
+		client.Upgrade()
+	}
 
 	client.SendMagic()
 
