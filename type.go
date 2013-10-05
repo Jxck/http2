@@ -27,7 +27,7 @@ const (
 	SettingsFrameType           = 0x4
 	PushPrimiseFrameType        = 0x5
 	PingFrameType               = 0x6
-	GoawayFrameType             = 0x7
+	GoAwayFrameType             = 0x7
 	WindowUpdateFrameType       = 0x9
 	ContinuationFrameType       = 0xA
 )

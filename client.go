@@ -111,6 +111,23 @@ func GetHeadersFrame(host, path string) *HeadersFrame {
 	return headersFrame
 }
 
+func NoEerrorGoAwayFrame() *GoAwayFrame {
+	fh := &FrameHeader{
+		Length:   8,
+		Type:     GoAwayFrameType,
+		Flags:    0x00,
+		StreamId: 0,
+	}
+
+	goAwayFrame := &GoAwayFrame{
+		FrameHeader:  fh,
+		LastStreamID: 0,
+		ErrorCode:    NO_ERROR,
+	}
+
+	return goAwayFrame
+}
+
 func Get(url string) string {
 	client := NewClient(url)
 	//client.Upgrade()
@@ -140,6 +157,8 @@ func Get(url string) string {
 		}
 		c++
 	}
+
+	client.Send(NoEerrorGoAwayFrame()) // err
 
 	return html
 
