@@ -8,8 +8,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	urllib "net/url"
-	"strings"
 )
 
 const Version string = "HTTP-draft-06/2.0"
@@ -22,26 +20,8 @@ func init() {
 	defaultSetting = DefaultSettingsFrame()
 }
 
-func URLParse(url string) (scheme, host, port, path string) {
-	u, _ := urllib.Parse(url) // err
-	scheme = u.Scheme
-	path = u.Path
-	tmp := strings.Split(u.Host, ":")
-	if len(tmp) > 1 {
-		host, port = tmp[0], tmp[1]
-	} else {
-		// TODO: fixme about default port
-		// from scheme
-		host, port = tmp[0], "80"
-	}
-	return
-}
-
 type Client struct {
-	scheme string
-	host   string
-	port   string
-	path   string
+	url    *URL
 	conn   net.Conn
 	bw     *bufio.Writer
 	br     *bufio.Reader
@@ -51,10 +31,10 @@ type Client struct {
 func NewClient(url string) *Client {
 	client := &Client{}
 
-	client.scheme, client.host, client.port, client.path = URLParse(url)
+	client.url, _ = NewURL(url) // err
 
-	if client.scheme == "http" {
-		client.conn, _ = net.Dial("tcp", client.host+":"+client.port) // err
+	if client.url.Scheme == "http" {
+		client.conn, _ = net.Dial("tcp", client.url.Host+":"+client.url.Port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
@@ -70,8 +50,8 @@ func NewClient(url string) *Client {
 
 func (client *Client) Upgrade() {
 	upgrade := "" +
-		"GET " + client.path + " HTTP/1.1\r\n" +
-		"Host: " + client.host + "\r\n" +
+		"GET " + client.url.Path + " HTTP/1.1\r\n" +
+		"Host: " + client.url.Host + "\r\n" +
 		"Connection: Upgrade, HTTP2-Settings\r\n" +
 		"Upgrade: " + Version + "\r\n" +
 		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
@@ -139,7 +119,7 @@ func Get(url string) string {
 
 	client.Send(NoFlowSettingsFrame()) // err
 
-	client.Send(GetHeadersFrame(client.host, client.path)) // err
+	client.Send(GetHeadersFrame(client.url.Host, client.url.Path)) // err
 
 	client.Recv()
 
