@@ -134,14 +134,14 @@ func Get(url string, upgrade bool) string {
 
 	if upgrade {
 		client.Upgrade()
+		client.SendMagic()
+		client.Send(NoFlowSettingsFrame()) // err
+	} else {
+		client.SendMagic()
+		client.Send(NoFlowSettingsFrame()) // err
+		header := NewHeader(client.url.Host, client.url.Path)
+		client.Send(GetHeadersFrame(header)) // err
 	}
-
-	client.SendMagic()
-
-	client.Send(NoFlowSettingsFrame()) // err
-
-	header := NewHeader(client.url.Host, client.url.Path)
-	client.Send(GetHeadersFrame(header)) // err
 
 	client.Recv()
 
