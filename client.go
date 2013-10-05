@@ -143,8 +143,6 @@ func Get(url string, upgrade bool) string {
 		client.Send(GetHeadersFrame(header)) // err
 	}
 
-	client.Recv()
-
 	c := 0
 	html := ""
 	for {
