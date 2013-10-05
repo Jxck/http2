@@ -184,13 +184,9 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 		binary.Read(r, binary.BigEndian, &frame.Priority) // err
 	}
 	b := make([]byte, frame.Length)
-	// TODO: Buffer.Read()
 	binary.Read(r, binary.BigEndian, &b) // err
-
 	frame.HeaderBlock = b
-
 	client := hpack.NewResponseContext()
-
 	client.Decode(b)
 	frame.Headers = client.EmittedSet.Header
 }

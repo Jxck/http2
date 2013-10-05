@@ -57,6 +57,7 @@ func (client *Client) Upgrade() {
 		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
 		"Accept: */*\r\n" +
 		"\r\n"
+
 	client.bw.WriteString(upgrade) // err
 	client.bw.Flush()              // err
 	fmt.Println(Blue(upgrade))
@@ -130,7 +131,7 @@ func NoEerrorGoAwayFrame() *GoAwayFrame {
 
 func Get(url string) string {
 	client := NewClient(url)
-	//client.Upgrade()
+	// client.Upgrade()
 
 	client.SendMagic()
 
@@ -161,6 +162,4 @@ func Get(url string) string {
 	client.Send(NoEerrorGoAwayFrame()) // err
 
 	return html
-
-	// TODO: Send GOAWAY
 }
