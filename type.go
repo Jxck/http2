@@ -348,7 +348,6 @@ func (frame *SettingsFrame) String() string {
 	return str
 }
 
-//
 // PUSH_PROMISE
 //
 // 0                   1                   2                   3
@@ -429,9 +428,6 @@ func (frame *GoAwayFrame) String() string {
 	return str
 }
 
-//
-//
-//
 // WINDOW_UPDATE
 //
 // 0                   1                   2                   3
