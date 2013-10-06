@@ -381,6 +381,19 @@ type WindowUpdateFrame struct {
 	WindowSizeIncrement uint32
 }
 
+func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
+	fh := &FrameHeader{
+		Length:   4,
+		Type:     WindowUpdateFrameType,
+		StreamId: streamId,
+	}
+	frame := &WindowUpdateFrame{
+		FrameHeader:         fh,
+		WindowSizeIncrement: incrementSize,
+	}
+	return frame
+}
+
 func (frame *WindowUpdateFrame) Read(r io.Reader) {
 	binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement) // err
 }

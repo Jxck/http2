@@ -87,18 +87,6 @@ func NewHeader(host, path string) http.Header {
 	return header
 }
 
-func CreateWindowUpdateFrame(size, streamId uint32) *WindowUpdateFrame {
-	fh := &FrameHeader{
-		Length:   4,
-		Type:     WindowUpdateFrameType,
-		StreamId: streamId,
-	}
-	frame := &WindowUpdateFrame{}
-	frame.FrameHeader = fh
-	frame.WindowSizeIncrement = size
-	return frame
-}
-
 func GetHeadersFrame(header http.Header) *HeadersFrame {
 	req := hpack.NewRequestContext()
 	headerBlock := req.Encode(header)
