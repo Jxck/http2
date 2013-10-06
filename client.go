@@ -21,26 +21,26 @@ func init() {
 }
 
 type Client struct {
-	url    *URL
-	conn   net.Conn
-	bw     *bufio.Writer
-	br     *bufio.Reader
-	framer *Framer
+	url  *URL
+	bw   *bufio.Writer
+	br   *bufio.Reader
+	conn *Conn
 }
 
 func (client *Client) Connect(url string) {
 	client.url, _ = NewURL(url) // err
 
+	var conn net.Conn
 	if client.url.Scheme == "http" {
-		client.conn, _ = net.Dial("tcp", client.url.Host+":"+client.url.Port) // err
+		conn, _ = net.Dial("tcp", client.url.Host+":"+client.url.Port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
 
-	client.bw = bufio.NewWriter(client.conn)
-	client.br = bufio.NewReader(client.conn)
-	client.framer = &Framer{
-		RW: client.conn,
+	client.bw = bufio.NewWriter(conn)
+	client.br = bufio.NewReader(conn)
+	client.conn = &Conn{
+		RW: conn,
 	}
 }
 
@@ -71,11 +71,11 @@ func (client *Client) SendMagic() {
 
 func (client *Client) Send(frame Frame) {
 	fmt.Println(Red("send"), frame)
-	client.framer.WriteFrame(frame) // err
+	client.conn.WriteFrame(frame) // err
 }
 
 func (client *Client) Recv() Frame {
-	frame := client.framer.ReadFrame() // err
+	frame := client.conn.ReadFrame() // err
 	fmt.Println(Green("recv"), frame)
 	return frame
 }
