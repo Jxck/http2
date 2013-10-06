@@ -38,47 +38,47 @@ type Frame interface {
 	Header() *FrameHeader
 }
 
-// Framer has 2 funcs
+// Conn has 2 funcs
 // ReadFrame() frame
 // WriteFrame(frame)
-type Framer struct {
+type Conn struct {
 	RW io.ReadWriter
 }
 
-func (f *Framer) WriteFrame(frame Frame) { // err
+func (c *Conn) WriteFrame(frame Frame) { // err
 	// DEGBU
 	// buf := bytes.NewBuffer([]byte{})
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 
-	frame.Write(f.RW) // err
+	frame.Write(c.RW) // err
 }
 
-func (f *Framer) ReadFrame() Frame {
+func (c *Conn) ReadFrame() Frame {
 	fh := &FrameHeader{} // New
-	fh.Read(f.RW)        // err
+	fh.Read(c.RW)        // err
 	Debug(fmt.Sprintf("Type: %v", fh.Type))
 
 	switch fh.Type {
 	case DataFrameType:
 		frame := &DataFrame{}
 		frame.FrameHeader = fh
-		frame.Read(f.RW)
+		frame.Read(c.RW)
 		return frame
 	case HeadersFrameType:
 		frame := &HeadersFrame{}
 		frame.FrameHeader = fh
-		frame.Read(f.RW)
+		frame.Read(c.RW)
 		return frame
 	case SettingsFrameType:
 		frame := &SettingsFrame{}
 		frame.FrameHeader = fh
-		frame.Read(f.RW)
+		frame.Read(c.RW)
 		return frame
 	case WindowUpdateFrameType:
 		frame := &WindowUpdateFrame{}
 		frame.FrameHeader = fh
-		frame.Read(f.RW)
+		frame.Read(c.RW)
 		return frame
 	default:
 		log.Printf("unknown type: %v", fh.Type)
