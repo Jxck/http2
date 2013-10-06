@@ -127,6 +127,22 @@ type HeadersFrame struct {
 	Headers     http.Header
 }
 
+func NewHeadersFrame(header http.Header, flags uint8, streamId uint32) *HeadersFrame {
+	fh := &FrameHeader{
+		Length:   0,
+		Type:     HeadersFrameType,
+		Flags:    flags,
+		StreamId: streamId,
+	}
+
+	headersFrame := &HeadersFrame{
+		FrameHeader: fh,
+		Headers:     header,
+	}
+
+	return headersFrame
+}
+
 func (frame *HeadersFrame) Read(r io.Reader) {
 	if frame.Flags == 0x08 {
 		binary.Read(r, binary.BigEndian, &frame.Priority) // err

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	. "github.com/jxck/color"
-	"github.com/jxck/hpack"
 	"log"
 	"net"
 	"net/http"
@@ -87,26 +86,6 @@ func NewHeader(host, path string) http.Header {
 	return header
 }
 
-func GetHeadersFrame(header http.Header) *HeadersFrame {
-	req := hpack.NewRequestContext()
-	headerBlock := req.Encode(header)
-
-	fh := &FrameHeader{
-		Length:   uint16(len(headerBlock)),
-		Type:     HeadersFrameType,
-		Flags:    0x05,
-		StreamId: 1,
-	}
-
-	headersFrame := &HeadersFrame{
-		FrameHeader: fh,
-		HeaderBlock: headerBlock,
-		Headers:     header,
-	}
-
-	return headersFrame
-}
-
 func Get(url string, upgrade bool) string {
 	client := &Client{}
 	client.Connect(url)
@@ -128,7 +107,10 @@ func Get(url string, upgrade bool) string {
 		}
 		client.Send(NewSettingsFrame(settings, 0)) // err
 		header := NewHeader(client.url.Host, client.url.Path)
-		client.Send(GetHeadersFrame(header)) // err
+		frame := NewHeadersFrame(header, 0x05, 1)
+		frame.HeaderBlock = client.conn.RequestContext.Encode(header)
+		frame.Length = uint16(len(frame.HeaderBlock))
+		client.Send(frame) // err
 	}
 
 	c := 0
