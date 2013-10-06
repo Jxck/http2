@@ -17,3 +17,14 @@ func ResponseString(res *http.Response) string {
 	}
 	return str
 }
+
+func NewHeader(host, path string) http.Header {
+	header := http.Header{}
+	header.Add("host", host)
+	header.Add("method", "GET")
+	header.Add("path", path)
+	header.Add("scheme", "http")
+	header.Add("accept", "*/*")
+	header.Add("x-http2-version", Version)
+	return header
+}

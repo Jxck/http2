@@ -77,17 +77,6 @@ func (transport *Transport) Recv() Frame {
 	return frame
 }
 
-func NewHeader(host, path string) http.Header {
-	header := http.Header{}
-	header.Add("host", host)
-	header.Add("method", "GET")
-	header.Add("path", path)
-	header.Add("scheme", "http")
-	header.Add("accept", "*/*")
-	header.Add("x-http2-version", Version)
-	return header
-}
-
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	transport.url, _ = NewURL(req.URL.String())
 	transport.Connect(req.URL.String())
