@@ -4,6 +4,7 @@ import (
 	"github.com/jxck/hpack"
 	"io"
 	"log"
+	"net/http"
 )
 
 func init() {
@@ -70,4 +71,8 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// log.Println(buf.Bytes())
 
 	frame.Write(c.RW) // err
+}
+
+func (c *Conn) EncodeHeader(header http.Header) []byte {
+	return c.RequestContext.Encode(header)
 }

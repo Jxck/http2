@@ -107,9 +107,8 @@ func Get(url string, upgrade bool) string {
 		}
 		client.Send(NewSettingsFrame(settings, 0)) // err
 		header := NewHeader(client.url.Host, client.url.Path)
-		frame := NewHeadersFrame(header, 0x05, 1)
-		frame.HeaderBlock = client.conn.RequestContext.Encode(header)
-		frame.Length = uint16(len(frame.HeaderBlock))
+		headerBlock := client.conn.EncodeHeader(header)
+		frame := NewHeadersFrame(header, headerBlock, 0x05, 1)
 		client.Send(frame) // err
 	}
 
