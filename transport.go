@@ -42,7 +42,7 @@ func (transport *Transport) Connect(url string) {
 	transport.conn = NewConn(conn)
 }
 
-func (transport *Transport) SendUpgrade() {
+func (transport *Transport) SendUpgrade() *Stream {
 	upgrade := "" +
 		"GET " + transport.url.Path + " HTTP/1.1\r\n" +
 		"Host: " + transport.url.Host + "\r\n" +
@@ -60,11 +60,17 @@ func (transport *Transport) SendUpgrade() {
 
 	fmt.Println(Blue(ResponseString(res)))
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
+	stream := &Stream{
+		Id:   1,
+		Conn: transport.conn,
+	}
+	return stream
 }
 
 func (transport *Transport) SendMagic() {
 	transport.bw.WriteString(MagicString) // err
 	transport.bw.Flush()                  // err
+	fmt.Println(Yellow("Send MagicOctet"))
 }
 
 func (transport *Transport) Send(frame Frame) {
@@ -79,9 +85,8 @@ func (transport *Transport) Recv() Frame {
 }
 
 type Stream struct {
-	Id      uint32
-	Conn    *Conn
-	Upgrade bool
+	Id   uint32
+	Conn *Conn
 }
 
 func (stream *Stream) Send(frame Frame) {
@@ -97,10 +102,10 @@ func (stream *Stream) Recv() Frame {
 
 func (transport *Transport) NewStream() *Stream {
 	stream := &Stream{
-		Id:      transport.LastStreamId + 2, // TODO: transport.GetNextID()
-		Conn:    transport.conn,
-		Upgrade: transport.Upgrade,
+		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
+		Conn: transport.conn,
 	}
+	transport.LastStreamId += 2
 	return stream
 }
 
@@ -109,13 +114,13 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	transport.Connect(req.URL.String())
 
 	if transport.Upgrade {
-		transport.SendUpgrade()
+		stream := transport.SendUpgrade()
 		transport.SendMagic()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 		}
-		transport.Send(NewSettingsFrame(settings, 0)) // err
+		stream.Send(NewSettingsFrame(settings, 0)) // err
 	} else {
 		transport.SendMagic()
 		stream := transport.NewStream()

@@ -26,7 +26,8 @@ func main() {
 	url := os.Args[1]
 
 	transport := &http2.Transport{
-		Upgrade: upgrade,
+		LastStreamId: 1,
+		Upgrade:      upgrade,
 	}
 	client := &http.Client{
 		Transport: transport,
