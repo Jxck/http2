@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"github.com/jxck/hpack"
 	"io"
 	"log"
 )
@@ -13,7 +14,18 @@ func init() {
 // ReadFrame() frame
 // WriteFrame(frame)
 type Conn struct {
-	RW io.ReadWriter
+	RW              io.ReadWriter
+	RequestContext  *hpack.Context
+	ResponseContext *hpack.Context
+}
+
+func NewConn(rw io.ReadWriter) *Conn {
+	conn := &Conn{
+		RW: rw,
+		RequestContext:  hpack.NewRequestContext(),
+		ResponseContext: hpack.NewResponseContext(),
+	}
+	return conn
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err

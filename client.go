@@ -39,9 +39,7 @@ func (client *Client) Connect(url string) {
 
 	client.bw = bufio.NewWriter(conn)
 	client.br = bufio.NewReader(conn)
-	client.conn = &Conn{
-		RW: conn,
-	}
+	client.conn = NewConn(conn)
 }
 
 func (client *Client) Upgrade() {
