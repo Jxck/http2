@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	. "github.com/jxck/color"
-	"github.com/jxck/hpack"
 	"io"
 	"log"
 	"net/http"
@@ -135,9 +134,6 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 	b := make([]byte, frame.Length)
 	binary.Read(r, binary.BigEndian, &b) // err
 	frame.HeaderBlock = b
-	client := hpack.NewResponseContext()
-	client.Decode(b)
-	frame.Headers = client.EmittedSet.Header
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) {

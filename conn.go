@@ -21,7 +21,7 @@ type Conn struct {
 
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
-		RW: rw,
+		RW:              rw,
 		RequestContext:  hpack.NewRequestContext(),
 		ResponseContext: hpack.NewResponseContext(),
 	}
@@ -51,6 +51,9 @@ func (c *Conn) ReadFrame() Frame {
 		frame := &HeadersFrame{}
 		frame.FrameHeader = fh
 		frame.Read(c.RW)
+
+		c.RequestContext.Decode(frame.HeaderBlock)
+		frame.Headers = c.RequestContext.EmittedSet.Header
 		return frame
 	case SettingsFrameType:
 		frame := &SettingsFrame{}
