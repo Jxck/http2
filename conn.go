@@ -28,15 +28,6 @@ func NewConn(rw io.ReadWriter) *Conn {
 	return conn
 }
 
-func (c *Conn) WriteFrame(frame Frame) { // err
-	// DEGBU
-	// buf := bytes.NewBuffer([]byte{})
-	// frame.Write(buf)
-	// log.Println(buf.Bytes())
-
-	frame.Write(c.RW) // err
-}
-
 func (c *Conn) ReadFrame() Frame {
 	fh := &FrameHeader{} // New
 	fh.Read(c.RW)        // err
@@ -70,4 +61,13 @@ func (c *Conn) ReadFrame() Frame {
 		return nil
 	}
 	return nil
+}
+
+func (c *Conn) WriteFrame(frame Frame) { // err
+	// DEGBU
+	// buf := bytes.NewBuffer([]byte{})
+	// frame.Write(buf)
+	// log.Println(buf.Bytes())
+
+	frame.Write(c.RW) // err
 }
