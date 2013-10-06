@@ -345,6 +345,22 @@ type GoAwayFrame struct {
 	AdditionalDebugData []byte // unsupported
 }
 
+func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *GoAwayFrame {
+	fh := &FrameHeader{
+		Length:   8,
+		Type:     GoAwayFrameType,
+		Flags:    0x00,
+		StreamId: streamId,
+	}
+	frame := &GoAwayFrame{
+		FrameHeader:  fh,
+		LastStreamID: lastStreamId,
+		ErrorCode:    errorCode,
+	}
+
+	return frame
+}
+
 func (frame *GoAwayFrame) Read(r io.Reader) {
 	binary.Read(r, binary.BigEndian, &frame.LastStreamID) // err
 	binary.Read(r, binary.BigEndian, &frame.ErrorCode)    // err
