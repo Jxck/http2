@@ -171,14 +171,6 @@ type HeadersFrame struct {
 	Headers     http.Header
 }
 
-func (frame *HeadersFrame) Write(w io.Writer) {
-	frame.FrameHeader.Write(w)
-	if frame.Flags == 0x08 {
-		binary.Write(w, binary.BigEndian, frame.Priority) // err
-	}
-	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
-}
-
 func (frame *HeadersFrame) Read(r io.Reader) {
 	if frame.Flags == 0x08 {
 		binary.Read(r, binary.BigEndian, &frame.Priority) // err
@@ -189,6 +181,14 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 	client := hpack.NewResponseContext()
 	client.Decode(b)
 	frame.Headers = client.EmittedSet.Header
+}
+
+func (frame *HeadersFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	if frame.Flags == 0x08 {
+		binary.Write(w, binary.BigEndian, frame.Priority) // err
+	}
+	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
 }
 
 func (frame *HeadersFrame) Header() *FrameHeader {
@@ -258,60 +258,6 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func DefaultSettingsFrame() *SettingsFrame {
-	setting1 := Setting{ // 4:100
-		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
-		Value:      100,
-	}
-	setting2 := Setting{ // 7:65535
-		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
-		Value:      65535,
-	}
-	fh := &FrameHeader{
-		Length:   16,
-		Type:     SettingsFrameType,
-		StreamId: 0,
-	}
-	settingsFrame := &SettingsFrame{
-		FrameHeader: fh,
-		Settings:    []Setting{setting1, setting2},
-	}
-	return settingsFrame
-}
-
-func NoFlowSettingsFrame() *SettingsFrame {
-	setting1 := Setting{ // 4:100
-		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
-		Value:      100,
-	}
-	setting2 := Setting{ // 7:65535
-		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
-		Value:      65535,
-	}
-	setting3 := Setting{ // 10:1
-		SettingsId: SETTINGS_FLOW_CONTROL_OPTIONS,
-		Value:      1,
-	}
-	fh := &FrameHeader{
-		Length:   24,
-		Type:     SettingsFrameType,
-		StreamId: 0,
-	}
-	settingsFrame := &SettingsFrame{
-		FrameHeader: fh,
-		Settings:    []Setting{setting1, setting2, setting3},
-	}
-	return settingsFrame
-}
-
-func (frame *SettingsFrame) Write(w io.Writer) {
-	frame.FrameHeader.Write(w)
-	for _, setting := range frame.Settings {
-		binary.Write(w, binary.BigEndian, setting.SettingsId) // err
-		binary.Write(w, binary.BigEndian, setting.Value)      // err
-	}
-}
-
 func (frame *SettingsFrame) Read(r io.Reader) {
 	for niv := frame.Length / 8; niv > 0; niv-- {
 		s := Setting{}
@@ -322,6 +268,14 @@ func (frame *SettingsFrame) Read(r io.Reader) {
 		s.Reserved = uint8(firstByte >> 24)
 		binary.Read(r, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
+	}
+}
+
+func (frame *SettingsFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	for _, setting := range frame.Settings {
+		binary.Write(w, binary.BigEndian, setting.SettingsId) // err
+		binary.Write(w, binary.BigEndian, setting.Value)      // err
 	}
 }
 
@@ -405,15 +359,15 @@ type GoAwayFrame struct {
 	AdditionalDebugData []byte // unsupported
 }
 
+func (frame *GoAwayFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.LastStreamID) // err
+	binary.Read(r, binary.BigEndian, &frame.ErrorCode)    // err
+}
+
 func (frame *GoAwayFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	binary.Write(w, binary.BigEndian, frame.LastStreamID) // err
 	binary.Write(w, binary.BigEndian, frame.ErrorCode)    // err
-}
-
-func (frame *GoAwayFrame) Read(r io.Reader) {
-	binary.Read(r, binary.BigEndian, &frame.LastStreamID) // err
-	binary.Read(r, binary.BigEndian, &frame.ErrorCode)    // err
 }
 
 func (frame *GoAwayFrame) Header() *FrameHeader {
@@ -441,25 +395,13 @@ type WindowUpdateFrame struct {
 	WindowSizeIncrement uint32
 }
 
-func CreateWindowUpdateFrame(size, streamId uint32) *WindowUpdateFrame {
-	fh := &FrameHeader{
-		Length:   4,
-		Type:     WindowUpdateFrameType,
-		StreamId: streamId,
-	}
-	frame := &WindowUpdateFrame{}
-	frame.FrameHeader = fh
-	frame.WindowSizeIncrement = size
-	return frame
+func (frame *WindowUpdateFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement) // err
 }
 
 func (frame *WindowUpdateFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	binary.Write(w, binary.BigEndian, frame.WindowSizeIncrement) // err
-}
-
-func (frame *WindowUpdateFrame) Read(r io.Reader) {
-	binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement) // err
 }
 
 func (frame *WindowUpdateFrame) Header() *FrameHeader {
