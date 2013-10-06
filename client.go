@@ -87,52 +87,6 @@ func NewHeader(host, path string) http.Header {
 	return header
 }
 
-func DefaultSettingsFrame() *SettingsFrame {
-	setting1 := Setting{ // 4:100
-		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
-		Value:      100,
-	}
-	setting2 := Setting{ // 7:65535
-		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
-		Value:      65535,
-	}
-	fh := &FrameHeader{
-		Length:   16,
-		Type:     SettingsFrameType,
-		StreamId: 0,
-	}
-	settingsFrame := &SettingsFrame{
-		FrameHeader: fh,
-		Settings:    []Setting{setting1, setting2},
-	}
-	return settingsFrame
-}
-
-func NoFlowSettingsFrame() *SettingsFrame {
-	setting1 := Setting{ // 4:100
-		SettingsId: SETTINGS_MAX_CONCURRENT_STREAMS,
-		Value:      100,
-	}
-	setting2 := Setting{ // 7:65535
-		SettingsId: SETTINGS_INITIAL_WINDOW_SIZE,
-		Value:      65535,
-	}
-	setting3 := Setting{ // 10:1
-		SettingsId: SETTINGS_FLOW_CONTROL_OPTIONS,
-		Value:      1,
-	}
-	fh := &FrameHeader{
-		Length:   24,
-		Type:     SettingsFrameType,
-		StreamId: 0,
-	}
-	settingsFrame := &SettingsFrame{
-		FrameHeader: fh,
-		Settings:    []Setting{setting1, setting2, setting3},
-	}
-	return settingsFrame
-}
-
 func CreateWindowUpdateFrame(size, streamId uint32) *WindowUpdateFrame {
 	fh := &FrameHeader{
 		Length:   4,
@@ -189,10 +143,19 @@ func Get(url string, upgrade bool) string {
 	if upgrade {
 		client.Upgrade()
 		client.SendMagic()
-		client.Send(NoFlowSettingsFrame()) // err
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+		}
+		client.Send(NewSettingsFrame(settings)) // err
 	} else {
 		client.SendMagic()
-		client.Send(NoFlowSettingsFrame()) // err
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
+		}
+		client.Send(NewSettingsFrame(settings)) // err
 		header := NewHeader(client.url.Host, client.url.Path)
 		client.Send(GetHeadersFrame(header)) // err
 	}
