@@ -21,11 +21,12 @@ func init() {
 }
 
 type Transport struct {
-	url     *URL
-	bw      *bufio.Writer
-	br      *bufio.Reader
-	conn    *Conn
-	Upgrade bool
+	LastStreamId uint32
+	url          *URL
+	bw           *bufio.Writer
+	br           *bufio.Reader
+	conn         *Conn
+	Upgrade      bool
 }
 
 func (transport *Transport) Connect(url string) {
@@ -77,6 +78,32 @@ func (transport *Transport) Recv() Frame {
 	return frame
 }
 
+type Stream struct {
+	Id      uint32
+	Conn    *Conn
+	Upgrade bool
+}
+
+func (stream *Stream) Send(frame Frame) {
+	stream.Conn.WriteFrame(frame) // err
+	fmt.Println(Red("send"), frame)
+}
+
+func (stream *Stream) Recv() Frame {
+	frame := stream.Conn.ReadFrame() // err
+	fmt.Println(Green("recv"), frame)
+	return frame
+}
+
+func (transport *Transport) NewStream() *Stream {
+	stream := &Stream{
+		Id:      transport.LastStreamId + 2, // TODO: transport.GetNextID()
+		Conn:    transport.conn,
+		Upgrade: transport.Upgrade,
+	}
+	return stream
+}
+
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	transport.url, _ = NewURL(req.URL.String())
 	transport.Connect(req.URL.String())
@@ -91,16 +118,17 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		transport.Send(NewSettingsFrame(settings, 0)) // err
 	} else {
 		transport.SendMagic()
+		stream := transport.NewStream()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
 		}
-		transport.Send(NewSettingsFrame(settings, 0)) // err
+		stream.Send(NewSettingsFrame(settings, 0)) // err
 		header := NewHeader(transport.url.Host, transport.url.Path)
 		headerBlock := transport.conn.EncodeHeader(header)
 		frame := NewHeadersFrame(header, headerBlock, 0x05, 1)
-		transport.Send(frame) // err
+		stream.Send(frame) // err
 	}
 
 	c := 0
