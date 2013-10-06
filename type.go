@@ -223,6 +223,27 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
+func NewSettingsFrame(setting map[SettingsId]uint32) *SettingsFrame {
+	var settings []Setting
+	for id, val := range setting {
+		s := Setting{
+			SettingsId: id,
+			Value:      val,
+		}
+		settings = append(settings, s)
+	}
+	fh := &FrameHeader{
+		Length:   uint16(8 * len(settings)),
+		Type:     SettingsFrameType,
+		StreamId: 0,
+	}
+	frame := &SettingsFrame{
+		FrameHeader: fh,
+		Settings:    settings,
+	}
+	return frame
+}
+
 func (frame *SettingsFrame) Read(r io.Reader) {
 	for niv := frame.Length / 8; niv > 0; niv-- {
 		s := Setting{}
