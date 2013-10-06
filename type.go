@@ -199,8 +199,20 @@ func (frame *HeadersFrame) String() string {
 	str := Cyan("HEADERS")
 	str += frame.FrameHeader.String()
 
-	if frame.Flags == 0x4 {
-		str += "\n; END_HEADERS"
+	if frame.Flags&0x1 == 1 {
+		str += "\n+ END_STREAM"
+	} else {
+		str += "\n- END_STREAM"
+	}
+
+	if frame.Flags&0x4 == 4 {
+		str += "\n+ END_HEADERS"
+	} else {
+		str += "\n- END_HEADERS"
+	}
+
+	if frame.Flags&0x8 == 8 {
+		str += "\n+ PRIORITY"
 	}
 
 	// TODO: ; First response header
