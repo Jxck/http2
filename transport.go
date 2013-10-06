@@ -100,6 +100,12 @@ func (stream *Stream) Recv() Frame {
 	return frame
 }
 
+func (stream *Stream) SendHeader(header http.Header) {
+	headerBlock := stream.Conn.EncodeHeader(header)
+	frame := NewHeadersFrame(header, headerBlock, 0x05, stream.Id)
+	stream.Send(frame) // err
+}
+
 func (transport *Transport) NewStream() *Stream {
 	stream := &Stream{
 		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
@@ -131,9 +137,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		}
 		stream.Send(NewSettingsFrame(settings, 0)) // err
 		header := NewHeader(transport.url.Host, transport.url.Path)
-		headerBlock := transport.conn.EncodeHeader(header)
-		frame := NewHeadersFrame(header, headerBlock, 0x05, 1)
-		stream.Send(frame) // err
+		stream.SendHeader(header)
 	}
 
 	c := 0
