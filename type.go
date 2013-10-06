@@ -151,6 +151,13 @@ func (frame *DataFrame) Header() *FrameHeader {
 func (frame *DataFrame) String() string {
 	str := Cyan("DATA")
 	str += frame.FrameHeader.String()
+
+	if frame.Flags&0x1 == 1 {
+		str += "\n+ END_STREAM"
+	} else {
+		str += "\n- END_STREAM"
+	}
+
 	return str
 }
 
