@@ -147,7 +147,7 @@ func Get(url string, upgrade bool) string {
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 		}
-		client.Send(NewSettingsFrame(settings)) // err
+		client.Send(NewSettingsFrame(settings, 0)) // err
 	} else {
 		client.SendMagic()
 		settings := map[SettingsId]uint32{
@@ -155,7 +155,7 @@ func Get(url string, upgrade bool) string {
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
 		}
-		client.Send(NewSettingsFrame(settings)) // err
+		client.Send(NewSettingsFrame(settings, 0)) // err
 		header := NewHeader(client.url.Host, client.url.Path)
 		client.Send(GetHeadersFrame(header)) // err
 	}

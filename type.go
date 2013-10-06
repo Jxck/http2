@@ -223,7 +223,7 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func NewSettingsFrame(setting map[SettingsId]uint32) *SettingsFrame {
+func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
 	var settings []Setting
 	for id, val := range setting {
 		s := Setting{
@@ -235,7 +235,7 @@ func NewSettingsFrame(setting map[SettingsId]uint32) *SettingsFrame {
 	fh := &FrameHeader{
 		Length:   uint16(8 * len(settings)),
 		Type:     SettingsFrameType,
-		StreamId: 0,
+		StreamId: streamId,
 	}
 	frame := &SettingsFrame{
 		FrameHeader: fh,
