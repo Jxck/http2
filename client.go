@@ -12,12 +12,10 @@ import (
 
 const Version string = "HTTP-draft-06/2.0"
 const MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-
-var defaultSetting *SettingsFrame
+const DefaultSettingsBase64 string = "AAAABAAAAGQAAAAHAAD__w"
 
 func init() {
 	log.SetFlags(log.Lshortfile)
-	defaultSetting = DefaultSettingsFrame()
 }
 
 type Client struct {
@@ -48,7 +46,7 @@ func (client *Client) Upgrade() {
 		"Host: " + client.url.Host + "\r\n" +
 		"Connection: Upgrade, HTTP2-Settings\r\n" +
 		"Upgrade: " + Version + "\r\n" +
-		"HTTP2-Settings: " + defaultSetting.PayloadBase64URL() + "\r\n" +
+		"HTTP2-Settings: " + DefaultSettingsBase64 + "\r\n" +
 		"Accept: */*\r\n" +
 		"\r\n"
 
