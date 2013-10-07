@@ -29,7 +29,8 @@ type Transport struct {
 func (transport *Transport) Connect() {
 	var conn net.Conn
 	if transport.URL.Scheme == "http" {
-		conn, _ = net.Dial("tcp", transport.URL.Host+":"+transport.URL.Port) // err
+		address := transport.URL.Host + ":" + transport.URL.Port
+		conn, _ = net.Dial("tcp", address) // err
 	} else {
 		log.Fatal("not support yet")
 	}
@@ -104,6 +105,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		stream.SendRequest(req)
 	}
 
-	res := stream.ReadResponse()
+	res := stream.ReadResponse() // err
 	return res, nil
 }
