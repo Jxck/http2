@@ -2,8 +2,10 @@ package http2
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	. "github.com/jxck/color"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -18,15 +20,14 @@ func init() {
 }
 
 type Client struct {
-	url  *URL
-	bw   *bufio.Writer
-	br   *bufio.Reader
-	conn *Conn
+	url     *URL
+	bw      *bufio.Writer
+	br      *bufio.Reader
+	conn    *Conn
+	Upgrade bool
 }
 
 func (client *Client) Connect(url string) {
-	client.url, _ = NewURL(url) // err
-
 	var conn net.Conn
 	if client.url.Scheme == "http" {
 		conn, _ = net.Dial("tcp", client.url.Host+":"+client.url.Port) // err
@@ -39,7 +40,7 @@ func (client *Client) Connect(url string) {
 	client.conn = NewConn(conn)
 }
 
-func (client *Client) Upgrade() {
+func (client *Client) SendUpgrade() {
 	upgrade := "" +
 		"GET " + client.url.Path + " HTTP/1.1\r\n" +
 		"Host: " + client.url.Host + "\r\n" +
@@ -86,12 +87,12 @@ func NewHeader(host, path string) http.Header {
 	return header
 }
 
-func Get(url string, upgrade bool) string {
-	client := &Client{}
-	client.Connect(url)
+func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
+	client.url, _ = NewURL(req.URL.String())
+	client.Connect(req.URL.String())
 
-	if upgrade {
-		client.Upgrade()
+	if client.Upgrade {
+		client.SendUpgrade()
 		client.SendMagic()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
@@ -113,14 +114,23 @@ func Get(url string, upgrade bool) string {
 	}
 
 	c := 0
-	html := ""
+	header := http.Header{}
+	resBody := bytes.NewBuffer([]byte{})
+
 	for {
 		frame := client.Recv()
 		frameHeader := frame.Header()
+
+		if frameHeader.Type == HeadersFrameType {
+			headersFrame := frame.(*HeadersFrame)
+			header = headersFrame.Headers
+		}
+
 		if frameHeader.Type == DataFrameType {
 			dataFrame := frame.(*DataFrame)
-			html += string(dataFrame.Data)
+			resBody.Write(dataFrame.Data)
 		}
+
 		if frameHeader.Flags == 0x1 {
 			break
 		}
@@ -132,5 +142,20 @@ func Get(url string, upgrade bool) string {
 
 	client.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
 
-	return html
+	res := &http.Response{ // TODO
+		Status:           "200 OK",
+		StatusCode:       200,
+		Proto:            Version,
+		ProtoMajor:       2,
+		ProtoMinor:       0,
+		Header:           header,
+		Body:             ioutil.NopCloser(resBody),
+		ContentLength:    int64(resBody.Len()),
+		TransferEncoding: nil,
+		Close:            false,
+		Trailer:          nil,
+		Request:          req,
+	}
+
+	return res, nil
 }

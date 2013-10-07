@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/jxck/http2"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -23,8 +23,19 @@ func init() {
 
 func main() {
 	url := os.Args[1]
-	html := http2.Get(url, upgrade)
+
+	transport := &http2.Client{
+		Upgrade: upgrade,
+	}
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	res, err := client.Get(url)
+	if err != nil {
+		log.Println(err)
+	}
 	if !nullout {
-		fmt.Println(html)
+		log.Println(res.Body)
 	}
 }
