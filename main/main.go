@@ -25,7 +25,7 @@ func init() {
 func main() {
 	url := os.Args[1]
 
-	transport := &http2.Client{
+	transport := &http2.Transport{
 		Upgrade: upgrade,
 	}
 	client := &http.Client{

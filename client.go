@@ -20,7 +20,7 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-type Client struct {
+type Transport struct {
 	url     *URL
 	bw      *bufio.Writer
 	br      *bufio.Reader
@@ -28,51 +28,51 @@ type Client struct {
 	Upgrade bool
 }
 
-func (client *Client) Connect(url string) {
+func (transport *Transport) Connect(url string) {
 	var conn net.Conn
-	if client.url.Scheme == "http" {
-		conn, _ = net.Dial("tcp", client.url.Host+":"+client.url.Port) // err
+	if transport.url.Scheme == "http" {
+		conn, _ = net.Dial("tcp", transport.url.Host+":"+transport.url.Port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
 
-	client.bw = bufio.NewWriter(conn)
-	client.br = bufio.NewReader(conn)
-	client.conn = NewConn(conn)
+	transport.bw = bufio.NewWriter(conn)
+	transport.br = bufio.NewReader(conn)
+	transport.conn = NewConn(conn)
 }
 
-func (client *Client) SendUpgrade() {
+func (transport *Transport) SendUpgrade() {
 	upgrade := "" +
-		"GET " + client.url.Path + " HTTP/1.1\r\n" +
-		"Host: " + client.url.Host + "\r\n" +
+		"GET " + transport.url.Path + " HTTP/1.1\r\n" +
+		"Host: " + transport.url.Host + "\r\n" +
 		"Connection: Upgrade, HTTP2-Settings\r\n" +
 		"Upgrade: " + Version + "\r\n" +
 		"HTTP2-Settings: " + DefaultSettingsBase64 + "\r\n" +
 		"Accept: */*\r\n" +
 		"\r\n"
 
-	client.bw.WriteString(upgrade) // err
-	client.bw.Flush()              // err
+	transport.bw.WriteString(upgrade) // err
+	transport.bw.Flush()              // err
 	fmt.Println(Blue(upgrade))
 
-	res, _ := http.ReadResponse(client.br, &http.Request{Method: "GET"}) // err
+	res, _ := http.ReadResponse(transport.br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Blue(ResponseString(res)))
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 }
 
-func (client *Client) SendMagic() {
-	client.bw.WriteString(MagicString) // err
-	client.bw.Flush()                  // err
+func (transport *Transport) SendMagic() {
+	transport.bw.WriteString(MagicString) // err
+	transport.bw.Flush()                  // err
 }
 
-func (client *Client) Send(frame Frame) {
+func (transport *Transport) Send(frame Frame) {
 	fmt.Println(Red("send"), frame)
-	client.conn.WriteFrame(frame) // err
+	transport.conn.WriteFrame(frame) // err
 }
 
-func (client *Client) Recv() Frame {
-	frame := client.conn.ReadFrame() // err
+func (transport *Transport) Recv() Frame {
+	frame := transport.conn.ReadFrame() // err
 	fmt.Println(Green("recv"), frame)
 	return frame
 }
@@ -88,30 +88,30 @@ func NewHeader(host, path string) http.Header {
 	return header
 }
 
-func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
-	client.url, _ = NewURL(req.URL.String())
-	client.Connect(req.URL.String())
+func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	transport.url, _ = NewURL(req.URL.String())
+	transport.Connect(req.URL.String())
 
-	if client.Upgrade {
-		client.SendUpgrade()
-		client.SendMagic()
+	if transport.Upgrade {
+		transport.SendUpgrade()
+		transport.SendMagic()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 		}
-		client.Send(NewSettingsFrame(settings, 0)) // err
+		transport.Send(NewSettingsFrame(settings, 0)) // err
 	} else {
-		client.SendMagic()
+		transport.SendMagic()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
 		}
-		client.Send(NewSettingsFrame(settings, 0)) // err
-		header := NewHeader(client.url.Host, client.url.Path)
-		headerBlock := client.conn.EncodeHeader(header)
+		transport.Send(NewSettingsFrame(settings, 0)) // err
+		header := NewHeader(transport.url.Host, transport.url.Path)
+		headerBlock := transport.conn.EncodeHeader(header)
 		frame := NewHeadersFrame(header, headerBlock, 0x05, 1)
-		client.Send(frame) // err
+		transport.Send(frame) // err
 	}
 
 	c := 0
@@ -119,7 +119,7 @@ func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
 	resBody := bytes.NewBuffer([]byte{})
 
 	for {
-		frame := client.Recv()
+		frame := transport.Recv()
 		frameHeader := frame.Header()
 
 		if frameHeader.Type == HeadersFrameType {
@@ -142,7 +142,7 @@ func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
 		c++
 	}
 
-	client.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
+	transport.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
 	status := header.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
 	res := &http.Response{                // TODO
