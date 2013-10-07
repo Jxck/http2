@@ -2,6 +2,8 @@ package http2
 
 import (
 	"bufio"
+	"fmt"
+	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
 	"io"
 	"log"
@@ -76,6 +78,17 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// log.Println(buf.Bytes())
 
 	frame.Write(c.RW) // err
+}
+
+func (c *Conn) Upgrade(header string) *http.Response {
+	c.Bw.WriteString(header) // err
+	c.Bw.Flush()             // err
+	fmt.Println(Blue(header))
+
+	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
+
+	fmt.Println(Blue(ResponseString(res)))
+	return res
 }
 
 func (c *Conn) EncodeHeader(header http.Header) []byte {

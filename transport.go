@@ -45,14 +45,13 @@ func (transport *Transport) SendUpgrade() *Stream {
 		"Accept: */*\r\n" +
 		"\r\n"
 
-	transport.Conn.Bw.WriteString(upgrade) // err
-	transport.Conn.Bw.Flush()              // err
-	fmt.Println(Blue(upgrade))
+	res := transport.Conn.Upgrade(upgrade)
 
-	res, _ := http.ReadResponse(transport.Conn.Br, &http.Request{Method: "GET"}) // err
-
-	fmt.Println(Blue(ResponseString(res)))
+	if res.StatusCode != 101 {
+		log.Fatal("error")
+	}
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
+
 	stream := &Stream{
 		Id:   1,
 		Conn: transport.Conn,
