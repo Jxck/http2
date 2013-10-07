@@ -23,6 +23,23 @@ type Transport struct {
 	Upgrade      bool
 }
 
+func (transport *Transport) NextStreamId() uint32 {
+	id := transport.LastStreamId
+	if id == 4294967295 { // 2^32-1
+		// err
+	}
+	if id == 0 {
+		id = 1
+	} else if id > 0 {
+		id += 2
+	}
+	if id%2 == 0 {
+		id += 1
+	}
+	transport.LastStreamId = id
+	return id
+}
+
 func (transport *Transport) Connect() {
 	var conn net.Conn
 	if transport.URL.Scheme == "http" {
@@ -63,13 +80,8 @@ func (transport *Transport) SendMagic() {
 }
 
 func (transport *Transport) NewStream() *Stream {
-	if transport.LastStreamId == 0 {
-		transport.LastStreamId = 1
-	} else {
-		transport.LastStreamId += 2
-	}
 	stream := &Stream{
-		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
+		Id:   transport.NextStreamId(),
 		Conn: transport.Conn,
 	}
 	return stream
