@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 )
 
 const Version string = "HTTP-draft-06/2.0"
@@ -134,6 +135,7 @@ func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
 		if frameHeader.Flags == 0x1 {
 			break
 		}
+
 		if c > 50 {
 			break
 		}
@@ -141,10 +143,11 @@ func (client *Client) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	client.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
-
-	res := &http.Response{ // TODO
-		Status:           "200 OK",
-		StatusCode:       200,
+	status := header.Get("Status")
+	statuscode, _ := strconv.Atoi(status) // err
+	res := &http.Response{                // TODO
+		Status:           status + http.StatusText(statuscode),
+		StatusCode:       statuscode,
 		Proto:            Version,
 		ProtoMajor:       2,
 		ProtoMinor:       0,

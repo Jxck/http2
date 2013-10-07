@@ -44,8 +44,8 @@ func (c *Conn) ReadFrame() Frame {
 		frame.FrameHeader = fh
 		frame.Read(c.RW)
 
-		c.RequestContext.Decode(frame.HeaderBlock)
-		frame.Headers = c.RequestContext.EmittedSet.Header
+		c.ResponseContext.Decode(frame.HeaderBlock)
+		frame.Headers = c.ResponseContext.EmittedSet.Header
 		return frame
 	case SettingsFrameType:
 		frame := &SettingsFrame{}
