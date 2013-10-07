@@ -33,7 +33,7 @@ func (stream *Stream) Recv() Frame {
 
 func (stream *Stream) SendRequest(req *http.Request) {
 	stream.req = req
-	frame := NewHeadersFrame(req.Header, nil, 0x05, stream.Id)
+	frame := NewHeadersFrame(req.Header, 0x05, stream.Id)
 	stream.Send(frame) // err
 }
 
