@@ -73,17 +73,6 @@ func (transport *Transport) SendMagic() {
 	fmt.Println(Yellow("Send MagicOctet"))
 }
 
-func (transport *Transport) Send(frame Frame) {
-	fmt.Println(Red("send"), frame)
-	transport.conn.WriteFrame(frame) // err
-}
-
-func (transport *Transport) Recv() Frame {
-	frame := transport.conn.ReadFrame() // err
-	fmt.Println(Green("recv"), frame)
-	return frame
-}
-
 type Stream struct {
 	Id   uint32
 	Conn *Conn
