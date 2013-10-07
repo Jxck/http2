@@ -75,8 +75,15 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// buf := bytes.NewBuffer([]byte{})
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
-
-	frame.Write(c.RW) // err
+	switch f := frame.(type) {
+	case *HeadersFrame:
+		f.HeaderBlock = c.EncodeHeader(f.Headers)
+		f.Length = uint16(len(f.HeaderBlock))
+		f.Write(c.RW)
+	default:
+		f.Write(c.RW)
+	}
+	//	frame.Write(c.RW) // err
 }
 
 func (c *Conn) WriteString(str string) { // err
