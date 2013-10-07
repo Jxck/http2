@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/jxck/http2"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -35,7 +36,12 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
+	defer res.Body.Close()
 	if !nullout {
-		log.Println(res.Body)
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Println(string(body))
 	}
 }
