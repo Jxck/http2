@@ -1,7 +1,6 @@
 package http2
 
 import (
-	"bufio"
 	"fmt"
 	. "github.com/jxck/color"
 	"log"
@@ -20,8 +19,6 @@ func init() {
 type Transport struct {
 	LastStreamId uint32
 	URL          *URL
-	Bw           *bufio.Writer
-	Br           *bufio.Reader
 	Conn         *Conn
 	Upgrade      bool
 }
@@ -35,8 +32,6 @@ func (transport *Transport) Connect() {
 		log.Fatal("not support yet")
 	}
 
-	transport.Bw = bufio.NewWriter(conn)
-	transport.Br = bufio.NewReader(conn)
 	transport.Conn = NewConn(conn)
 }
 
@@ -50,11 +45,11 @@ func (transport *Transport) SendUpgrade() *Stream {
 		"Accept: */*\r\n" +
 		"\r\n"
 
-	transport.Bw.WriteString(upgrade) // err
-	transport.Bw.Flush()              // err
+	transport.Conn.Bw.WriteString(upgrade) // err
+	transport.Conn.Bw.Flush()              // err
 	fmt.Println(Blue(upgrade))
 
-	res, _ := http.ReadResponse(transport.Br, &http.Request{Method: "GET"}) // err
+	res, _ := http.ReadResponse(transport.Conn.Br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Blue(ResponseString(res)))
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
@@ -66,8 +61,8 @@ func (transport *Transport) SendUpgrade() *Stream {
 }
 
 func (transport *Transport) SendMagic() {
-	transport.Bw.WriteString(MagicString) // err
-	transport.Bw.Flush()                  // err
+	transport.Conn.Bw.WriteString(MagicString) // err
+	transport.Conn.Bw.Flush()                  // err
 	fmt.Println(Yellow("Send MagicOctet"))
 }
 

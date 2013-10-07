@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"bufio"
 	"github.com/jxck/hpack"
 	"io"
 	"log"
@@ -16,6 +17,8 @@ func init() {
 // WriteFrame(frame)
 type Conn struct {
 	RW              io.ReadWriter
+	Bw              *bufio.Writer
+	Br              *bufio.Reader
 	RequestContext  *hpack.Context
 	ResponseContext *hpack.Context
 }
@@ -23,6 +26,8 @@ type Conn struct {
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
 		RW:              rw,
+		Bw:              bufio.NewWriter(rw),
+		Br:              bufio.NewReader(rw),
 		RequestContext:  hpack.NewRequestContext(),
 		ResponseContext: hpack.NewResponseContext(),
 	}
