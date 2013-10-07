@@ -53,10 +53,7 @@ func (transport *Transport) SendUpgrade() *Stream {
 	}
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 
-	stream := &Stream{
-		Id:   1,
-		Conn: transport.Conn,
-	}
+	stream := transport.NewStream()
 	return stream
 }
 
@@ -66,7 +63,11 @@ func (transport *Transport) SendMagic() {
 }
 
 func (transport *Transport) NewStream() *Stream {
-	transport.LastStreamId += 2
+	if transport.LastStreamId == 0 {
+		transport.LastStreamId = 1
+	} else {
+		transport.LastStreamId += 2
+	}
 	stream := &Stream{
 		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
 		Conn: transport.Conn,
