@@ -108,46 +108,13 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	stream.Send(frame) // err
 }
 
-func (transport *Transport) NewStream() *Stream {
-	stream := &Stream{
-		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
-		Conn: transport.conn,
-	}
-	transport.LastStreamId += 2
-	return stream
-}
-
-func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	transport.url, _ = NewURL(req.URL.String())
-	transport.Connect(req.URL.String())
-
-	if transport.Upgrade {
-		stream := transport.SendUpgrade()
-		transport.SendMagic()
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
-		}
-		stream.Send(NewSettingsFrame(settings, 0)) // err
-	} else {
-		transport.SendMagic()
-		stream := transport.NewStream()
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
-			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
-		}
-		stream.Send(NewSettingsFrame(settings, 0)) // err
-		header := NewHeader(transport.url.Host, transport.url.Path)
-		stream.SendHeader(header)
-	}
-
+func (stream *Stream) ReadResponse() *http.Response {
 	c := 0
 	header := http.Header{}
 	resBody := bytes.NewBuffer([]byte{})
 
 	for {
-		frame := transport.Recv()
+		frame := stream.Recv()
 		frameHeader := frame.Header()
 
 		if frameHeader.Type == HeadersFrameType {
@@ -170,7 +137,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		c++
 	}
 
-	transport.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
+	stream.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
 	status := header.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
 	res := &http.Response{                // TODO
@@ -185,8 +152,45 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		TransferEncoding: nil,
 		Close:            false,
 		Trailer:          nil,
-		Request:          req,
+		Request:          stream.req,
+	}
+	return res
+}
+
+func (transport *Transport) NewStream() *Stream {
+	stream := &Stream{
+		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
+		Conn: transport.conn,
+	}
+	transport.LastStreamId += 2
+	return stream
+}
+
+func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	transport.url, _ = NewURL(req.URL.String())
+	transport.Connect(req.URL.String())
+
+	var stream *Stream
+	if transport.Upgrade {
+		stream = transport.SendUpgrade()
+		transport.SendMagic()
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+		}
+		stream.Send(NewSettingsFrame(settings, 0)) // err
+	} else {
+		transport.SendMagic()
+		stream = transport.NewStream()
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
+		}
+		stream.Send(NewSettingsFrame(settings, 0)) // err
+		stream.SendRequest(req)
 	}
 
+	res := stream.ReadResponse()
 	return res, nil
 }
