@@ -66,11 +66,11 @@ func (transport *Transport) SendMagic() {
 }
 
 func (transport *Transport) NewStream() *Stream {
+	transport.LastStreamId += 2
 	stream := &Stream{
 		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
 		Conn: transport.Conn,
 	}
-	transport.LastStreamId += 2
 	return stream
 }
 
