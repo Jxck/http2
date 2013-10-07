@@ -80,11 +80,13 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	frame.Write(c.RW) // err
 }
 
-func (c *Conn) Upgrade(header string) *http.Response {
-	c.Bw.WriteString(header) // err
-	c.Bw.Flush()             // err
-	fmt.Println(Blue(header))
+func (c *Conn) WriteString(str string) { // err
+	c.Bw.WriteString(str) // err
+	c.Bw.Flush()          // err
+	fmt.Println(Blue(str))
+}
 
+func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Blue(ResponseString(res)))

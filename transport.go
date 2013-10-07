@@ -45,7 +45,8 @@ func (transport *Transport) SendUpgrade() *Stream {
 		"Accept: */*\r\n" +
 		"\r\n"
 
-	res := transport.Conn.Upgrade(upgrade)
+	transport.Conn.WriteString(upgrade)
+	res := transport.Conn.ReadResponse()
 
 	if res.StatusCode != 101 {
 		log.Fatal("error")
