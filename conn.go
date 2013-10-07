@@ -51,8 +51,7 @@ func (c *Conn) ReadFrame() Frame {
 		frame.FrameHeader = fh
 		frame.Read(c.RW)
 
-		c.ResponseContext.Decode(frame.HeaderBlock)
-		frame.Headers = c.ResponseContext.EmittedSet.Header
+		frame.Headers = c.DecodeHeader(frame.HeaderBlock)
 		return frame
 	case SettingsFrameType:
 		frame := &SettingsFrame{}
@@ -95,4 +94,9 @@ func (c *Conn) ReadResponse() *http.Response {
 
 func (c *Conn) EncodeHeader(header http.Header) []byte {
 	return c.RequestContext.Encode(header)
+}
+
+func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
+	c.ResponseContext.Decode(headerBlock)
+	return c.ResponseContext.EmittedSet.Header
 }
