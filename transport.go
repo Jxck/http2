@@ -109,6 +109,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
 		}
 		stream.Send(NewSettingsFrame(settings, 0)) // err
+		req.Header = NewHeader(transport.URL.Host, transport.URL.Path)
 		stream.SendRequest(req)
 	}
 
