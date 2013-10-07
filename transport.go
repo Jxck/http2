@@ -61,8 +61,7 @@ func (transport *Transport) SendUpgrade() *Stream {
 }
 
 func (transport *Transport) SendMagic() {
-	transport.Conn.Bw.WriteString(MagicString) // err
-	transport.Conn.Bw.Flush()                  // err
+	transport.Conn.WriteString(MagicString) // err
 	fmt.Println(Yellow("Send MagicOctet"))
 }
 
