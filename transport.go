@@ -19,68 +19,68 @@ func init() {
 
 type Transport struct {
 	LastStreamId uint32
-	url          *URL
-	bw           *bufio.Writer
-	br           *bufio.Reader
-	conn         *Conn
+	URL          *URL
+	Bw           *bufio.Writer
+	Br           *bufio.Reader
+	Conn         *Conn
 	Upgrade      bool
 }
 
 func (transport *Transport) Connect(url string) {
 	var conn net.Conn
-	if transport.url.Scheme == "http" {
-		conn, _ = net.Dial("tcp", transport.url.Host+":"+transport.url.Port) // err
+	if transport.URL.Scheme == "http" {
+		conn, _ = net.Dial("tcp", transport.URL.Host+":"+transport.URL.Port) // err
 	} else {
 		log.Fatal("not support yet")
 	}
 
-	transport.bw = bufio.NewWriter(conn)
-	transport.br = bufio.NewReader(conn)
-	transport.conn = NewConn(conn)
+	transport.Bw = bufio.NewWriter(conn)
+	transport.Br = bufio.NewReader(conn)
+	transport.Conn = NewConn(conn)
 }
 
 func (transport *Transport) SendUpgrade() *Stream {
 	upgrade := "" +
-		"GET " + transport.url.Path + " HTTP/1.1\r\n" +
-		"Host: " + transport.url.Host + "\r\n" +
+		"GET " + transport.URL.Path + " HTTP/1.1\r\n" +
+		"Host: " + transport.URL.Host + "\r\n" +
 		"Connection: Upgrade, HTTP2-Settings\r\n" +
 		"Upgrade: " + Version + "\r\n" +
 		"HTTP2-Settings: " + DefaultSettingsBase64 + "\r\n" +
 		"Accept: */*\r\n" +
 		"\r\n"
 
-	transport.bw.WriteString(upgrade) // err
-	transport.bw.Flush()              // err
+	transport.Bw.WriteString(upgrade) // err
+	transport.Bw.Flush()              // err
 	fmt.Println(Blue(upgrade))
 
-	res, _ := http.ReadResponse(transport.br, &http.Request{Method: "GET"}) // err
+	res, _ := http.ReadResponse(transport.Br, &http.Request{Method: "GET"}) // err
 
 	fmt.Println(Blue(ResponseString(res)))
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 	stream := &Stream{
 		Id:   1,
-		Conn: transport.conn,
+		Conn: transport.Conn,
 	}
 	return stream
 }
 
 func (transport *Transport) SendMagic() {
-	transport.bw.WriteString(MagicString) // err
-	transport.bw.Flush()                  // err
+	transport.Bw.WriteString(MagicString) // err
+	transport.Bw.Flush()                  // err
 	fmt.Println(Yellow("Send MagicOctet"))
 }
 
 func (transport *Transport) NewStream() *Stream {
 	stream := &Stream{
 		Id:   transport.LastStreamId, // TODO: transport.GetNextID()
-		Conn: transport.conn,
+		Conn: transport.Conn,
 	}
 	transport.LastStreamId += 2
 	return stream
 }
 
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	transport.url, _ = NewURL(req.URL.String())
+	transport.URL, _ = NewURL(req.URL.String())
 	transport.Connect(req.URL.String())
 
 	var stream *Stream
