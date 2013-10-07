@@ -90,6 +90,7 @@ func (frame *DataFrame) Read(r io.Reader) {
 }
 
 func (frame *DataFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
 	binary.Write(w, binary.BigEndian, frame.Data) // err
 }
 
