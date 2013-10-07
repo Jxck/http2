@@ -87,6 +87,7 @@ func (transport *Transport) Recv() Frame {
 type Stream struct {
 	Id   uint32
 	Conn *Conn
+	req  *http.Request
 }
 
 func (stream *Stream) Send(frame Frame) {
@@ -100,9 +101,10 @@ func (stream *Stream) Recv() Frame {
 	return frame
 }
 
-func (stream *Stream) SendHeader(header http.Header) {
-	headerBlock := stream.Conn.EncodeHeader(header)
-	frame := NewHeadersFrame(header, headerBlock, 0x05, stream.Id)
+func (stream *Stream) SendRequest(req *http.Request) {
+	stream.req = req
+	headerBlock := stream.Conn.EncodeHeader(req.Header)
+	frame := NewHeadersFrame(req.Header, headerBlock, 0x05, stream.Id)
 	stream.Send(frame) // err
 }
 
