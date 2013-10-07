@@ -26,7 +26,7 @@ type Transport struct {
 	Upgrade      bool
 }
 
-func (transport *Transport) Connect(url string) {
+func (transport *Transport) Connect() {
 	var conn net.Conn
 	if transport.URL.Scheme == "http" {
 		conn, _ = net.Dial("tcp", transport.URL.Host+":"+transport.URL.Port) // err
@@ -81,7 +81,7 @@ func (transport *Transport) NewStream() *Stream {
 
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	transport.URL, _ = NewURL(req.URL.String())
-	transport.Connect(req.URL.String())
+	transport.Connect()
 
 	var stream *Stream
 	if transport.Upgrade {
