@@ -112,6 +112,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		stream.SendRequest(req)
 	}
 
-	res := stream.ReadResponse() // err
+	res := stream.RecvResponse() // err
 	return res, nil
 }

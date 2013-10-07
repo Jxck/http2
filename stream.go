@@ -38,7 +38,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	stream.Send(frame) // err
 }
 
-func (stream *Stream) ReadResponse() *http.Response {
+func (stream *Stream) RecvResponse() *http.Response {
 	c := 0
 	header := http.Header{}
 	resBody := bytes.NewBuffer([]byte{})
