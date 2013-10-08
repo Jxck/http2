@@ -88,5 +88,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	}
 
 	res := stream.RecvResponse() // err
+	transport.Conn.SendGoAway(NO_ERROR)
 	return res, nil
 }

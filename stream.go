@@ -65,7 +65,6 @@ func (stream *Stream) RecvResponse() *http.Response {
 		c++
 	}
 
-	stream.Send(NewGoAwayFrame(0, NO_ERROR, 0)) // err
 	status := header.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
 	res := &http.Response{                // TODO

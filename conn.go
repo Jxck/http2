@@ -111,6 +111,10 @@ func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
 	c.WriteFrame(NewSettingsFrame(settings, 0)) // err
 }
 
+func (c *Conn) SendGoAway(errorCode ErrorCode) { // err
+	c.WriteFrame(NewGoAwayFrame(c.LastStreamId, errorCode, 0)) // err
+}
+
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
