@@ -73,16 +73,16 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 		}
-		stream.Send(NewSettingsFrame(settings, 0)) // err
+		transport.Conn.SendSettings(settings) // err
 	} else {
 		transport.SendMagic()
-		stream = transport.Conn.NewStream()
+		stream = transport.Conn.NewStream() // TODO: move
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
 			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
 		}
-		stream.Send(NewSettingsFrame(settings, 0)) // err
+		transport.Conn.SendSettings(settings) // err
 		req.Header = NewHeader(transport.URL.Host, transport.URL.Path)
 		stream.SendRequest(req)
 	}

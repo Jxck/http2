@@ -104,6 +104,10 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	frame.Write(c.RW) // err
 }
 
+func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
+	c.WriteFrame(NewSettingsFrame(settings, 0)) // err
+}
+
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
