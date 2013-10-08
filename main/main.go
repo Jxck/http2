@@ -32,7 +32,13 @@ func main() {
 		Transport: transport,
 	}
 
-	res, err := client.Get(url)
+	// GET
+	// res, err := client.Get(url)
+
+	// POST
+	buf := bytes.NewBufferString(body)
+	res, err := client.Post(url, "text/plain", buf)
+
 	if err != nil {
 		log.Println(err)
 	}
