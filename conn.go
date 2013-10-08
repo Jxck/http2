@@ -23,6 +23,7 @@ type Conn struct {
 	Br              *bufio.Reader
 	RequestContext  *hpack.Context
 	ResponseContext *hpack.Context
+	LastStreamId    uint32
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -34,6 +35,31 @@ func NewConn(rw io.ReadWriter) *Conn {
 		ResponseContext: hpack.NewResponseContext(),
 	}
 	return conn
+}
+
+func (c *Conn) NextStreamId() uint32 {
+	id := c.LastStreamId
+	if id == 4294967295 { // 2^32-1
+		// err
+	}
+	if id == 0 {
+		id = 1
+	} else if id > 0 {
+		id += 2
+	}
+	if id%2 == 0 {
+		id += 1
+	}
+	c.LastStreamId = id
+	return id
+}
+
+func (c *Conn) NewStream() *Stream {
+	stream := &Stream{
+		Id:   c.NextStreamId(),
+		Conn: c,
+	}
+	return stream
 }
 
 func (c *Conn) ReadFrame() Frame {

@@ -17,27 +17,9 @@ func init() {
 }
 
 type Transport struct {
-	LastStreamId uint32
-	URL          *URL
-	Conn         *Conn
-	Upgrade      bool
-}
-
-func (transport *Transport) NextStreamId() uint32 {
-	id := transport.LastStreamId
-	if id == 4294967295 { // 2^32-1
-		// err
-	}
-	if id == 0 {
-		id = 1
-	} else if id > 0 {
-		id += 2
-	}
-	if id%2 == 0 {
-		id += 1
-	}
-	transport.LastStreamId = id
-	return id
+	URL     *URL
+	Conn    *Conn
+	Upgrade bool
 }
 
 func (transport *Transport) Connect() {
@@ -70,21 +52,13 @@ func (transport *Transport) SendUpgrade() *Stream {
 	}
 	fmt.Println(Yellow("HTTP Upgrade Success :)"))
 
-	stream := transport.NewStream()
+	stream := transport.Conn.NewStream()
 	return stream
 }
 
 func (transport *Transport) SendMagic() {
 	transport.Conn.WriteString(MagicString) // err
 	fmt.Println(Red("Send"), Blue(MagicString))
-}
-
-func (transport *Transport) NewStream() *Stream {
-	stream := &Stream{
-		Id:   transport.NextStreamId(),
-		Conn: transport.Conn,
-	}
-	return stream
 }
 
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -102,7 +76,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		stream.Send(NewSettingsFrame(settings, 0)) // err
 	} else {
 		transport.SendMagic()
-		stream = transport.NewStream()
+		stream = transport.Conn.NewStream()
 		settings := map[SettingsId]uint32{
 			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
