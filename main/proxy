@@ -1,0 +1,1 @@
+nghttpx -f 0.0.0.0,8080 -b 127.0.0.1,8000 --frontend-no-tls --backend-no-tls -L INFO
