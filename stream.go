@@ -2,8 +2,6 @@ package http2
 
 import (
 	"bytes"
-	"fmt"
-	. "github.com/jxck/color"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,12 +20,10 @@ type Stream struct {
 
 func (stream *Stream) Send(frame Frame) {
 	stream.Conn.WriteFrame(frame) // err
-	fmt.Println(Red("send"), Indent(frame))
 }
 
 func (stream *Stream) Recv() Frame {
 	frame := stream.Conn.ReadFrame() // err
-	fmt.Println(Green("recv"), Indent(frame))
 	return frame
 }
 

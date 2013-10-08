@@ -62,38 +62,40 @@ func (c *Conn) NewStream() *Stream {
 	return stream
 }
 
-func (c *Conn) ReadFrame() Frame {
+func (c *Conn) ReadFrame() (frame Frame) {
 	fh := &FrameHeader{} // New
 	fh.Read(c.RW)        // err
 
 	switch fh.Type {
 	case DataFrameType:
-		frame := &DataFrame{}
-		frame.FrameHeader = fh
+		frame = &DataFrame{
+			FrameHeader: fh,
+		}
 		frame.Read(c.RW)
-		return frame
 	case HeadersFrameType:
-		frame := &HeadersFrame{}
-		frame.FrameHeader = fh
-		frame.Read(c.RW)
+		f := &HeadersFrame{
+			FrameHeader: fh,
+		}
+		f.Read(c.RW)
 
-		frame.Headers = c.DecodeHeader(frame.HeaderBlock)
-		return frame
+		f.Headers = c.DecodeHeader(f.HeaderBlock)
+		frame = f
 	case SettingsFrameType:
-		frame := &SettingsFrame{}
-		frame.FrameHeader = fh
+		frame = &SettingsFrame{
+			FrameHeader: fh,
+		}
 		frame.Read(c.RW)
-		return frame
 	case WindowUpdateFrameType:
-		frame := &WindowUpdateFrame{}
-		frame.FrameHeader = fh
+		frame = &WindowUpdateFrame{
+			FrameHeader: fh,
+		}
 		frame.Read(c.RW)
-		return frame
 	default:
 		log.Printf("unknown type: %v", fh.Type)
-		return nil
+		return nil // err
 	}
-	return nil
+	fmt.Println(Green("recv"), Indent(frame))
+	return frame
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
@@ -102,6 +104,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
+	fmt.Println(Red("send"), Indent(frame))
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
