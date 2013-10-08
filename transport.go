@@ -76,7 +76,7 @@ func (transport *Transport) SendUpgrade() *Stream {
 
 func (transport *Transport) SendMagic() {
 	transport.Conn.WriteString(MagicString) // err
-	fmt.Println(Yellow("Send MagicOctet"))
+	fmt.Println(Red("Send"), Blue(MagicString))
 }
 
 func (transport *Transport) NewStream() *Stream {

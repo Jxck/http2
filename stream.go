@@ -22,12 +22,12 @@ type Stream struct {
 
 func (stream *Stream) Send(frame Frame) {
 	stream.Conn.WriteFrame(frame) // err
-	fmt.Println(Red("send"), frame)
+	fmt.Println(Red("send"), Indent(frame))
 }
 
 func (stream *Stream) Recv() Frame {
 	frame := stream.Conn.ReadFrame() // err
-	fmt.Println(Green("recv"), frame)
+	fmt.Println(Green("recv"), Indent(frame))
 	return frame
 }
 

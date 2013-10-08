@@ -89,13 +89,13 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	fmt.Println(Blue(str))
+	fmt.Println(Red("send"), Indent(Blue(str)))
 }
 
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
 
-	fmt.Println(Blue(ResponseString(res)))
+	fmt.Println(Green("recv"), Blue(Indent(ResponseString(res))), "\n")
 	return res
 }
 
