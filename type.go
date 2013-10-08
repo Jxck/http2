@@ -128,8 +128,16 @@ type HeadersFrame struct {
 	Headers     http.Header
 }
 
-func NewHeadersFrame(header http.Header, flags uint8, streamId uint32) *HeadersFrame {
+const (
+	END_STREAM  uint8 = 0x1
+	RESERVED          = 0x2
+	END_HEADERS       = 0x4
+	PRIORITY          = 0x8
+)
+
+func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 	fh := &FrameHeader{
+		Length:   0,
 		Type:     HeadersFrameType,
 		Flags:    flags,
 		StreamId: streamId,
@@ -137,7 +145,6 @@ func NewHeadersFrame(header http.Header, flags uint8, streamId uint32) *HeadersF
 
 	headersFrame := &HeadersFrame{
 		FrameHeader: fh,
-		Headers:     header,
 	}
 
 	return headersFrame
