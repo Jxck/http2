@@ -29,19 +29,21 @@ func (stream *Stream) Recv() Frame {
 
 func (stream *Stream) SendRequest(req *http.Request) {
 	stream.req = req
-	if req.Method == "GET" {
-		frame := NewHeadersFrame(END_STREAM+END_HEADERS, stream.Id)
-		frame.Headers = req.Header
-		frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
-		frame.Length = uint16(len(frame.HeaderBlock))
-		stream.Send(frame) // err
-	} else if req.Method == "POST" {
-		frame := NewHeadersFrame(END_HEADERS, stream.Id)
-		frame.Headers = req.Header
-		frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
-		frame.Length = uint16(len(frame.HeaderBlock))
-		stream.Send(frame) // err
 
+	var flags uint8
+	if req.Method == "GET" {
+		flags = END_STREAM + END_HEADERS
+	} else if req.Method == "POST" {
+		flags = END_HEADERS
+	}
+
+	frame := NewHeadersFrame(flags, stream.Id)
+	frame.Headers = req.Header
+	frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
+	frame.Length = uint16(len(frame.HeaderBlock))
+	stream.Send(frame) // err
+
+	if req.Body != nil {
 		data := NewDataFrame(0, stream.Id)
 		data.Data, _ = ioutil.ReadAll(req.Body) // err
 		data.Length = uint16(len(data.Data))
