@@ -20,6 +20,7 @@ type Transport struct {
 	URL     *URL
 	Conn    *Conn
 	Upgrade bool
+	FlowCtl bool
 }
 
 func (transport *Transport) Connect() {
@@ -65,21 +66,20 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	transport.URL, _ = NewURL(req.URL.String())
 	transport.Connect()
 
+	settings := map[SettingsId]uint32{
+		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+		SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+	}
+
 	var stream *Stream
 	if transport.Upgrade {
 		stream = transport.SendUpgrade()
 		transport.SendMagic()
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
-		}
 		transport.Conn.SendSettings(settings) // err
 	} else {
 		transport.SendMagic()
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    65535,
-			SETTINGS_FLOW_CONTROL_OPTIONS:   1,
+		if !transport.FlowCtl {
+			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 		}
 		transport.Conn.SendSettings(settings) // err
 		stream = transport.Conn.NewStream()   // TODO: move

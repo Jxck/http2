@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-var nullout, upgrade bool
+var nullout, upgrade, flowctl bool
 var post string
 
 func init() {
@@ -18,6 +18,7 @@ func init() {
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f.BoolVar(&nullout, "n", false, "null output")
 	f.BoolVar(&upgrade, "u", false, "upgrade")
+	f.BoolVar(&flowctl, "f", false, "flow control")
 	f.StringVar(&post, "d", "", "send post data")
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
@@ -30,6 +31,7 @@ func main() {
 
 	transport := &http2.Transport{
 		Upgrade: upgrade,
+		FlowCtl: flowctl,
 	}
 	client := &http.Client{
 		Transport: transport,
