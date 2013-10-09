@@ -96,7 +96,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		if c > 50 {
-			break
+			log.Fatal("over run")
 		}
 		c++
 	}
