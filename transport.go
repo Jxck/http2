@@ -83,7 +83,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		}
 		transport.Conn.SendSettings(settings) // err
 		stream = transport.Conn.NewStream()   // TODO: move
-		req.Header = NewHeader(transport.URL.Host, transport.URL.Path)
+		req = UpdateRequest(req, transport.URL)
 		stream.SendRequest(req)
 	}
 
