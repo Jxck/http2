@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func init() {
@@ -14,7 +15,8 @@ func init() {
 func index(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	log.Println(string(body), err)
-	b := bytes.Repeat([]byte("hello"), 100000)
+	count, _ := strconv.Atoi(string(body))
+	b := bytes.Repeat([]byte("hello"), count)
 	w.Write(b)
 }
 
