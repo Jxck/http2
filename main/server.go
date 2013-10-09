@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +14,8 @@ func init() {
 func index(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	log.Println(string(body), err)
-	w.Write(body)
+	b := bytes.Repeat([]byte("hello"), 100000)
+	w.Write(b)
 }
 
 func main() {
