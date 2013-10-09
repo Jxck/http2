@@ -84,6 +84,21 @@ type DataFrame struct {
 	Data []byte
 }
 
+func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
+	fh := &FrameHeader{
+		Length:   0,
+		Type:     DataFrameType,
+		Flags:    flags,
+		StreamId: streamId,
+	}
+
+	dataFrame := &DataFrame{
+		FrameHeader: fh,
+	}
+
+	return dataFrame
+}
+
 func (frame *DataFrame) Read(r io.Reader) {
 	frame.Data = make([]byte, frame.Length)
 	binary.Read(r, binary.BigEndian, &frame.Data) // err
