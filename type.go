@@ -244,6 +244,7 @@ func (frame *HeadersFrame) String() string {
 
 type SettingsId uint32
 
+const DEFAULT_WINDOW_SIZE uint32 = 65535
 const (
 	SETTINGS_MAX_CONCURRENT_STREAMS SettingsId = 4
 	SETTINGS_INITIAL_WINDOW_SIZE               = 7

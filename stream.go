@@ -13,9 +13,10 @@ func init() {
 }
 
 type Stream struct {
-	Id   uint32
-	Conn *Conn
-	req  *http.Request
+	Id         uint32
+	Conn       *Conn
+	req        *http.Request
+	WindowSize uint32
 }
 
 func (stream *Stream) Send(frame Frame) {
@@ -54,6 +55,22 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	}
 }
 
+func (stream *Stream) WindowUpdate(size uint16) {
+	threshold := DEFAULT_WINDOW_SIZE / 2
+	s := uint32(size)
+	stream.WindowSize -= s
+	if stream.WindowSize < threshold {
+		frame := NewWindowUpdateFrame(threshold, stream.Id)
+		stream.Send(frame) // err
+		stream.WindowSize += threshold
+	}
+	stream.Conn.WindowSize -= s
+	if stream.Conn.WindowSize < threshold {
+		stream.Conn.SendWindowUpdate(threshold)
+		stream.Conn.WindowSize += threshold
+	}
+}
+
 func (stream *Stream) RecvResponse() *http.Response {
 	c := 0
 	header := http.Header{}
@@ -71,6 +88,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		if frameHeader.Type == DataFrameType {
 			dataFrame := frame.(*DataFrame)
 			resBody.Write(dataFrame.Data)
+			stream.WindowUpdate(dataFrame.Length)
 		}
 
 		if frameHeader.Flags == 0x1 {

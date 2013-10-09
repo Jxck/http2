@@ -68,7 +68,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-		SETTINGS_INITIAL_WINDOW_SIZE:    65535,
+		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
 
 	var stream *Stream
@@ -82,8 +82,8 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 		}
 		transport.Conn.SendSettings(settings) // err
-		stream = transport.Conn.NewStream()   // TODO: move
 		req = UpdateRequest(req, transport.URL)
+		stream = transport.Conn.NewStream()
 		stream.SendRequest(req)
 	}
 

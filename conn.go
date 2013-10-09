@@ -24,6 +24,7 @@ type Conn struct {
 	RequestContext  *hpack.Context
 	ResponseContext *hpack.Context
 	LastStreamId    uint32
+	WindowSize      uint32
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -33,6 +34,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		Br:              bufio.NewReader(rw),
 		RequestContext:  hpack.NewRequestContext(),
 		ResponseContext: hpack.NewResponseContext(),
+		WindowSize:      DEFAULT_WINDOW_SIZE,
 	}
 	return conn
 }
@@ -56,8 +58,9 @@ func (c *Conn) NextStreamId() uint32 {
 
 func (c *Conn) NewStream() *Stream {
 	stream := &Stream{
-		Id:   c.NextStreamId(),
-		Conn: c,
+		Id:         c.NextStreamId(),
+		Conn:       c,
+		WindowSize: DEFAULT_WINDOW_SIZE,
 	}
 	return stream
 }
@@ -113,6 +116,10 @@ func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
 
 func (c *Conn) SendGoAway(errorCode ErrorCode) { // err
 	c.WriteFrame(NewGoAwayFrame(c.LastStreamId, errorCode, 0)) // err
+}
+
+func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
+	c.WriteFrame(NewWindowUpdateFrame(incrementSize, 0)) // err
 }
 
 func (c *Conn) WriteString(str string) { // err
