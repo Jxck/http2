@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"github.com/jxck/http2"
 	"io/ioutil"
@@ -36,7 +37,7 @@ func main() {
 	// res, err := client.Get(url)
 
 	// POST
-	buf := bytes.NewBufferString(body)
+	buf := bytes.NewBufferString("hello world")
 	res, err := client.Post(url, "text/plain", buf)
 
 	if err != nil {
