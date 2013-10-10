@@ -1,26 +1,32 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	log.Println(string(body), err)
-	count, _ := strconv.Atoi(string(body))
-	b := bytes.Repeat([]byte("hello"), count)
-	w.Write(b)
+type Hello struct{}
+
+func (h *Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Hello!")
 }
 
+var httpHandler http.Handler = &Hello{}
+
+// var httpHandler http.Handler = http.FileServer(http.Dir("."))
+
 func main() {
-	http.HandleFunc("/", index)
-	log.Println(http.ListenAndServe(":8000", nil))
+	flag.Parse()
+	port := ":" + flag.Args()[0]
+
+	err := http.ListenAndServe(port, httpHandler)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
