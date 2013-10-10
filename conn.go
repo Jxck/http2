@@ -129,8 +129,7 @@ func (c *Conn) WriteString(str string) { // err
 }
 
 func (c *Conn) ReadString() { // err
-	line, _, err := c.Br.ReadLine() // err
-	log.Println(err)
+	line, _, _ := c.Br.ReadLine() // err
 	fmt.Println(Red("recv"), Indent(Blue(string(line))))
 }
 

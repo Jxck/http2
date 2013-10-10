@@ -45,17 +45,39 @@ Connection: Upgrade
 Upgrade: HTTP-draft-06/2.0
 
 `
-	log.Printf("%q", upgrade)
 	Conn.WriteString(upgrade)
 
+	// SEND SETTINGS
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
 	Conn.SendSettings(settings)
-	for c := 0; c < 4; c++ {
-		Conn.ReadFrame()
-	}
 
+	Conn.ReadString()
+	Conn.ReadFrame()
+
+	// SEND HEADERS
+	stream := Conn.NewStream()
+	header := http.Header{}
+	header.Add("status", "200")
+	header.Add("content-type", "text/plain")
+
+	frame := NewHeadersFrame(END_HEADERS, 1)
+	frame.Headers = header
+	frame.HeaderBlock = stream.Conn.ResponseContext.Encode(header)
+	frame.Length = uint16(len(frame.HeaderBlock))
+	stream.Send(frame) // err
+
+	// SEND DATA
+	data := NewDataFrame(0, 1)
+	data.Data = []byte("hello world")
+	data.Length = uint16(len(data.Data))
+	stream.Send(data)
+
+	data = NewDataFrame(END_STREAM, stream.Id)
+	stream.Send(data)
+
+	Conn.ReadFrame()
 	return
 }
