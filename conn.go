@@ -88,6 +88,11 @@ func (c *Conn) ReadFrame() (frame Frame) {
 			FrameHeader: fh,
 		}
 		frame.Read(c.RW)
+	case GoAwayFrameType:
+		frame = &GoAwayFrame{
+			FrameHeader: fh,
+		}
+		frame.Read(c.RW)
 	case WindowUpdateFrameType:
 		frame = &WindowUpdateFrame{
 			FrameHeader: fh,
