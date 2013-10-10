@@ -59,7 +59,6 @@ func (transport *Transport) SendUpgrade() *Stream {
 
 func (transport *Transport) SendMagic() {
 	transport.Conn.WriteString(MagicString) // err
-	fmt.Println(Red("Send"), Blue(MagicString))
 }
 
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
