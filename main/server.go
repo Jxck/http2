@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	_ "github.com/jxck/http2"
+	"github.com/jxck/http2"
 	"log"
 	"net/http"
 )
@@ -32,7 +32,7 @@ func main() {
 	addr := ":" + args[0]
 
 	log.Printf("server starts on port %s\n", addr)
-	err := http.ListenAndServe(addr, handler)
+	err := http2.ListenAndServe(addr, handler)
 	if err != nil {
 		log.Fatal(err)
 	}

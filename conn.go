@@ -135,6 +135,14 @@ func (c *Conn) ReadResponse() *http.Response {
 	return res
 }
 
+func (c *Conn) ReadRequest() *http.Request {
+	req, e := http.ReadRequest(c.Br) // err
+	log.Println(e)
+
+	fmt.Println(Green("recv"), Blue(Indent(req)), "\n")
+	return req
+}
+
 func (c *Conn) EncodeHeader(header http.Header) []byte {
 	return c.RequestContext.Encode(header)
 }
