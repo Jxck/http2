@@ -40,11 +40,11 @@ func HandleConnection(conn net.Conn) {
 	log.Println(req.Header.Get("Upgrade"))
 	log.Println(req.Header.Get("Http2-Settings"))
 
-	upgrade := `HTTP/1.1 101 Switching Protocols
-Connection: Upgrade
-Upgrade: HTTP-draft-06/2.0
+	upgrade := "HTTP/1.1 101 Switching Protocols\r\n" +
+		"Connection: Upgrade\r\n" +
+		"Upgrade: HTTP-draft-06/2.0\r\n" +
+		"\r\n"
 
-`
 	Conn.WriteString(upgrade)
 
 	// SEND SETTINGS
@@ -55,7 +55,6 @@ Upgrade: HTTP-draft-06/2.0
 	Conn.SendSettings(settings)
 
 	Conn.ReadString()
-	Conn.ReadFrame()
 
 	// SEND HEADERS
 	stream := Conn.NewStream()
@@ -78,6 +77,12 @@ Upgrade: HTTP-draft-06/2.0
 	data = NewDataFrame(END_STREAM, stream.Id)
 	stream.Send(data)
 
-	Conn.ReadFrame()
+	for c := 0; c < 4; c++ {
+		frame := Conn.ReadFrame()
+		_, ok := frame.(*GoAwayFrame)
+		if ok {
+			break
+		}
+	}
 	return
 }
