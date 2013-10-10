@@ -2,6 +2,7 @@ package http2
 
 import (
 	. "github.com/jxck/color"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -17,12 +18,13 @@ func ListenAndServe(addr string, handler http.Handler) error {
 		return err
 	}
 
-	for c := 0; c < 50; c++ {
+	for c := 0; c < 10; c++ {
 		conn, err := listener.Accept()
-		log.Printf(Cyan("New connection from %s\n"), conn.RemoteAddr())
 		if err != nil {
+			log.Println(err)
 			return err
 		}
+		log.Printf(Cyan("New connection from %s\n"), conn.RemoteAddr())
 		go HandleConnection(conn)
 	}
 
@@ -30,12 +32,14 @@ func ListenAndServe(addr string, handler http.Handler) error {
 }
 
 func HandleConnection(conn net.Conn) {
+	log.Println("Handle Connection")
 	defer conn.Close()
-	Conn := NewConn(conn)
-	Conn.ReadRequest()
 
-	for {
-		frame := Conn.ReadFrame()
-		log.Println(frame)
-	}
+
+	//Conn := NewConn(conn)
+	//	for {
+	//		frame := Conn.ReadFrame()
+	//		log.Println(frame)
+	//	}
+	return
 }
