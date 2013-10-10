@@ -128,6 +128,12 @@ func (c *Conn) WriteString(str string) { // err
 	fmt.Println(Red("send"), Indent(Blue(str)))
 }
 
+func (c *Conn) ReadString() { // err
+	line, _, err := c.Br.ReadLine() // err
+	log.Println(err)
+	fmt.Println(Red("recv"), Indent(Blue(string(line))))
+}
+
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
 
