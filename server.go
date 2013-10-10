@@ -2,7 +2,6 @@ package http2
 
 import (
 	. "github.com/jxck/color"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -34,9 +33,9 @@ func ListenAndServe(addr string, handler http.Handler) error {
 func HandleConnection(conn net.Conn) {
 	log.Println("Handle Connection")
 	defer conn.Close()
-
-
-	//Conn := NewConn(conn)
+	Conn := NewConn(conn)
+	req := Conn.ReadRequest()
+	log.Println(req)
 	//	for {
 	//		frame := Conn.ReadFrame()
 	//		log.Println(frame)

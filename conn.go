@@ -136,10 +136,9 @@ func (c *Conn) ReadResponse() *http.Response {
 }
 
 func (c *Conn) ReadRequest() *http.Request {
-	req, e := http.ReadRequest(c.Br) // err
-	log.Println(e)
+	req, _ := http.ReadRequest(c.Br) // err
 
-	fmt.Println(Green("recv"), Blue(Indent(req)), "\n")
+	fmt.Println(Green("recv"), Blue(Indent(RequestString(req))), "\n")
 	return req
 }
 
