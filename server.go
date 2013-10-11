@@ -59,33 +59,45 @@ func HandleConnection(conn net.Conn) {
 
 	Conn.ReadString()
 
-	// SEND HEADERS
-	stream := Conn.NewStream()
-	header := http.Header{}
-	header.Add("status", "200")
-	header.Add("content-type", "text/plain")
+	fin := make(chan bool)
 
-	frame := NewHeadersFrame(END_HEADERS, 1)
-	frame.Headers = header
-	frame.HeaderBlock = stream.Conn.ResponseContext.Encode(header)
-	frame.Length = uint16(len(frame.HeaderBlock))
-	stream.Send(frame) // err
+	// Send Routine
+	go func() {
+		// SEND HEADERS
+		stream := Conn.NewStream()
+		header := http.Header{}
+		header.Add("status", "200")
+		header.Add("content-type", "text/plain")
 
-	// SEND DATA
-	data := NewDataFrame(0, 1)
-	data.Data = []byte("hello world")
-	data.Length = uint16(len(data.Data))
-	stream.Send(data)
+		frame := NewHeadersFrame(END_HEADERS, 1)
+		frame.Headers = header
+		frame.HeaderBlock = stream.Conn.ResponseContext.Encode(header)
+		frame.Length = uint16(len(frame.HeaderBlock))
+		stream.Send(frame) // err
 
-	data = NewDataFrame(END_STREAM, stream.Id)
-	stream.Send(data)
+		// SEND DATA
+		data := NewDataFrame(0, 1)
+		data.Data = []byte("hello world")
+		data.Length = uint16(len(data.Data))
+		stream.Send(data)
 
-	for c := 0; c < 4; c++ {
-		frame := Conn.ReadFrame()
-		_, ok := frame.(*GoAwayFrame)
-		if ok {
-			break
+		data = NewDataFrame(END_STREAM, stream.Id)
+		stream.Send(data)
+		fin <- true
+	}()
+
+	// Recv Routine
+	go func() {
+		for c := 0; c < 4; c++ {
+			frame := Conn.ReadFrame()
+			_, ok := frame.(*GoAwayFrame)
+			if ok {
+				break
+			}
 		}
-	}
+		fin <- true
+	}()
+	<-fin
+	<-fin
 	return
 }
