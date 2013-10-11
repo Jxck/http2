@@ -36,6 +36,7 @@ func HandleConnection(conn net.Conn) {
 	Conn := NewConn(conn)
 	req := Conn.ReadRequest()
 
+	// TODO: parse/check settings
 	log.Println(req.Header.Get("Connection"))
 	log.Println(req.Header.Get("Upgrade"))
 	log.Println(req.Header.Get("Http2-Settings"))
