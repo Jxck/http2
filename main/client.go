@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"flag"
 	"github.com/jxck/http2"
+	"github.com/jxck/logger"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 )
 
-var nullout, upgrade, flowctl bool
+var nullout, upgrade, flowctl, verbose bool
 var post string
+var loglevel int
 
 func init() {
 	log.SetFlags(log.Lshortfile)
@@ -19,11 +21,15 @@ func init() {
 	f.BoolVar(&nullout, "n", false, "null output")
 	f.BoolVar(&upgrade, "u", false, "upgrade")
 	f.BoolVar(&flowctl, "f", false, "flow control")
+	f.BoolVar(&verbose, "v", false, "verbose out")
 	f.StringVar(&post, "d", "", "send post data")
+	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
 		f.Parse(f.Args()[1:])
 	}
+	logger.LogLevel(loglevel)
+	logger.Verbose(verbose)
 }
 
 func main() {

@@ -2,8 +2,8 @@ package http2
 
 import (
 	"bufio"
-	"fmt"
 	. "github.com/jxck/color"
+	. "github.com/jxck/logger"
 	"github.com/jxck/hpack"
 	"io"
 	"log"
@@ -102,7 +102,7 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		log.Printf("unknown type: %v", fh.Type)
 		return nil // err
 	}
-	fmt.Println(Green("recv"), Indent(frame))
+	Print(Green("recv"), Indent(frame))
 	return frame
 }
 
@@ -112,7 +112,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
-	fmt.Println(Red("send"), Indent(frame))
+	Print(Red("send"), Indent(frame))
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
@@ -130,25 +130,25 @@ func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	fmt.Println(Red("send"), Indent(Blue(str)))
+	Print(Red("send"), Indent(Blue(str)))
 }
 
 func (c *Conn) ReadString() { // err
 	line, _, _ := c.Br.ReadLine() // err
-	fmt.Println(Red("recv"), Indent(Blue(string(line))))
+	Print(Red("recv"), Indent(Blue(string(line))))
 }
 
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
 
-	fmt.Println(Green("recv"), Blue(Indent(ResponseString(res))), "\n")
+	Print(Green("recv"), Blue(Indent(ResponseString(res))), "\n")
 	return res
 }
 
 func (c *Conn) ReadRequest() *http.Request {
 	req, _ := http.ReadRequest(c.Br) // err
 
-	fmt.Println(Green("recv"), Blue(Indent(RequestString(req))), "\n")
+	Print(Green("recv"), Blue(Indent(RequestString(req))), "\n")
 	return req
 }
 

@@ -1,8 +1,8 @@
 package http2
 
 import (
-	"fmt"
 	. "github.com/jxck/color"
+	. "github.com/jxck/logger"
 	"log"
 	"net"
 	"net/http"
@@ -51,7 +51,7 @@ func (transport *Transport) SendUpgrade() *Stream {
 	if res.StatusCode != 101 {
 		log.Fatal("error")
 	}
-	fmt.Println(Yellow("HTTP Upgrade Success :)"))
+	Print(Yellow("HTTP Upgrade Success :)"))
 
 	stream := transport.Conn.NewStream()
 	return stream
