@@ -3,8 +3,8 @@ package http2
 import (
 	"bufio"
 	. "github.com/jxck/color"
-	. "github.com/jxck/logger"
 	"github.com/jxck/hpack"
+	. "github.com/jxck/logger"
 	"io"
 	"log"
 	"net/http"

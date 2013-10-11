@@ -2,6 +2,7 @@ package http2
 
 import (
 	. "github.com/jxck/color"
+	. "github.com/jxck/logger"
 	"log"
 	"net"
 	"net/http"
@@ -16,6 +17,7 @@ func ListenAndServe(addr string, handler http.Handler) error {
 	if err != nil {
 		return err
 	}
+	Info(Yellow("server starts on port %s"), addr)
 
 	for c := 0; c < 10; c++ {
 		conn, err := listener.Accept()
@@ -23,7 +25,7 @@ func ListenAndServe(addr string, handler http.Handler) error {
 			log.Println(err)
 			return err
 		}
-		log.Printf(Cyan("New connection from %s\n"), conn.RemoteAddr())
+		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())
 		go HandleConnection(conn)
 	}
 
@@ -31,15 +33,15 @@ func ListenAndServe(addr string, handler http.Handler) error {
 }
 
 func HandleConnection(conn net.Conn) {
-	log.Println("Handle Connection")
+	Debug("Handle Connection")
 	defer conn.Close()
 	Conn := NewConn(conn)
 	req := Conn.ReadRequest()
 
 	// TODO: parse/check settings
-	log.Println(req.Header.Get("Connection"))
-	log.Println(req.Header.Get("Upgrade"))
-	log.Println(req.Header.Get("Http2-Settings"))
+	Debug(req.Header.Get("Connection"))
+	Debug(req.Header.Get("Upgrade"))
+	Debug(req.Header.Get("Http2-Settings"))
 
 	upgrade := "HTTP/1.1 101 Switching Protocols\r\n" +
 		"Connection: Upgrade\r\n" +

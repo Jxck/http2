@@ -39,7 +39,6 @@ var handler http.Handler = &Hello{}
 func main() {
 	addr := ":" + os.Args[1]
 
-	log.Printf("server starts on port %s\n", addr)
 	err := http2.ListenAndServe(addr, handler)
 	if err != nil {
 		log.Fatal(err)
