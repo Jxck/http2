@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"bytes"
 	. "github.com/jxck/color"
 	. "github.com/jxck/logger"
 	"log"
@@ -26,13 +27,30 @@ func ListenAndServe(addr string, handler http.Handler) error {
 			return err
 		}
 		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())
-		go HandleConnection(conn)
+		go HandleConnection(conn, handler)
 	}
 
 	return nil
 }
 
-func HandleConnection(conn net.Conn) {
+type Response struct {
+	Headers http.Header
+	Body    *bytes.Buffer
+}
+
+func (res *Response) Write(wire []byte) (int, error) {
+	return res.Body.Write(wire)
+}
+
+func (res *Response) Header() http.Header {
+	return res.Headers
+}
+
+func (res *Response) WriteHeader(statusCode int) {
+	// TODO: implement me
+}
+
+func HandleConnection(conn net.Conn, handler http.Handler) {
 	Debug("Handle Connection")
 	defer conn.Close()
 	Conn := NewConn(conn)
@@ -69,6 +87,13 @@ func HandleConnection(conn net.Conn) {
 		header.Add("status", "200")
 		header.Add("content-type", "text/plain")
 
+		res := &Response{
+			Headers: header,
+			Body:    bytes.NewBuffer([]byte{}),
+		}
+
+		handler.ServeHTTP(res, req)
+
 		frame := NewHeadersFrame(END_HEADERS, 1)
 		frame.Headers = header
 		frame.HeaderBlock = stream.Conn.ResponseContext.Encode(header)
@@ -77,7 +102,7 @@ func HandleConnection(conn net.Conn) {
 
 		// SEND DATA
 		data := NewDataFrame(0, 1)
-		data.Data = []byte("hello world")
+		data.Data = res.Body.Bytes()
 		data.Length = uint16(len(data.Data))
 		stream.Send(data)
 
