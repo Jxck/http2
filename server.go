@@ -108,7 +108,6 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 
 		data = NewDataFrame(END_STREAM, stream.Id)
 		stream.Send(data)
-		fin <- true
 	}()
 
 	// Recv Routine
@@ -122,7 +121,6 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 		}
 		fin <- true
 	}()
-	<-fin
 	<-fin
 	return
 }
