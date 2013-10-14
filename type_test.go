@@ -91,3 +91,25 @@ func TestHeadersPriorityFrame(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+func TestSettingsFrame(t *testing.T) {
+	settings := map[SettingsId]uint32{
+		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+	}
+	expected := NewSettingsFrame(settings, 2)
+
+	buf := bytes.NewBuffer([]byte{})
+	expected.Write(buf)
+
+	fh := &FrameHeader{}
+	fh.Read(buf)
+
+	actual := &SettingsFrame{}
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
