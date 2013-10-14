@@ -65,3 +65,31 @@ func TestHeadersFrame(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+func TestHeadersPriorityFrame(t *testing.T) {
+	b := []byte("test header block")
+	expected := NewHeadersFrame(PRIORITY, 2)
+	expected.Priority = 1
+	expected.Length = uint16(len(b) + 4)
+	expected.HeaderBlock = b
+
+	buf := bytes.NewBuffer([]byte{})
+	expected.Write(buf)
+
+	fh := &FrameHeader{}
+	fh.Read(buf)
+
+	actual := &HeadersFrame{}
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	t.Logf("%#v", actual)
+
+	if actual.Priority != 1 {
+		t.Errorf("got %v\nwant %v", actual.Priority, 1)
+	}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
