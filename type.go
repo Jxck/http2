@@ -57,17 +57,11 @@ type FrameHeader struct {
 }
 
 func (fh *FrameHeader) Read(r io.Reader) {
-	binary.Read(r, binary.BigEndian, &fh.Length)   // err
-	binary.Read(r, binary.BigEndian, &fh.Type)     // err
-	binary.Read(r, binary.BigEndian, &fh.Flags)    // err
-	binary.Read(r, binary.BigEndian, &fh.StreamId) // err
+	binary.Read(r, binary.BigEndian, fh) // err
 }
 
 func (fh *FrameHeader) Write(w io.Writer) {
-	binary.Write(w, binary.BigEndian, fh.Length)   // err
-	binary.Write(w, binary.BigEndian, fh.Type)     // err
-	binary.Write(w, binary.BigEndian, fh.Flags)    // err
-	binary.Write(w, binary.BigEndian, fh.StreamId) // err
+	binary.Write(w, binary.BigEndian, fh) // err
 }
 
 func (fh *FrameHeader) Format() string {
@@ -106,7 +100,7 @@ func (frame *DataFrame) Read(r io.Reader) {
 
 func (frame *DataFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	binary.Write(w, binary.BigEndian, frame.Data) // err
+	binary.Write(w, binary.BigEndian, &frame.Data) // err
 }
 
 func (frame *DataFrame) Header() *FrameHeader {
@@ -179,9 +173,9 @@ func (frame *HeadersFrame) Read(r io.Reader) {
 func (frame *HeadersFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	if frame.Flags == PRIORITY {
-		binary.Write(w, binary.BigEndian, frame.Priority) // err
+		binary.Write(w, binary.BigEndian, &frame.Priority) // err
 	}
-	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
+	binary.Write(w, binary.BigEndian, &frame.HeaderBlock) // err
 }
 
 func (frame *HeadersFrame) Header() *FrameHeader {
@@ -301,8 +295,8 @@ func (frame *SettingsFrame) Read(r io.Reader) {
 func (frame *SettingsFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
 	for _, setting := range frame.Settings {
-		binary.Write(w, binary.BigEndian, setting.SettingsId) // err
-		binary.Write(w, binary.BigEndian, setting.Value)      // err
+		binary.Write(w, binary.BigEndian, &setting.SettingsId) // err
+		binary.Write(w, binary.BigEndian, &setting.Value)      // err
 	}
 }
 
@@ -403,14 +397,16 @@ func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *
 }
 
 func (frame *GoAwayFrame) Read(r io.Reader) {
-	binary.Read(r, binary.BigEndian, &frame.LastStreamID) // err
-	binary.Read(r, binary.BigEndian, &frame.ErrorCode)    // err
+	binary.Read(r, binary.BigEndian, &frame.LastStreamID)        // err
+	binary.Read(r, binary.BigEndian, &frame.ErrorCode)           // err
+	binary.Read(r, binary.BigEndian, &frame.AdditionalDebugData) // err
 }
 
 func (frame *GoAwayFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	binary.Write(w, binary.BigEndian, frame.LastStreamID) // err
-	binary.Write(w, binary.BigEndian, frame.ErrorCode)    // err
+	binary.Write(w, binary.BigEndian, &frame.LastStreamID)        // err
+	binary.Write(w, binary.BigEndian, &frame.ErrorCode)           // err
+	binary.Write(w, binary.BigEndian, &frame.AdditionalDebugData) // err
 }
 
 func (frame *GoAwayFrame) Header() *FrameHeader {
@@ -457,7 +453,7 @@ func (frame *WindowUpdateFrame) Read(r io.Reader) {
 
 func (frame *WindowUpdateFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	binary.Write(w, binary.BigEndian, frame.WindowSizeIncrement) // err
+	binary.Write(w, binary.BigEndian, &frame.WindowSizeIncrement) // err
 }
 
 func (frame *WindowUpdateFrame) Header() *FrameHeader {
