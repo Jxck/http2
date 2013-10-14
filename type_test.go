@@ -83,8 +83,6 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	t.Logf("%#v", actual)
-
 	if actual.Priority != 1 {
 		t.Errorf("got %v\nwant %v", actual.Priority, 1)
 	}

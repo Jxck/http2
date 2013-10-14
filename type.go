@@ -166,17 +166,19 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 }
 
 func (frame *HeadersFrame) Read(r io.Reader) {
-	if frame.Flags == 0x08 {
+	length := frame.Length
+	if frame.Flags == PRIORITY {
 		binary.Read(r, binary.BigEndian, &frame.Priority) // err
+		length -= 4
 	}
-	b := make([]byte, frame.Length)
+	b := make([]byte, length)
 	binary.Read(r, binary.BigEndian, &b) // err
 	frame.HeaderBlock = b
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	if frame.Flags == 0x08 {
+	if frame.Flags == PRIORITY {
 		binary.Write(w, binary.BigEndian, frame.Priority) // err
 	}
 	binary.Write(w, binary.BigEndian, frame.HeaderBlock) // err
