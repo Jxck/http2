@@ -52,7 +52,6 @@ type FrameHeader struct {
 	Length   uint16
 	Type     uint8
 	Flags    uint8
-	R        uint8 // not care
 	StreamId uint32
 }
 
