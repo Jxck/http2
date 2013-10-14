@@ -34,6 +34,7 @@ type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
 	Header() *FrameHeader
+	Format() string
 }
 
 // Frame Header
@@ -69,7 +70,7 @@ func (fh *FrameHeader) Write(w io.Writer) {
 	binary.Write(w, binary.BigEndian, fh.StreamId) // err
 }
 
-func (fh *FrameHeader) String() string {
+func (fh *FrameHeader) Format() string {
 	str := fmt.Sprintf(
 		" frame <length=%v, flags=%#x, stream_id=%v>",
 		fh.Length, fh.Flags, fh.StreamId,
@@ -112,9 +113,9 @@ func (frame *DataFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *DataFrame) String() string {
+func (frame *DataFrame) Format() string {
 	str := Cyan("DATA")
-	str += frame.FrameHeader.String()
+	str += frame.FrameHeader.Format()
 
 	if frame.Flags&0x1 == 1 {
 		str += "\n+ END_STREAM"
@@ -185,9 +186,9 @@ func (frame *HeadersFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *HeadersFrame) String() string {
+func (frame *HeadersFrame) Format() string {
 	str := Cyan("HEADERS")
-	str += frame.FrameHeader.String()
+	str += frame.FrameHeader.Format()
 
 	if frame.Flags&0x1 == 1 {
 		str += "\n+ END_STREAM"
@@ -316,9 +317,9 @@ func (frame *SettingsFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *SettingsFrame) String() string {
+func (frame *SettingsFrame) Format() string {
 	str := Cyan("SETTINGS")
-	str += frame.FrameHeader.String()
+	str += frame.FrameHeader.Format()
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
 		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
@@ -414,9 +415,9 @@ func (frame *GoAwayFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *GoAwayFrame) String() string {
+func (frame *GoAwayFrame) Format() string {
 	str := Cyan("GOAWAY")
-	str += frame.FrameHeader.String()
+	str += frame.FrameHeader.Format()
 	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%d, opaque_data(unsupported))",
 		frame.LastStreamID, frame.ErrorCode)
 	return str
@@ -461,9 +462,9 @@ func (frame *WindowUpdateFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *WindowUpdateFrame) String() string {
+func (frame *WindowUpdateFrame) Format() string {
 	str := Cyan("WINDOW_UPDATE")
-	str += frame.FrameHeader.String()
+	str += frame.FrameHeader.Format()
 	str += fmt.Sprintf("\n(window_size_increment=%d)", frame.WindowSizeIncrement)
 	return str
 }

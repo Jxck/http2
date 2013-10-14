@@ -102,7 +102,7 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		log.Printf("unknown type: %v", fh.Type)
 		return nil // err
 	}
-	Print(Green("recv"), Indent(frame))
+	Print(Green("recv"), Indent(frame.Format()))
 	return frame
 }
 
@@ -112,7 +112,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
-	Print(Red("send"), Indent(frame))
+	Print(Red("send"), Indent(frame.Format()))
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
