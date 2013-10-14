@@ -113,3 +113,21 @@ func TestSettingsFrame(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+func TestGoAwayFrame(t *testing.T) {
+	expected := NewGoAwayFrame(100, NO_ERROR, 0)
+
+	buf := bytes.NewBuffer([]byte{})
+	expected.Write(buf)
+
+	fh := &FrameHeader{}
+	fh.Read(buf)
+
+	actual := &GoAwayFrame{}
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
