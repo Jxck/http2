@@ -44,3 +44,24 @@ func TestDataFrame(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+func TestHeadersFrame(t *testing.T) {
+	b := []byte("test header block")
+	expected := NewHeadersFrame(END_STREAM, 2)
+	expected.Length = uint16(len(b))
+	expected.HeaderBlock = b
+
+	buf := bytes.NewBuffer([]byte{})
+	expected.Write(buf)
+
+	fh := &FrameHeader{}
+	fh.Read(buf)
+
+	actual := &HeadersFrame{}
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
