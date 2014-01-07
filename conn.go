@@ -99,10 +99,10 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		}
 		frame.Read(c.RW)
 	default:
-		log.Printf("unknown type: %v", fh.Type)
+		Error("unknown type: %v", fh.Type)
 		return nil // err
 	}
-	Print(Green("recv"), Indent(frame.Format()))
+	Debug(Green("recv"), frame.Format())
 	return frame
 }
 
@@ -112,7 +112,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
-	Print(Red("send"), Indent(frame.Format()))
+	Debug(Red("send"), frame.Format())
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
@@ -130,25 +130,25 @@ func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	Print(Red("send"), Indent(Blue(str)))
+	Debug(Red("send"), Blue(str))
 }
 
 func (c *Conn) ReadString() { // err
 	line, _, _ := c.Br.ReadLine() // err
-	Print(Red("recv"), Indent(Blue(string(line))))
+	Debug(Red("recv"), Blue(string(line)))
 }
 
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
 
-	Print(Green("recv"), Blue(Indent(ResponseString(res))), "\n")
+	Debug(Green("recv"), Blue(ResponseString(res)), "\n")
 	return res
 }
 
 func (c *Conn) ReadRequest() *http.Request {
 	req, _ := http.ReadRequest(c.Br) // err
 
-	Print(Green("recv"), Blue(Indent(RequestString(req))), "\n")
+	Debug(Green("recv"), Blue(RequestString(req)), "\n")
 	return req
 }
 

@@ -24,7 +24,6 @@ func ListenAndServe(addr string, handler http.Handler) error {
 	for c := 0; c < 10; c++ {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Println(err)
 			return err
 		}
 		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())

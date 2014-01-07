@@ -2,6 +2,7 @@ package http2
 
 import (
 	"bytes"
+	. "github.com/jxck/logger"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -80,7 +81,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		if c > 50 {
-			log.Fatal("over run")
+			Error("over run (c = %v)", c)
 		}
 		c++
 	}

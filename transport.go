@@ -29,7 +29,7 @@ func (transport *Transport) Connect() {
 		address := transport.URL.Host + ":" + transport.URL.Port
 		conn, _ = net.Dial("tcp", address) // err
 	} else {
-		log.Fatal("not support yet")
+		Error("not support yet")
 	}
 
 	transport.Conn = NewConn(conn)
@@ -49,9 +49,9 @@ func (transport *Transport) SendUpgrade() *Stream {
 	res := transport.Conn.ReadResponse()
 
 	if res.StatusCode != 101 {
-		log.Fatal("error")
+		Error("error")
 	}
-	Print(Yellow("HTTP Upgrade Success :)"))
+	Info(Yellow("HTTP Upgrade Success :)"))
 
 	stream := transport.Conn.NewStream()
 	return stream
