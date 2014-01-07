@@ -3,6 +3,7 @@ package http2
 import (
 	"bytes"
 	. "github.com/jxck/color"
+	"github.com/jxck/hpack"
 	. "github.com/jxck/logger"
 	"log"
 	"net"
@@ -52,8 +53,12 @@ func (res *Response) WriteHeader(statusCode int) {
 
 func HandleConnection(conn net.Conn, handler http.Handler) {
 	Debug("Handle Connection")
-	defer conn.Close()
+	defer conn.Close() // err
+
+	// http.Conn に変換
 	Conn := NewConn(conn)
+
+	// Request を読み出す
 	req := Conn.ReadRequest()
 
 	// TODO: parse/check settings
@@ -96,7 +101,9 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 
 		frame := NewHeadersFrame(END_HEADERS, 1)
 		frame.Headers = header
-		frame.HeaderBlock = stream.Conn.ResponseContext.Encode(header)
+
+		headerSet := hpack.ToHeaderSet(header)
+		frame.HeaderBlock = stream.Conn.ResponseContext.Encode(headerSet)
 		frame.Length = uint16(len(frame.HeaderBlock))
 		stream.Send(frame) // err
 

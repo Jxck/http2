@@ -32,8 +32,8 @@ func NewConn(rw io.ReadWriter) *Conn {
 		RW:              rw,
 		Bw:              bufio.NewWriter(rw),
 		Br:              bufio.NewReader(rw),
-		RequestContext:  hpack.NewRequestContext(),
-		ResponseContext: hpack.NewResponseContext(),
+		RequestContext:  hpack.NewContext(hpack.REQUEST, hpack.DEFAULT_HEADER_TABLE_SIZE),
+		ResponseContext: hpack.NewContext(hpack.RESPONSE, hpack.DEFAULT_HEADER_TABLE_SIZE),
 		WindowSize:      DEFAULT_WINDOW_SIZE,
 	}
 	return conn
@@ -153,10 +153,11 @@ func (c *Conn) ReadRequest() *http.Request {
 }
 
 func (c *Conn) EncodeHeader(header http.Header) []byte {
-	return c.RequestContext.Encode(header)
+	headerSet := hpack.ToHeaderSet(header)
+	return c.RequestContext.Encode(headerSet)
 }
 
 func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
 	c.ResponseContext.Decode(headerBlock)
-	return c.ResponseContext.EmittedSet.Header
+	return c.ResponseContext.ES.ToHeader()
 }
