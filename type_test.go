@@ -16,7 +16,7 @@ func TestFrameHeader(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	actual := &FrameHeader{}
+	actual := new(FrameHeader)
 	actual.Read(buf)
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -33,10 +33,10 @@ func TestDataFrame(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	fh := &FrameHeader{}
+	fh := new(FrameHeader)
 	fh.Read(buf)
 
-	actual := &DataFrame{}
+	actual := new(DataFrame)
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
@@ -54,10 +54,10 @@ func TestHeadersFrame(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	fh := &FrameHeader{}
+	fh := new(FrameHeader)
 	fh.Read(buf)
 
-	actual := &HeadersFrame{}
+	actual := new(HeadersFrame)
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
@@ -76,10 +76,10 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	fh := &FrameHeader{}
+	fh := new(FrameHeader)
 	fh.Read(buf)
 
-	actual := &HeadersFrame{}
+	actual := new(HeadersFrame)
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
@@ -102,10 +102,10 @@ func TestSettingsFrame(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	fh := &FrameHeader{}
+	fh := new(FrameHeader)
 	fh.Read(buf)
 
-	actual := &SettingsFrame{}
+	actual := new(SettingsFrame)
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
@@ -120,10 +120,10 @@ func TestGoAwayFrame(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 
-	fh := &FrameHeader{}
+	fh := new(FrameHeader)
 	fh.Read(buf)
 
-	actual := &GoAwayFrame{}
+	actual := new(GoAwayFrame)
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
