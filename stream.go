@@ -58,8 +58,8 @@ func (stream *Stream) SendRequest(req *http.Request) {
 
 func (stream *Stream) RecvResponse() *http.Response {
 	c := 0
-	header := http.Header{}
-	resBody := bytes.NewBuffer([]byte{})
+	header := *new(http.Header)
+	resBody := bytes.NewBuffer(make([]byte, 0))
 
 	for {
 		frame := stream.Recv()

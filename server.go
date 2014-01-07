@@ -87,13 +87,13 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	go func() {
 		// SEND HEADERS
 		stream := Conn.NewStream()
-		header := http.Header{}
+		header := *new(http.Header)
 		header.Add("status", "200")
 		header.Add("content-type", "text/plain")
 
 		res := &Response{
 			Headers: header,
-			Body:    bytes.NewBuffer([]byte{}),
+			Body:    bytes.NewBuffer(make([]byte, 0)),
 		}
 
 		handler.ServeHTTP(res, req)

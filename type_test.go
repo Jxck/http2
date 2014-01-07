@@ -8,7 +8,7 @@ import (
 
 func TestFrameHeader(t *testing.T) {
 	expected := NewFrameHeader(8, 1, 2, 3)
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	actual := new(FrameHeader)
@@ -25,7 +25,7 @@ func TestDataFrame(t *testing.T) {
 	expected.Length = uint16(len(b))
 	expected.Data = b
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	fh := new(FrameHeader)
@@ -46,7 +46,7 @@ func TestHeadersFrame(t *testing.T) {
 	expected.Length = uint16(len(b))
 	expected.HeaderBlock = b
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	fh := new(FrameHeader)
@@ -68,7 +68,7 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	expected.Length = uint16(len(b) + 4)
 	expected.HeaderBlock = b
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	fh := new(FrameHeader)
@@ -94,7 +94,7 @@ func TestSettingsFrame(t *testing.T) {
 	}
 	expected := NewSettingsFrame(settings, 2)
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	fh := new(FrameHeader)
@@ -112,7 +112,7 @@ func TestSettingsFrame(t *testing.T) {
 func TestGoAwayFrame(t *testing.T) {
 	expected := NewGoAwayFrame(100, NO_ERROR, 0)
 
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
 	fh := new(FrameHeader)

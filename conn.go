@@ -66,7 +66,7 @@ func (c *Conn) NewStream() *Stream {
 }
 
 func (c *Conn) ReadFrame() (frame Frame) {
-	fh := &FrameHeader{} // New
+	fh := new(FrameHeader)
 	fh.Read(c.RW)        // err
 
 	switch fh.Type {

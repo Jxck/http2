@@ -291,7 +291,7 @@ func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsF
 
 func (frame *SettingsFrame) Read(r io.Reader) {
 	for niv := frame.Length / 8; niv > 0; niv-- {
-		s := Setting{}
+		s := *new(Setting)
 
 		var firstByte uint32
 		binary.Read(r, binary.BigEndian, &firstByte) // err
@@ -312,7 +312,7 @@ func (frame *SettingsFrame) Write(w io.Writer) {
 
 // TODO: fixme
 func (frame *SettingsFrame) PayloadBase64URL() string {
-	buf := bytes.NewBuffer([]byte{})
+	buf := bytes.NewBuffer(make([]byte, 0))
 	frame.Write(buf)
 	str := base64.URLEncoding.EncodeToString(buf.Bytes()[8:])
 	str = strings.Replace(str, "=", "", -1)
