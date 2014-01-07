@@ -7,12 +7,7 @@ import (
 )
 
 func TestFrameHeader(t *testing.T) {
-	expected := &FrameHeader{
-		Length:   8,
-		Type:     1,
-		Flags:    2,
-		StreamId: 3,
-	}
+	expected := NewFrameHeader(8, 1, 2, 3)
 	buf := bytes.NewBuffer([]byte{})
 	expected.Write(buf)
 

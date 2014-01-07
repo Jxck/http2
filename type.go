@@ -56,6 +56,16 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
+func NewFrameHeader(l uint16, t uint8, f uint8, sid uint32) *FrameHeader {
+	fh := &FrameHeader{
+		Length:   l,
+		Type:     t,
+		Flags:    f,
+		StreamId: sid,
+	}
+	return fh
+}
+
 func (fh *FrameHeader) Read(r io.Reader) {
 	binary.Read(r, binary.BigEndian, fh) // err
 }
