@@ -89,12 +89,8 @@ type DataFrame struct {
 }
 
 func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
-	fh := &FrameHeader{
-		Length:   0,
-		Type:     DataFrameType,
-		Flags:    flags,
-		StreamId: streamId,
-	}
+	var length uint16 = 0
+	fh := NewFrameHeader(length, DataFrameType, flags, streamId)
 
 	dataFrame := &DataFrame{
 		FrameHeader: fh,
@@ -155,12 +151,8 @@ const (
 )
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
-	fh := &FrameHeader{
-		Length:   0,
-		Type:     HeadersFrameType,
-		Flags:    flags,
-		StreamId: streamId,
-	}
+	var length uint16 = 0
+	fh := NewFrameHeader(length, HeadersFrameType, flags, streamId)
 
 	headersFrame := &HeadersFrame{
 		FrameHeader: fh,
@@ -268,6 +260,7 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
+// TODO: flags
 func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
 	var settings []Setting
 	for id, val := range setting {
@@ -277,11 +270,10 @@ func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsF
 		}
 		settings = append(settings, s)
 	}
-	fh := &FrameHeader{
-		Length:   uint16(8 * len(settings)),
-		Type:     SettingsFrameType,
-		StreamId: streamId,
-	}
+
+	var length uint16 = uint16(8 * len(settings))
+	var flags uint8 = 0 // TODO: temp flags
+	fh := NewFrameHeader(length, flags, SettingsFrameType, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
 		Settings:    settings,
@@ -391,12 +383,9 @@ type GoAwayFrame struct {
 }
 
 func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *GoAwayFrame {
-	fh := &FrameHeader{
-		Length:   8,
-		Type:     GoAwayFrameType,
-		Flags:    0x00,
-		StreamId: streamId,
-	}
+	var length uint16 = 8
+	var flags uint8 = 0x00
+	fh := NewFrameHeader(length, GoAwayFrameType, flags, streamId)
 	frame := &GoAwayFrame{
 		FrameHeader:  fh,
 		LastStreamID: lastStreamId,
@@ -445,11 +434,12 @@ type WindowUpdateFrame struct {
 }
 
 func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
-	fh := &FrameHeader{
-		Length:   4,
-		Type:     WindowUpdateFrameType,
-		StreamId: streamId,
-	}
+	var length uint16 = 4
+
+	// TODO: temp flag
+	var flags uint8 = 0
+
+	fh := NewFrameHeader(length, WindowUpdateFrameType, flags, streamId)
 	frame := &WindowUpdateFrame{
 		FrameHeader:         fh,
 		WindowSizeIncrement: incrementSize,
