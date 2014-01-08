@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"fmt"
 	. "github.com/jxck/color"
 	. "github.com/jxck/logger"
 	"log"
@@ -36,14 +37,18 @@ func (transport *Transport) Connect() {
 }
 
 func (transport *Transport) SendUpgrade() *Stream {
-	upgrade := "" +
-		"GET " + transport.URL.Path + " HTTP/1.1\r\n" +
-		"Host: " + transport.URL.Host + "\r\n" +
-		"Connection: Upgrade, HTTP2-Settings\r\n" +
-		"Upgrade: " + Version + "\r\n" +
-		"HTTP2-Settings: " + DefaultSettingsBase64 + "\r\n" +
-		"Accept: */*\r\n" +
-		"\r\n"
+	upgrade := fmt.Sprintf(""+
+		"GET %s HTTP/1.1\r\n"+
+		"Host: %s\r\n"+
+		"Connection: Upgrade, HTTP2-Settings\r\n"+
+		"Upgrade: %s\r\n"+
+		"HTTP2-Settings: %s\r\n"+
+		"Accept: */*\r\n"+
+		"\r\n",
+		transport.URL.Path,
+		transport.URL.Host,
+		Version,
+		DefaultSettingsBase64)
 
 	transport.Conn.WriteString(upgrade)
 	res := transport.Conn.ReadResponse()
