@@ -56,12 +56,12 @@ type FrameHeader struct {
 	StreamId uint32
 }
 
-func NewFrameHeader(l uint16, t uint8, f uint8, sid uint32) *FrameHeader {
+func NewFrameHeader(length uint16, types uint8, flags uint8, streamid uint32) *FrameHeader {
 	fh := &FrameHeader{
-		Length:   l,
-		Type:     t,
-		Flags:    f,
-		StreamId: sid,
+		Length:   length,
+		Type:     types,
+		Flags:    flags,
+		StreamId: streamid,
 	}
 	return fh
 }
