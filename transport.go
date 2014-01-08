@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const Version string = "HTTP-draft-06/2.0"
+const Version string = "HTTP-draft-09/2.0"
 const MagicString string = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 const DefaultSettingsBase64 string = "AAAABAAAAGQAAAAHAAD__w"
 
