@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func init() {
@@ -38,4 +39,8 @@ func UpdateRequest(req *http.Request, url *URL) *http.Request {
 	}
 	req.Header.Add("x-http2-version", Version)
 	return req
+}
+
+func Indent(v interface{}) string {
+	return strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
 }

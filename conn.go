@@ -67,7 +67,7 @@ func (c *Conn) NewStream() *Stream {
 
 func (c *Conn) ReadFrame() (frame Frame) {
 	fh := new(FrameHeader)
-	fh.Read(c.RW)        // err
+	fh.Read(c.RW) // err
 
 	switch fh.Type {
 	case DataFrameType:
@@ -102,7 +102,7 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		Error("unknown type: %v", fh.Type)
 		return nil // err
 	}
-	Debug(Green("recv"), frame.Format())
+	Info("%v %v", Green("recv"), Indent(frame.Format()))
 	return frame
 }
 
@@ -112,7 +112,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 	// frame.Write(buf)
 	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
-	Debug(Red("send"), frame.Format())
+	Info("%v %v", Red("send"), Indent(frame.Format()))
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
@@ -130,7 +130,7 @@ func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	Debug(Red("send"), Blue(str))
+	Info("%v %v", Red("send"), Blue(str))
 }
 
 func (c *Conn) ReadString() { // err
