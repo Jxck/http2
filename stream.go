@@ -20,10 +20,12 @@ type Stream struct {
 	WindowSize uint32
 }
 
+// send frame using Conn.WriteFrame
 func (stream *Stream) Send(frame Frame) {
 	stream.Conn.WriteFrame(frame) // err
 }
 
+// receive frame using Conn.ReadFrame
 func (stream *Stream) Recv() Frame {
 	frame := stream.Conn.ReadFrame() // err
 	return frame
@@ -39,12 +41,15 @@ func (stream *Stream) SendRequest(req *http.Request) {
 		flags = END_HEADERS
 	}
 
+	// send request header via HEADERS Frame
 	frame := NewHeadersFrame(flags, stream.Id)
 	frame.Headers = req.Header
 	frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
 	frame.Length = uint16(len(frame.HeaderBlock))
 	stream.Send(frame) // err
 
+	// if request has body data
+	// send it via DATA Frame
 	if req.Body != nil {
 		data := NewDataFrame(0, stream.Id)
 		data.Data, _ = ioutil.ReadAll(req.Body) // err
@@ -57,38 +62,47 @@ func (stream *Stream) SendRequest(req *http.Request) {
 }
 
 func (stream *Stream) RecvResponse() *http.Response {
-	c := 0
+	looplimit := 0
 	header := *new(http.Header)
 	resBody := bytes.NewBuffer(make([]byte, 0))
 
 	for {
+		// receive frame
 		frame := stream.Recv()
+
+		// get frame header
 		frameHeader := frame.Header()
 
+		// if HEADERS Frame
 		if frameHeader.Type == HeadersFrameType {
 			headersFrame := frame.(*HeadersFrame)
 			header = headersFrame.Headers
 		}
 
+		// if DATA Frame
 		if frameHeader.Type == DataFrameType {
 			dataFrame := frame.(*DataFrame)
 			resBody.Write(dataFrame.Data)
 			stream.WindowUpdate(dataFrame.Length)
 		}
 
-		if frameHeader.Flags == 0x1 {
+		// END_STREAM
+		if frameHeader.Flags == END_STREAM {
 			break
 		}
 
-		if c > 50 {
-			Error("over run (c = %v)", c)
+		// Limitter for avoid infini loop ;p
+		if looplimit > 50 {
+			Error("over run (loop limit = %v)", looplimit)
 		}
-		c++
+		looplimit++
 	}
 
 	status := header.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
-	res := &http.Response{                // TODO
+
+	// build http response
+	res := &http.Response{ // TODO
 		Status:           status + http.StatusText(statuscode),
 		StatusCode:       statuscode,
 		Proto:            Version,

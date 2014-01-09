@@ -19,6 +19,10 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+/**
+ * Transport implements http.RoundTriper
+ * with RoundTrip(request) response
+ */
 type Transport struct {
 	URL     *URL
 	Conn    *Conn
@@ -26,6 +30,7 @@ type Transport struct {
 	FlowCtl bool
 }
 
+// connect tcp connection with host
 func (transport *Transport) Connect() {
 	var conn net.Conn
 	if transport.URL.Scheme == "http" {
@@ -38,6 +43,7 @@ func (transport *Transport) Connect() {
 	transport.Conn = NewConn(conn)
 }
 
+// send http upgrade header
 func (transport *Transport) SendUpgrade() *Stream {
 	upgrade := fmt.Sprintf(""+
 		"GET %s HTTP/1.1\r\n"+
@@ -64,25 +70,32 @@ func (transport *Transport) SendUpgrade() *Stream {
 	return stream
 }
 
+// send magic octet
 func (transport *Transport) SendMagic() {
 	transport.Conn.WriteString(MagicString) // err
 }
 
+// http.RoundTriper implementation
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	transport.URL, _ = NewURL(req.URL.String())
+	transport.URL, _ = NewURL(req.URL.String()) // err
+
+	// establish tcp connection
 	transport.Connect()
 
+	// Default Settings
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
 
-	var stream *Stream
+	var stream *Stream // create stream
 	if transport.Upgrade {
+		// using http upgrade
 		stream = transport.SendUpgrade()
 		transport.SendMagic()
 		transport.Conn.SendSettings(settings) // err
 	} else {
+		// prior knowledge
 		transport.SendMagic()
 		if !transport.FlowCtl {
 			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
@@ -93,7 +106,11 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		stream.SendRequest(req)
 	}
 
+	// receive response from stream
 	res := stream.RecvResponse() // err
+
+	//  send GOAWAY
 	transport.Conn.SendGoAway(NO_ERROR)
+
 	return res, nil
 }

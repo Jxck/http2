@@ -152,11 +152,13 @@ func (c *Conn) ReadRequest() *http.Request {
 	return req
 }
 
+// Encode Header using HPACK
 func (c *Conn) EncodeHeader(header http.Header) []byte {
 	headerSet := hpack.ToHeaderSet(header)
 	return c.RequestContext.Encode(headerSet)
 }
 
+// Decode Header using HPACK
 func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
 	c.ResponseContext.Decode(headerBlock)
 	return c.ResponseContext.ES.ToHeader()
