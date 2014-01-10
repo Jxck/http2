@@ -92,8 +92,9 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		// Limitter for avoid infini loop ;p
-		if looplimit > 50 {
+		if looplimit > 10 {
 			Error("over run (loop limit = %v)", looplimit)
+			break
 		}
 		looplimit++
 	}
