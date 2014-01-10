@@ -52,8 +52,8 @@ func DialNPN(address, certpath, keypath string) *tls.Conn {
 
 	// 接続確認
 	state := conn.ConnectionState()
-	log.Println("handshake: ", state.HandshakeComplete)
-	log.Println("protocol: ", state.NegotiatedProtocol)
+	Info("%v %v", Yellow("handshake"), state.HandshakeComplete)
+	Info("%v %v", Yellow("protocol"), state.NegotiatedProtocol)
 
 	return conn
 }
