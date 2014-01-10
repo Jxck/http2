@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"crypto/tls"
 	"fmt"
 	. "github.com/jxck/color"
 	. "github.com/jxck/logger"
@@ -30,16 +31,44 @@ type Transport struct {
 	FlowCtl bool
 }
 
+// NPN Dial
+func DialNPN(address, certpath, keypath string) *tls.Conn {
+	// 証明書の設定
+	cert, err := tls.LoadX509KeyPair(certpath, keypath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// TLS の設定(証明書検証無)
+	config := tls.Config{
+		Certificates:       []tls.Certificate{cert},
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"http2.0/draft-09"},
+	}
+	conn, err := tls.Dial("tcp", address, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 接続確認
+	state := conn.ConnectionState()
+	log.Println("handshake: ", state.HandshakeComplete)
+	log.Println("protocol: ", state.NegotiatedProtocol)
+
+	return conn
+}
+
 // connect tcp connection with host
 func (transport *Transport) Connect() {
 	var conn net.Conn
+	address := transport.URL.Host + ":" + transport.URL.Port
 	if transport.URL.Scheme == "http" {
-		address := transport.URL.Host + ":" + transport.URL.Port
 		conn, _ = net.Dial("tcp", address) // err
 	} else {
-		Error("not support yet")
+		// TODO: move to arg
+		certpath, keypath := "keys/cert.pem", "keys/key.pem"
+		conn = DialNPN(address, certpath, keypath)
 	}
-
 	transport.Conn = NewConn(conn)
 }
 
@@ -95,7 +124,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		transport.SendMagic()
 		transport.Conn.SendSettings(settings) // err
 	} else {
-		// prior knowledge
+		// using NPN
 		transport.SendMagic()
 		if !transport.FlowCtl {
 			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
