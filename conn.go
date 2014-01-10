@@ -130,7 +130,7 @@ func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	Info("%v %v", Red("send"), Blue(str))
+	Info("%v %q", Red("send"), str)
 }
 
 func (c *Conn) ReadString() { // err
