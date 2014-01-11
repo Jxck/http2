@@ -87,8 +87,6 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		if frameHeader.Type == GoAwayFrameType {
-			goAwayFrame := frame.(*GoAwayFrame)
-			log.Println(goAwayFrame)
 			break
 		}
 
