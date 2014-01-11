@@ -375,6 +375,21 @@ const (
 	COMPRESSION_ERROR            = 9
 )
 
+func (e ErrorCode) ToName() string {
+	errors := []string{
+		"NO_ERROR",
+		"PROTOCOL_ERROR",
+		"INTERNAL_ERROR",
+		"FLOW_CONTROL_ERROR",
+		"STREAM_CLOSED",
+		"FRAME_TOO_LARGE",
+		"REFUSED_STREAM",
+		"CANCEL",
+		"COMPRESSION_ERROR",
+	}
+	return errors[int(e)]
+}
+
 type GoAwayFrame struct {
 	*FrameHeader
 	LastStreamID        uint32
@@ -415,8 +430,8 @@ func (frame *GoAwayFrame) Header() *FrameHeader {
 func (frame *GoAwayFrame) Format() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.Format()
-	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%d, opaque_data(unsupported))",
-		frame.LastStreamID, frame.ErrorCode)
+	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(unsupported))",
+		frame.LastStreamID, Red(frame.ErrorCode.ToName()))
 	return str
 }
 
