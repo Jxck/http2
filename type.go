@@ -244,7 +244,9 @@ type SettingsId uint32
 
 const DEFAULT_WINDOW_SIZE uint32 = 65535
 const (
-	SETTINGS_MAX_CONCURRENT_STREAMS SettingsId = 4
+	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1
+	SETTINGS_ENABLE_PUSH                       = 2
+	SETTINGS_MAX_CONCURRENT_STREAMS            = 4
 	SETTINGS_INITIAL_WINDOW_SIZE               = 7
 	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
 )
