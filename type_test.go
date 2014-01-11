@@ -92,7 +92,7 @@ func TestSettingsFrame(t *testing.T) {
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
-	expected := NewSettingsFrame(settings, 2)
+	expected := NewSettingsFrame(0, settings, 2)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)

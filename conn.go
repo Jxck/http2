@@ -116,7 +116,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
-	c.WriteFrame(NewSettingsFrame(settings, 0)) // err
+	c.WriteFrame(NewSettingsFrame(0, settings, 0)) // err
 }
 
 func (c *Conn) SendGoAway(errorCode ErrorCode) { // err

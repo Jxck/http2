@@ -261,7 +261,7 @@ type SettingsFrame struct {
 }
 
 // TODO: flags
-func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
+func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
 	var settings []Setting
 	for id, val := range setting {
 		s := Setting{
@@ -272,7 +272,6 @@ func NewSettingsFrame(setting map[SettingsId]uint32, streamId uint32) *SettingsF
 	}
 
 	var length uint16 = uint16(8 * len(settings))
-	var flags uint8 = 0 // TODO: temp flags
 	fh := NewFrameHeader(length, flags, SettingsFrameType, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
