@@ -83,6 +83,11 @@ func (c *Conn) ReadFrame() (frame Frame) {
 
 		f.Headers = c.DecodeHeader(f.HeaderBlock)
 		frame = f
+	case RstStreamFrameType:
+		frame = &RstStreamFrame{
+			FrameHeader: fh,
+		}
+		frame.Read(c.RW)
 	case SettingsFrameType:
 		frame = &SettingsFrame{
 			FrameHeader: fh,
