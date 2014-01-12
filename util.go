@@ -28,10 +28,10 @@ func ResponseString(res *http.Response) string {
 }
 
 func UpdateRequest(req *http.Request, url *URL) *http.Request {
-	req.Header.Add("host", url.Host)
-	req.Header.Add("method", req.Method)
-	req.Header.Add("path", url.Path)
-	req.Header.Add("scheme", url.Scheme)
+	req.Header.Add(":authority", url.Host)
+	req.Header.Add(":method", req.Method)
+	req.Header.Add(":path", url.Path)
+	req.Header.Add(":scheme", url.Scheme)
 	req.Header.Add("accept", "*/*")
 
 	if req.ContentLength != 0 {
