@@ -2,6 +2,7 @@ package http2
 
 import (
 	"bytes"
+	. "github.com/jxck/color"
 	. "github.com/jxck/logger"
 	"io/ioutil"
 	"log"
@@ -81,6 +82,11 @@ func (stream *Stream) RecvResponse() *http.Response {
 			dataFrame := frametype
 			resBody.Write(dataFrame.Data)
 			stream.WindowUpdate(dataFrame.Length)
+			if dataFrame.Flags == END_STREAM {
+				// END_STREAM
+				Info("%s", Yellow("END_STREAM"))
+				goto BREAK
+			}
 
 		case *SettingsFrame:
 			// if SETTINGS Frame
@@ -98,12 +104,6 @@ func (stream *Stream) RecvResponse() *http.Response {
 			log.Println("go away")
 		}
 
-		// if frameHeader.Flags == END_STREAM {
-		// 	// END_STREAM
-		// 	log.Println("END_STREAM")
-		// 	break
-		// }
-
 		// Limitter for avoid infini loop ;p
 		if looplimit > 10 {
 			Error("over run (loop limit = %v)", looplimit)
@@ -111,6 +111,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 		looplimit++
 	}
+BREAK:
 
 	status := header.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
