@@ -70,25 +70,21 @@ func (stream *Stream) RecvResponse() *http.Response {
 		// receive frame
 		frame := stream.Recv()
 
-		// get frame header
-		frameHeader := frame.Header()
-
-		// if HEADERS Frame
-		if frameHeader.Type == HeadersFrameType {
-			headersFrame := frame.(*HeadersFrame)
+		switch frametype := frame.(type) {
+		case *HeadersFrame:
+			// if HEADERS Frame
+			headersFrame := frametype
 			header = headersFrame.Headers
-		}
 
-		// if DATA Frame
-		if frameHeader.Type == DataFrameType {
-			dataFrame := frame.(*DataFrame)
+		case *DataFrame:
+			// if DATA Frame
+			dataFrame := frametype
 			resBody.Write(dataFrame.Data)
 			stream.WindowUpdate(dataFrame.Length)
-		}
 
-		// if SETTINGS Frame
-		if frameHeader.Type == SettingsFrameType {
-			settingsFrame := frame.(*SettingsFrame)
+		case *SettingsFrame:
+			// if SETTINGS Frame
+			settingsFrame := frametype
 			if settingsFrame.Flags == 0 {
 				// Apply Settings
 
@@ -97,18 +93,16 @@ func (stream *Stream) RecvResponse() *http.Response {
 			} else if settingsFrame.Flags == 1 {
 				// receive ACK
 			}
-		}
 
-		if frameHeader.Type == GoAwayFrameType {
+		case *GoAwayFrame:
 			log.Println("go away")
-			break
 		}
 
-		// END_STREAM
-		if frameHeader.Flags == END_STREAM {
-			log.Println("END_STREAM")
-			break
-		}
+		// if frameHeader.Flags == END_STREAM {
+		// 	// END_STREAM
+		// 	log.Println("END_STREAM")
+		// 	break
+		// }
 
 		// Limitter for avoid infini loop ;p
 		if looplimit > 10 {
