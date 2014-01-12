@@ -30,6 +30,24 @@ const (
 	ContinuationFrameType       = 0xA
 )
 
+// For RST_STREAM and GOAWAY Frame
+type ErrorCode uint32
+
+const (
+	NO_ERROR           ErrorCode = 0
+	PROTOCOL_ERROR               = 1
+	INTERNAL_ERROR               = 2
+	FLOW_CONTROL_ERROR           = 3
+	SETTINGS_TIMEOUT             = 4
+	STREAM_CLOSED                = 5
+	FRAME_SIZE_ERROR             = 6
+	REFUSED_STREAM               = 7
+	CANCEL                       = 8
+	COMPRESSION_ERROR            = 9
+	CONNECT_ERROR                = 10
+	ENHANCE_YOUR_CALM            = 420
+)
+
 type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
@@ -364,23 +382,6 @@ func (frame *SettingsFrame) Format() string {
 // +---------------------------------------------------------------+
 // |                  Additional Debug Data (*)                    |
 // +---------------------------------------------------------------+
-
-type ErrorCode uint32
-
-const (
-	NO_ERROR           ErrorCode = 0
-	PROTOCOL_ERROR               = 1
-	INTERNAL_ERROR               = 2
-	FLOW_CONTROL_ERROR           = 3
-	SETTINGS_TIMEOUT             = 4
-	STREAM_CLOSED                = 5
-	FRAME_SIZE_ERROR             = 6
-	REFUSED_STREAM               = 7
-	CANCEL                       = 8
-	COMPRESSION_ERROR            = 9
-	CONNECT_ERROR                = 10
-	ENHANCE_YOUR_CALM            = 420
-)
 
 func (e ErrorCode) ToName() string {
 	errors := []string{
