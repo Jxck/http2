@@ -86,6 +86,19 @@ func (stream *Stream) RecvResponse() *http.Response {
 			stream.WindowUpdate(dataFrame.Length)
 		}
 
+		// if SETTINGS Frame
+		if frameHeader.Type == SettingsFrameType {
+			settingsFrame := frame.(*SettingsFrame)
+			if settingsFrame.Flags == 0 {
+				// Apply Settings
+
+				// send ACK
+				stream.Conn.SendSettingsAck()
+			} else if settingsFrame.Flags == 1 {
+				// receive ACK
+			}
+		}
+
 		if frameHeader.Type == GoAwayFrameType {
 			break
 		}

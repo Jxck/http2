@@ -320,6 +320,9 @@ func (frame *SettingsFrame) Format() string {
 	str := Cyan("SETTINGS")
 	str += frame.FrameHeader.Format()
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
+	if frame.Flags == 1 {
+		str += "\n; ACK"
+	}
 	for _, s := range frame.Settings {
 		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
 	}

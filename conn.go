@@ -119,6 +119,10 @@ func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
 	c.WriteFrame(NewSettingsFrame(0, settings, 0)) // err
 }
 
+func (c *Conn) SendSettingsAck() { // err
+	c.WriteFrame(NewSettingsFrame(1, nil, 0)) // err
+}
+
 func (c *Conn) SendGoAway(errorCode ErrorCode) { // err
 	c.WriteFrame(NewGoAwayFrame(c.LastStreamId, errorCode, 0)) // err
 }
