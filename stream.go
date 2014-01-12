@@ -100,11 +100,13 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		if frameHeader.Type == GoAwayFrameType {
+			log.Println("go away")
 			break
 		}
 
 		// END_STREAM
 		if frameHeader.Flags == END_STREAM {
+			log.Println("END_STREAM")
 			break
 		}
 
