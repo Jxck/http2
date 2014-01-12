@@ -274,7 +274,7 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 	}
 
 	var length uint16 = uint16(8 * len(settings))
-	fh := NewFrameHeader(length, flags, SettingsFrameType, streamId)
+	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
 		Settings:    settings,
