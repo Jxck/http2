@@ -247,7 +247,44 @@ func (frame *HeadersFrame) Format() string {
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |                        Error Code (32)                        |
 // +---------------------------------------------------------------+
-//
+
+type RstStreamFrame struct {
+	*FrameHeader
+	ErrorCode ErrorCode
+}
+
+func NewRstStreamFrame(errorCode ErrorCode, streamId uint32) *RstStreamFrame {
+	var length uint16 = 4
+	var flags uint8 = 0
+
+	fh := NewFrameHeader(length, RstStreamFrameType, flags, streamId)
+	frame := &RstStreamFrame{
+		FrameHeader: fh,
+		ErrorCode:   errorCode,
+	}
+	return frame
+}
+
+func (frame *RstStreamFrame) Read(r io.Reader) {
+	binary.Read(r, binary.BigEndian, &frame.ErrorCode) // err
+}
+
+func (frame *RstStreamFrame) Write(w io.Writer) {
+	frame.FrameHeader.Write(w)
+	binary.Write(w, binary.BigEndian, &frame.ErrorCode) // err
+}
+
+func (frame *RstStreamFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *RstStreamFrame) Format() string {
+	str := Cyan("RST_STREAM")
+	str += frame.FrameHeader.Format()
+	str += fmt.Sprintf("\n(Error Code=%d)", frame.ErrorCode)
+	return str
+}
+
 // SETTINGS Frame
 //
 //  0                   1                   2                   3

@@ -87,6 +87,24 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	}
 }
 
+func TestRstStreamFrame(t *testing.T) {
+	expected := NewRstStreamFrame(PROTOCOL_ERROR, 1)
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	fh := new(FrameHeader)
+	fh.Read(buf)
+
+	actual := new(RstStreamFrame)
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
+
 func TestSettingsFrame(t *testing.T) {
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
