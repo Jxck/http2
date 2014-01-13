@@ -98,10 +98,11 @@ func (stream *Stream) RecvResponse() *http.Response {
 				stream.Conn.SendSettingsAck()
 			} else if settingsFrame.Flags == 1 {
 				// receive ACK
+				// TODO: Apply Settings
 			}
 
 		case *GoAwayFrame:
-			log.Println("go away")
+			Info("%s", Yellow("go away"))
 		}
 
 		// Limitter for avoid infini loop ;p
