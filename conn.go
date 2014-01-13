@@ -149,14 +149,12 @@ func (c *Conn) ReadString() { // err
 
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
-
 	Debug(Green("recv"), Blue(ResponseString(res)), "\n")
 	return res
 }
 
 func (c *Conn) ReadRequest() *http.Request {
 	req, _ := http.ReadRequest(c.Br) // err
-
 	Debug(Green("recv"), Blue(RequestString(req)), "\n")
 	return req
 }

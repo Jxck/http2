@@ -20,10 +20,8 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-/**
- * Transport implements http.RoundTriper
- * with RoundTrip(request) response
- */
+// Transport implements http.RoundTriper
+// with RoundTrip(request) response
 type Transport struct {
 	URL     *URL
 	Conn    *Conn
@@ -31,15 +29,15 @@ type Transport struct {
 	FlowCtl bool
 }
 
-// NPN Dial
+// dial tls connection with NPN
 func DialNPN(address, certpath, keypath string) *tls.Conn {
-	// 証明書の設定
+	// loading key pair
 	cert, err := tls.LoadX509KeyPair(certpath, keypath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// TLS の設定(証明書検証無)
+	// setting TLS config
 	config := tls.Config{
 		Certificates:       []tls.Certificate{cert},
 		InsecureSkipVerify: true,
@@ -50,7 +48,7 @@ func DialNPN(address, certpath, keypath string) *tls.Conn {
 		log.Fatal(err)
 	}
 
-	// 接続確認
+	// check connection state
 	state := conn.ConnectionState()
 	Info("%v %v", Yellow("handshake"), state.HandshakeComplete)
 	Info("%v %v", Yellow("protocol"), state.NegotiatedProtocol)
@@ -74,6 +72,7 @@ func (transport *Transport) Connect() {
 
 // send http upgrade header
 func (transport *Transport) SendUpgrade() *Stream {
+	// HTTP/1.1 Upgrade Header
 	upgrade := fmt.Sprintf(""+
 		"GET %s HTTP/1.1\r\n"+
 		"Host: %s\r\n"+
@@ -91,7 +90,7 @@ func (transport *Transport) SendUpgrade() *Stream {
 	res := transport.Conn.ReadResponse()
 
 	if res.StatusCode != 101 {
-		Error("error")
+		Error(Red("faild to Upgrade :("))
 	}
 	Info(Yellow("HTTP Upgrade Success :)"))
 
@@ -111,7 +110,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// establish tcp connection
 	transport.Connect()
 
-	// Default Settings
+	// default Settings
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
@@ -138,7 +137,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// receive response from stream
 	res := stream.RecvResponse() // err
 
-	//  send GOAWAY
+	// send GOAWAY
 	transport.Conn.SendGoAway(NO_ERROR)
 
 	return res, nil

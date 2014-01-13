@@ -32,6 +32,7 @@ func (stream *Stream) Recv() Frame {
 	return frame
 }
 
+// send http.request as HEADER & DATA frame
 func (stream *Stream) SendRequest(req *http.Request) {
 	stream.req = req
 
@@ -62,6 +63,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	}
 }
 
+// receive frame and parse to http.Response
 func (stream *Stream) RecvResponse() *http.Response {
 	looplimit := 100
 	resHeader := *new(http.Header)
@@ -134,6 +136,7 @@ BREAK:
 	return res
 }
 
+// send WINDOW_UPDATE for flow control
 func (stream *Stream) WindowUpdate(size uint16) {
 	threshold := DEFAULT_WINDOW_SIZE / 2
 	s := uint32(size)
