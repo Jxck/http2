@@ -84,7 +84,6 @@ func (stream *Stream) RecvResponse() *http.Response {
 			stream.WindowUpdate(dataFrame.Length)
 			if dataFrame.Flags == END_STREAM {
 				// END_STREAM
-				Info("%s", Yellow("END_STREAM"))
 				goto BREAK
 			}
 

@@ -136,9 +136,7 @@ func (frame *DataFrame) Format() string {
 	str += frame.FrameHeader.Format()
 
 	if frame.Flags&0x1 == 1 {
-		str += "\n+ END_STREAM"
-	} else {
-		str += "\n- END_STREAM"
+		str += "\n; END_STREAM"
 	}
 
 	// Print first 8 byte of Data or all
@@ -217,19 +215,15 @@ func (frame *HeadersFrame) Format() string {
 	str += frame.FrameHeader.Format()
 
 	if frame.Flags&0x1 == 1 {
-		str += "\n+ END_STREAM"
-	} else {
-		str += "\n- END_STREAM"
+		str += "\n; END_STREAM"
 	}
 
 	if frame.Flags&0x4 == 4 {
-		str += "\n+ END_HEADERS"
-	} else {
-		str += "\n- END_HEADERS"
+		str += "\n; END_HEADERS"
 	}
 
 	if frame.Flags&0x8 == 8 {
-		str += "\n+ PRIORITY"
+		str += "\n; PRIORITY"
 	}
 
 	// TODO: ; First response header
@@ -384,10 +378,10 @@ func (frame *SettingsFrame) Header() *FrameHeader {
 func (frame *SettingsFrame) Format() string {
 	str := Cyan("SETTINGS")
 	str += frame.FrameHeader.Format()
-	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	if frame.Flags == 1 {
 		str += "\n; ACK"
 	}
+	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
 		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
 	}
