@@ -63,7 +63,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 }
 
 func (stream *Stream) RecvResponse() *http.Response {
-	looplimit := 0
+	looplimit := 100
 	resHeader := *new(http.Header)
 	resBody := bytes.NewBuffer(make([]byte, 0))
 
@@ -105,7 +105,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		}
 
 		// Limitter for avoid infini loop ;p
-		if looplimit > 30 {
+		if looplimit < 0 {
 			Error("over run (loop limit = %v)", looplimit)
 			break
 		}
