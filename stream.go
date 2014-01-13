@@ -64,7 +64,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 
 func (stream *Stream) RecvResponse() *http.Response {
 	looplimit := 0
-	header := *new(http.Header)
+	resHeader := *new(http.Header)
 	resBody := bytes.NewBuffer(make([]byte, 0))
 
 	for {
@@ -75,7 +75,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 		case *HeadersFrame:
 			// if HEADERS Frame
 			headersFrame := frametype
-			header = headersFrame.Headers
+			resHeader = headersFrame.Headers
 
 		case *DataFrame:
 			// if DATA Frame
@@ -114,7 +114,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 	}
 BREAK:
 
-	status := header.Get("Status")
+	status := resHeader.Get("Status")
 	statuscode, _ := strconv.Atoi(status) // err
 
 	// build http response
@@ -124,7 +124,7 @@ BREAK:
 		Proto:            Version,
 		ProtoMajor:       2,
 		ProtoMinor:       0,
-		Header:           header,
+		Header:           resHeader,
 		Body:             ioutil.NopCloser(resBody),
 		ContentLength:    int64(resBody.Len()),
 		TransferEncoding: nil,
