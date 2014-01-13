@@ -48,6 +48,26 @@ const (
 	ENHANCE_YOUR_CALM            = 420
 )
 
+func (e ErrorCode) Format() string {
+	if e == ENHANCE_YOUR_CALM {
+		return "ENHANCE_YOUR_CALM"
+	}
+	errors := []string{
+		"NO_ERROR",
+		"PROTOCOL_ERROR",
+		"INTERNAL_ERROR",
+		"FLOW_CONTROL_ERROR",
+		"SETTINGS_TIMEOUT",
+		"STREAM_CLOSED",
+		"FRAME_SIZE_ERROR",
+		"REFUSED_STREAM",
+		"CANCEL",
+		"COMPRESSION_ERROR",
+		"CONNECT_ERROR",
+	}
+	return errors[int(e)]
+}
+
 type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
@@ -424,21 +444,6 @@ func (frame *SettingsFrame) Format() string {
 // |                  Additional Debug Data (*)                    |
 // +---------------------------------------------------------------+
 
-func (e ErrorCode) ToName() string {
-	errors := []string{
-		"NO_ERROR",
-		"PROTOCOL_ERROR",
-		"INTERNAL_ERROR",
-		"FLOW_CONTROL_ERROR",
-		"STREAM_CLOSED",
-		"FRAME_TOO_LARGE",
-		"REFUSED_STREAM",
-		"CANCEL",
-		"COMPRESSION_ERROR",
-	}
-	return errors[int(e)]
-}
-
 type GoAwayFrame struct {
 	*FrameHeader
 	LastStreamID        uint32
@@ -480,7 +485,7 @@ func (frame *GoAwayFrame) Format() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.Format()
 	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(unsupported))",
-		frame.LastStreamID, Red(frame.ErrorCode.ToName()))
+		frame.LastStreamID, Red(frame.ErrorCode.Format()))
 	return str
 }
 
