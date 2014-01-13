@@ -319,9 +319,10 @@ func (frame *RstStreamFrame) Format() string {
 // |                        Value (32)                             |
 // +---------------------------------------------------------------+
 
+const DEFAULT_WINDOW_SIZE uint32 = 65535
+
 type SettingsId uint32
 
-const DEFAULT_WINDOW_SIZE uint32 = 65535
 const (
 	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1
 	SETTINGS_ENABLE_PUSH                       = 2
@@ -329,6 +330,17 @@ const (
 	SETTINGS_INITIAL_WINDOW_SIZE               = 7
 	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
 )
+
+func (s SettingsId) Format() string {
+	m := map[SettingsId]string{
+		1:  "SETTINGS_HEADER_TABLE_SIZE",
+		2:  "SETTINGS_ENABLE_PUSH",
+		4:  "SETTINGS_MAX_CONCURRENT_STREAMS",
+		7:  "SETTINGS_INITIAL_WINDOW_SIZE",
+		10: "SETTINGS_FLOW_CONTROL_OPTIONS",
+	}
+	return fmt.Sprintf("%s(%d)", m[s], s)
+}
 
 type Setting struct {
 	Reserved   uint8
@@ -403,7 +415,7 @@ func (frame *SettingsFrame) Format() string {
 	}
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
-		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId, s.Value)
+		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId.Format(), s.Value)
 	}
 	return str
 }
