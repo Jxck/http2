@@ -139,12 +139,12 @@ func (c *Conn) SendWindowUpdate(incrementSize uint32) { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	Info("%v %q", Red("send"), str)
+	Info("%v\n%s", Red("send"), Blue(str))
 }
 
 func (c *Conn) ReadString() { // err
 	line, _, _ := c.Br.ReadLine() // err
-	Debug(Red("recv"), Blue(string(line)))
+	Debug("%v %v", Red("recv"), Blue(string(line)))
 }
 
 func (c *Conn) ReadResponse() *http.Response {
@@ -155,7 +155,7 @@ func (c *Conn) ReadResponse() *http.Response {
 
 func (c *Conn) ReadRequest() *http.Request {
 	req, _ := http.ReadRequest(c.Br) // err
-	Debug(Green("recv"), Blue(RequestString(req)), "\n")
+	Info("%v\n%v\n", Green("recv"), Blue(RequestString(req)))
 	return req
 }
 

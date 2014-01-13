@@ -16,14 +16,12 @@ var loglevel int
 func init() {
 	log.SetFlags(log.Lshortfile)
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	f.BoolVar(&verbose, "v", false, "verbose out")
 	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
 		f.Parse(f.Args()[1:])
 	}
 	logger.LogLevel(loglevel)
-	logger.Verbose(verbose)
 }
 
 type Hello struct{}

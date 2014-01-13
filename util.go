@@ -12,7 +12,7 @@ func init() {
 }
 
 func RequestString(req *http.Request) string {
-	str := fmt.Sprintf("%v %v %v", req.URL, req.Method, req.Proto)
+	str := fmt.Sprintf("%v %v %v", req.Method, req.URL, req.Proto)
 	for k, v := range req.Header {
 		str += fmt.Sprintf("\n%v: %v", k, v[0])
 	}

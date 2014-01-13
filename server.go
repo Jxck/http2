@@ -51,19 +51,19 @@ func (res *Response) WriteHeader(statusCode int) {
 }
 
 func HandleConnection(conn net.Conn, handler http.Handler) {
-	Debug("Handle Connection")
+	Info("Handle Connection")
 	defer conn.Close() // err
 
-	// http.Conn に変換
+	// http2.Conn に変換
 	Conn := NewConn(conn)
 
 	// Request を読み出す
 	req := Conn.ReadRequest()
 
 	// TODO: parse/check settings
-	Debug(req.Header.Get("Connection"))
-	Debug(req.Header.Get("Upgrade"))
-	Debug(req.Header.Get("Http2-Settings"))
+	Debug("%s", req.Header.Get("Connection"))
+	Debug("%s", req.Header.Get("Upgrade"))
+	Debug("%s", req.Header.Get("Http2-Settings"))
 
 	upgrade := "HTTP/1.1 101 Switching Protocols\r\n" +
 		"Connection: Upgrade\r\n" +
@@ -87,7 +87,7 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	go func() {
 		// SEND HEADERS
 		stream := Conn.NewStream()
-		header := *new(http.Header)
+		header := http.Header{}
 		header.Add("status", "200")
 		header.Add("content-type", "text/plain")
 
