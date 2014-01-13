@@ -141,6 +141,16 @@ func (frame *DataFrame) Format() string {
 		str += "\n- END_STREAM"
 	}
 
+	// Print first 8 byte of Data or all
+	window := len(frame.Data)
+	if window == 0 {
+		// no data do nothing
+		return str
+	} else if window > 8 {
+		// trim to 8 byte
+		window = 8
+	}
+	str += fmt.Sprintf("\n'%s...'", string(frame.Data[:window]))
 	return str
 }
 
