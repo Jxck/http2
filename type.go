@@ -168,7 +168,7 @@ func (frame *DataFrame) Format() string {
 		// trim to 8 byte
 		window = 8
 	}
-	str += fmt.Sprintf("\n'%s...'", string(frame.Data[:window]))
+	str += fmt.Sprintf("\n%q...", string(frame.Data[:window]))
 	return str
 }
 
