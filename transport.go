@@ -42,7 +42,7 @@ func DialNPN(address, certpath, keypath string) *tls.Conn {
 	config := tls.Config{
 		Certificates:       []tls.Certificate{cert},
 		InsecureSkipVerify: true,
-		NextProtos:         []string{"HTTP-draft-09/2.0"},
+		NextProtos:         []string{Version},
 	}
 	conn, err := tls.Dial("tcp", address, &config)
 	if err != nil {
