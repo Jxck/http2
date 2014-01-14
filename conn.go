@@ -4,6 +4,7 @@ import (
 	"bufio"
 	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
+	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"io"
 	"log"

@@ -3,6 +3,7 @@ package http2
 import (
 	"bytes"
 	. "github.com/jxck/color"
+	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"io/ioutil"
 	"log"
