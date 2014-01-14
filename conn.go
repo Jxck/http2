@@ -66,7 +66,7 @@ func (c *Conn) NewStream() *Stream {
 	return stream
 }
 
-func (c *Conn) ReadFrame() (frame Frame) {
+func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
 	fh := new(FrameHeader)
 	fh.Read(c.RW) // err
 
@@ -82,7 +82,7 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		}
 		f.Read(c.RW)
 
-		f.Headers = c.DecodeHeader(f.HeaderBlock)
+		f.Headers = c.DecodeHeader(cxt, f.HeaderBlock)
 		frame = f
 	case RstStreamFrameType:
 		frame = &RstStreamFrame{
@@ -171,7 +171,13 @@ func (c *Conn) EncodeHeader(header http.Header) []byte {
 }
 
 // Decode Header using HPACK
-func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
-	c.ResponseContext.Decode(headerBlock)
-	return c.ResponseContext.ES.ToHeader()
+func (c *Conn) DecodeHeader(cxt hpack.CXT, headerBlock []byte) http.Header {
+	if cxt == hpack.RESPONSE {
+		c.ResponseContext.Decode(headerBlock)
+		return c.ResponseContext.ES.ToHeader()
+	} else {
+		c.RequestContext.Decode(headerBlock)
+		return c.RequestContext.ES.ToHeader()
+	}
+	return nil // with err
 }

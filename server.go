@@ -152,7 +152,7 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	// Recv Routine
 	go func() {
 		for c := 0; c < 4; c++ {
-			frame := Conn.ReadFrame()
+			frame := Conn.ReadFrame(hpack.REQUEST)
 			_, ok := frame.(*GoAwayFrame)
 			if ok {
 				break

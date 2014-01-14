@@ -3,6 +3,7 @@ package http2
 import (
 	"bytes"
 	. "github.com/jxck/color"
+	"github.com/jxck/hpack"
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"io/ioutil"
@@ -29,7 +30,7 @@ func (stream *Stream) Send(frame Frame) {
 
 // receive frame using Conn.ReadFrame
 func (stream *Stream) Recv() Frame {
-	frame := stream.Conn.ReadFrame() // err
+	frame := stream.Conn.ReadFrame(hpack.RESPONSE) // err
 	return frame
 }
 
