@@ -16,6 +16,12 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+const (
+	// TODO: move to arg
+	DEFAULT_CERT string = "keys/cert.pem"
+	DEFAULT_KEY         = "keys/key.pem"
+)
+
 func ListenAndServe(addr string, handler http.Handler) error {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
