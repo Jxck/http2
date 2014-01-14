@@ -24,7 +24,7 @@ const (
 )
 
 // TODO: move to arg
-var SSL bool = true
+var SSL bool = false
 
 type Server struct {
 	listener net.Listener
@@ -84,29 +84,35 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	// convert to http2.Conn
 	Conn := NewConn(conn)
 
-	req := Conn.ReadRequest()
+	var req *http.Request
+	if SSL {
+		// Read Magic
+		Conn.ReadMagic()
+	} else {
+		req = Conn.ReadRequest()
 
-	// TODO: parse/check settings
-	Debug("%s", req.Header.Get("Http2-Settings"))
+		// TODO: parse/check settings
+		Debug("%s", req.Header.Get("Http2-Settings"))
 
-	upgrade := fmt.Sprintf(""+
-		"HTTP/1.1 101 Switching Protocols\r\n"+
-		"Connection: Upgrade\r\n"+
-		"Upgrade: %v\r\n"+
-		"\r\n",
-		Version)
+		upgrade := fmt.Sprintf(""+
+			"HTTP/1.1 101 Switching Protocols\r\n"+
+			"Connection: Upgrade\r\n"+
+			"Upgrade: %v\r\n"+
+			"\r\n",
+			Version)
 
-	Conn.WriteString(upgrade)
+		Conn.WriteString(upgrade)
 
-	// Send SETTINGS
-	settings := map[SettingsId]uint32{
-		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+		// Send SETTINGS
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+		}
+		Conn.SendSettings(settings)
+
+		// Read Magic
+		Conn.ReadMagic()
 	}
-	Conn.SendSettings(settings)
-
-	// Read Magic
-	Conn.ReadString()
 
 	fin := make(chan bool)
 

@@ -143,9 +143,13 @@ func (c *Conn) WriteString(str string) { // err
 	Info("%v\n%s", Red("send"), Blue(str))
 }
 
-func (c *Conn) ReadString() { // err
-	line, _, _ := c.Br.ReadLine() // err
-	Debug("%v %v", Red("recv"), Blue(string(line)))
+func (c *Conn) ReadMagic() { // err
+	magic := make([]byte, len(MagicString))
+	c.RW.Read(magic) // err
+	if string(magic) != MagicString {
+		Error("Invalid Magic String") // err
+	}
+	Info("%v %q", Red("recv"), string(magic))
 }
 
 func (c *Conn) ReadResponse() *http.Response {
