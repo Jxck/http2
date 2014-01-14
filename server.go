@@ -98,20 +98,21 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 
 	Conn.WriteString(upgrade)
 
-	// SEND SETTINGS
+	// Send SETTINGS
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
 	Conn.SendSettings(settings)
 
+	// Read Magic
 	Conn.ReadString()
 
 	fin := make(chan bool)
 
 	// Send Routine
 	go func() {
-		// SEND HEADERS
+		// Send HEADERS
 		stream := Conn.NewStream()
 		header := http.Header{}
 		header.Add("status", "200")
@@ -132,7 +133,7 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 		frame.Length = uint16(len(frame.HeaderBlock))
 		stream.Send(frame) // err
 
-		// SEND DATA
+		// Send DATA
 		data := NewDataFrame(0, 1)
 		data.Data = res.Body.Bytes()
 		data.Length = uint16(len(data.Data))
