@@ -24,7 +24,7 @@ const (
 )
 
 // TODO: move to arg
-var SSL bool = false
+var SSL bool = true
 
 type Server struct {
 	listener net.Listener
@@ -88,6 +88,17 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	if SSL {
 		// Read Magic
 		Conn.ReadMagic()
+
+		// Send SETTINGS
+		settings := map[SettingsId]uint32{
+			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+			SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+		}
+		Conn.SendSettings(settings)
+
+		Conn.ReadFrame(hpack.REQUEST)
+		Conn.ReadFrame(hpack.REQUEST)
+
 	} else {
 		req = Conn.ReadRequest()
 

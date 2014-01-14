@@ -113,7 +113,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 			Error("over run (loop limit = %v)", looplimit)
 			break
 		}
-		looplimit++
+		looplimit--
 	}
 BREAK:
 
