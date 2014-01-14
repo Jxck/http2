@@ -2,6 +2,7 @@ package http2
 
 import (
 	"bytes"
+	"fmt"
 	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
 	. "github.com/jxck/logger"
@@ -37,21 +38,20 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 	Info("Handle Connection")
 	defer conn.Close() // err
 
-	// http2.Conn に変換
+	// convert to http2.Conn
 	Conn := NewConn(conn)
 
-	// Request を読み出す
 	req := Conn.ReadRequest()
 
 	// TODO: parse/check settings
-	Debug("%s", req.Header.Get("Connection"))
-	Debug("%s", req.Header.Get("Upgrade"))
 	Debug("%s", req.Header.Get("Http2-Settings"))
 
-	upgrade := "HTTP/1.1 101 Switching Protocols\r\n" +
-		"Connection: Upgrade\r\n" +
-		"Upgrade: HTTP-draft-06/2.0\r\n" +
-		"\r\n"
+	upgrade := fmt.Sprintf(""+
+		"HTTP/1.1 101 Switching Protocols\r\n"+
+		"Connection: Upgrade\r\n"+
+		"Upgrade: %v\r\n"+
+		"\r\n",
+		Version)
 
 	Conn.WriteString(upgrade)
 
