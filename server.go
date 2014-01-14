@@ -33,23 +33,6 @@ func ListenAndServe(addr string, handler http.Handler) error {
 	return nil
 }
 
-type Response struct {
-	Headers http.Header
-	Body    *bytes.Buffer
-}
-
-func (res *Response) Write(wire []byte) (int, error) {
-	return res.Body.Write(wire)
-}
-
-func (res *Response) Header() http.Header {
-	return res.Headers
-}
-
-func (res *Response) WriteHeader(statusCode int) {
-	// TODO: implement me
-}
-
 func HandleConnection(conn net.Conn, handler http.Handler) {
 	Info("Handle Connection")
 	defer conn.Close() // err
