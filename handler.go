@@ -15,6 +15,11 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+var defaultSettings = map[SettingsId]uint32{
+	SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+	SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+}
+
 func HandleConnection(conn net.Conn, handler http.Handler) {
 	Info("Handle Connection")
 	defer conn.Close() // err
@@ -28,11 +33,7 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 		Conn.ReadMagic()
 
 		// Send SETTINGS
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
-		}
-		Conn.SendSettings(settings)
+		Conn.SendSettings(defaultSettings)
 
 		Conn.ReadFrame(hpack.REQUEST)
 		Conn.ReadFrame(hpack.REQUEST)
@@ -53,11 +54,7 @@ func HandleConnection(conn net.Conn, handler http.Handler) {
 		Conn.WriteString(upgrade)
 
 		// Send SETTINGS
-		settings := map[SettingsId]uint32{
-			SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-			SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
-		}
-		Conn.SendSettings(settings)
+		Conn.SendSettings(defaultSettings)
 
 		// Read Magic
 		Conn.ReadMagic()
