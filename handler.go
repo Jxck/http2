@@ -116,7 +116,7 @@ func HandleConnection(conn net.Conn, h http.Handler) {
 		Handler: h,
 	}
 
-	var req *http.Request
+	req := &http.Request{}
 	if SSL {
 		handler.HandShakeSSL()
 	} else {

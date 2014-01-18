@@ -30,11 +30,10 @@ func (h *Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello HTTP2.0!")
 }
 
-var handler http.Handler = &Hello{}
-
-// var httpHandler http.Handler = http.FileServer(http.Dir("."))
-
 func main() {
+	var handler http.Handler = &Hello{}
+	// handler = http.FileServer(http.Dir("."))
+
 	addr := ":" + os.Args[1]
 
 	err := http2.ListenAndServe(addr, handler)
