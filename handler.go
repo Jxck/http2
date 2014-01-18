@@ -92,6 +92,20 @@ func (handler *Handler) ServeHTTP(req *http.Request) {
 	stream.Send(data)
 }
 
+func (handler *Handler) RecvLoop() {
+	fin := make(chan bool)
+	for {
+		frame := handler.Conn.ReadFrame(hpack.REQUEST)
+		_, ok := frame.(*GoAwayFrame)
+		if ok {
+			fin <- true
+			break
+		}
+	}
+	<-fin
+	return
+}
+
 func HandleConnection(conn net.Conn, h http.Handler) {
 	Info("Handle Connection")
 	defer conn.Close() // err
@@ -109,22 +123,11 @@ func HandleConnection(conn net.Conn, h http.Handler) {
 		req = handler.HandShake()
 	}
 
-	fin := make(chan bool)
-
 	// Send Routine
 	go handler.ServeHTTP(req)
 
 	// Recv Routine
-	go func() {
-		for c := 0; c < 4; c++ {
-			frame := handler.Conn.ReadFrame(hpack.REQUEST)
-			_, ok := frame.(*GoAwayFrame)
-			if ok {
-				break
-			}
-		}
-		fin <- true
-	}()
-	<-fin
+	handler.RecvLoop()
+
 	return
 }
