@@ -128,7 +128,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 		}
 		transport.Conn.SendSettings(settings) // err
-		req = UpdateRequest(req, transport.URL)
+		req = transport.URL.Update(req)
 		stream = transport.Conn.NewStream()
 		stream.SendRequest(req)
 	}
