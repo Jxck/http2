@@ -10,13 +10,14 @@ import (
 	"os"
 )
 
-var verbose bool
+var verbose, no_tls bool
 var loglevel int
 
 func init() {
 	log.SetFlags(log.Lshortfile)
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
+	f.BoolVar(&no_tls, "no-tls", false, "disable TLS and user upgrade")
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
 		f.Parse(f.Args()[1:])
@@ -36,8 +37,9 @@ func main() {
 
 	addr := ":" + os.Args[1]
 
-	err := http2.ListenAndServe(addr, handler)
-	if err != nil {
-		log.Fatal(err)
+	if no_tls {
+		http2.ListenAndServe(addr, handler)
+	} else {
+		http2.ListenAndServeTLS(addr, handler)
 	}
 }

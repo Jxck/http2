@@ -116,12 +116,29 @@ func HandleConnection(conn net.Conn, h http.Handler) {
 		Handler: h,
 	}
 
-	req := &http.Request{}
-	if SSL {
-		handler.HandShakeSSL()
-	} else {
-		req = handler.HandShake()
+	req := handler.HandShake()
+
+	// Send Routine
+	go handler.ServeHTTP(req)
+
+	// Recv Routine
+	handler.RecvLoop()
+
+	return
+}
+
+func HandleTLSConnection(conn net.Conn, h http.Handler) {
+	Info("Handle TLS Connection")
+	defer conn.Close() // err
+
+	handler := &Handler{
+		// convert to http2.Conn
+		Conn:    NewConn(conn),
+		Handler: h,
 	}
+
+	req := &http.Request{}
+	handler.HandShakeSSL()
 
 	// Send Routine
 	go handler.ServeHTTP(req)

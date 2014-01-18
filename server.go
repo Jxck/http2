@@ -19,9 +19,6 @@ const (
 	DEFAULT_KEY         = "keys/key.pem"
 )
 
-// TODO: move to arg
-var SSL bool = true
-
 type Server struct {
 	listener net.Listener
 	addr     string
@@ -49,17 +46,32 @@ func (s *Server) ListenTLS() {
 }
 
 func ListenAndServe(addr string, handler http.Handler) (err error) {
-
 	server := &Server{
 		addr: addr,
 	}
-	if SSL {
-		server.ListenTLS()
-	} else {
-		server.Listen()
-	}
+	server.Listen()
 
 	Info(Yellow("server starts on port %s"), addr)
+
+	for c := 0; c < 10; c++ {
+		conn, err := server.listener.Accept()
+		if err != nil {
+			return err
+		}
+		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())
+		go HandleConnection(conn, handler)
+	}
+
+	return nil
+}
+
+func ListenAndServeTLS(addr string, handler http.Handler) (err error) {
+	server := &Server{
+		addr: addr,
+	}
+	server.ListenTLS()
+
+	Info(Yellow("server starts on port %s(tls)"), addr)
 
 	for c := 0; c < 10; c++ {
 		conn, err := server.listener.Accept()
