@@ -73,7 +73,7 @@ func ListenAndServeTLS(addr string, certFile string, keyFile string, handler htt
 			return err
 		}
 		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())
-		go HandleConnection(conn, handler)
+		go HandleTLSConnection(conn, handler)
 	}
 
 	return nil

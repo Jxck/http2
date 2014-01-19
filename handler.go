@@ -140,11 +140,45 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	req := &http.Request{}
 	handler.HandShakeSSL()
 
-	// Send Routine
-	go handler.ServeHTTP(req)
+	// Send HEADERS
+	stream := handler.Conn.NewStream()
+	header := http.Header{}
+	header.Add("status", "200")
+	header.Add("content-type", "text/plain")
 
-	// Recv Routine
-	handler.RecvLoop()
+	res := &Response{
+		Headers: header,
+		Body:    bytes.NewBuffer(make([]byte, 0)),
+	}
 
+	handler.Handler.ServeHTTP(res, req)
+
+	frame := NewHeadersFrame(END_HEADERS, 1)
+	frame.Headers = header
+
+	headerSet := hpack.ToHeaderSet(header)
+	frame.HeaderBlock = stream.Conn.ResponseContext.Encode(headerSet)
+	frame.Length = uint16(len(frame.HeaderBlock))
+	stream.Send(frame) // err
+
+	// Send DATA
+	data := NewDataFrame(0, 1)
+	data.Data = res.Body.Bytes()
+	data.Length = uint16(len(data.Data))
+	stream.Send(data)
+
+	data = NewDataFrame(END_STREAM, stream.Id)
+	stream.Send(data)
+
+	fin := make(chan bool)
+	for {
+		frame := handler.Conn.ReadFrame(hpack.REQUEST)
+		_, ok := frame.(*GoAwayFrame)
+		if ok {
+			fin <- true
+			break
+		}
+	}
+	<-fin
 	return
 }
