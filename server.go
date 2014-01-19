@@ -13,12 +13,6 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-const (
-	// TODO: move to arg
-	DEFAULT_CERT string = "keys/cert.pem"
-	DEFAULT_KEY         = "keys/key.pem"
-)
-
 type Server struct {
 	listener net.Listener
 	addr     string
@@ -28,9 +22,9 @@ func (s *Server) Listen() {
 	s.listener, _ = net.Listen("tcp", s.addr)
 }
 
-func (s *Server) ListenTLS() {
+func (s *Server) ListenTLS(certFile, keyFile string) {
 	// loading key pair
-	cert, err := tls.LoadX509KeyPair(DEFAULT_CERT, DEFAULT_KEY)
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,11 +59,11 @@ func ListenAndServe(addr string, handler http.Handler) (err error) {
 	return nil
 }
 
-func ListenAndServeTLS(addr string, handler http.Handler) (err error) {
+func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) (err error) {
 	server := &Server{
 		addr: addr,
 	}
-	server.ListenTLS()
+	server.ListenTLS(certFile, keyFile)
 
 	Info(Yellow("server starts on port %s(tls)"), addr)
 

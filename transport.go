@@ -64,7 +64,10 @@ func (transport *Transport) Connect() {
 	if transport.URL.Scheme == "http" {
 		conn, _ = net.Dial("tcp", address) // err
 	} else {
-		conn = DialNPN(address, DEFAULT_CERT, DEFAULT_KEY)
+		// TODO: move to args
+		cert := "keys/cert.pem"
+		key := "keys/key.pem"
+		conn = DialNPN(address, cert, key)
 	}
 	transport.Conn = NewConn(conn)
 }

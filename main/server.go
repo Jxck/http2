@@ -40,6 +40,9 @@ func main() {
 	if no_tls {
 		http2.ListenAndServe(addr, handler)
 	} else {
-		http2.ListenAndServeTLS(addr, handler)
+		cert := "keys/cert.pem"
+		key := "keys/key.pem"
+
+		http2.ListenAndServeTLS(addr, cert, key, handler)
 	}
 }
