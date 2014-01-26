@@ -37,8 +37,8 @@ func main() {
 	cert := "keys/cert.pem"
 	key := "keys/key.pem"
 
-	var handler http.Handler = &Hello{}
-	// handler = http.FileServer(http.Dir("."))
+	// var handler http.Handler = &Hello{}
+	var handler http.Handler = http.FileServer(http.Dir("."))
 
 	// setup TLS config
 	config := &tls.Config{

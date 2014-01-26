@@ -34,6 +34,7 @@ func NewURL(rawurl string) (*URL, error) {
 	return url, nil
 }
 
+// TODO: net#SplitHostPort
 func (url *URL) SplitHostPort() (err error) {
 	splitted := strings.Split(url.Host, ":")
 	switch {
