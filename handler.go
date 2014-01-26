@@ -85,7 +85,10 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 		Host:  header.Get("Authority"),
 	}
 
+	res := NewResponseWriter()
 	handler.Handler.ServeHTTP(res, req)
+
+	log.Println(res.Headers, res.Body)
 
 	//frame := NewHeadersFrame(END_HEADERS, 1)
 	//frame.Headers = header

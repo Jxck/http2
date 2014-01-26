@@ -5,19 +5,27 @@ import (
 	"net/http"
 )
 
-type Response struct {
-	Headers http.Header
+type ResponseWriter struct {
+	Headers *http.Header
 	Body    *bytes.Buffer
 }
 
-func (res *Response) Write(wire []byte) (int, error) {
+func NewResponseWriter() ResponseWriter {
+	buf := make([]byte, 1000)
+	return ResponseWriter{
+		Headers: new(http.Header),
+		Body:    bytes.NewBuffer(buf),
+	}
+}
+
+func (res ResponseWriter) Write(wire []byte) (int, error) {
 	return res.Body.Write(wire)
 }
 
-func (res *Response) Header() http.Header {
-	return res.Headers
+func (res ResponseWriter) Header() http.Header {
+	return *res.Headers
 }
 
-func (res *Response) WriteHeader(statusCode int) {
+func (res ResponseWriter) WriteHeader(statusCode int) {
 	// TODO: implement me
 }
