@@ -52,7 +52,9 @@ func main() {
 		Handler:        handler,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
 		TLSConfig:      config,
+		TLSNextProto:   http2.TLSNextProto,
 	}
 
+	log.Printf("server starts at localhost%v", addr)
 	log.Println(server.ListenAndServeTLS(cert, key))
 }

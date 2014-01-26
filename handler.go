@@ -93,7 +93,7 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	stream.Send(data)
 
 	fin := make(chan bool)
-	for {
+	for i := 0; i < 30; i++ {
 		frame := handler.Conn.ReadFrame(hpack.REQUEST)
 		_, ok := frame.(*GoAwayFrame)
 		if ok {
