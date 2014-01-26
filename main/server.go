@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"github.com/jxck/http2"
@@ -31,13 +32,27 @@ func (h *Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var handler http.Handler = &Hello{}
-	// handler = http.FileServer(http.Dir("."))
-
+	// params
 	addr := ":" + os.Args[1]
-
 	cert := "keys/cert.pem"
 	key := "keys/key.pem"
 
-	http2.ListenAndServeTLS(addr, cert, key, handler)
+	var handler http.Handler = &Hello{}
+	// handler = http.FileServer(http.Dir("."))
+
+	// setup TLS config
+	config := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{http2.Version},
+	}
+
+	// setup Server
+	server := &http.Server{
+		Addr:           addr,
+		Handler:        handler,
+		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
+		TLSConfig:      config,
+	}
+
+	log.Println(server.ListenAndServeTLS(cert, key))
 }
