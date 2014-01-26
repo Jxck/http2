@@ -18,10 +18,6 @@ type Server struct {
 	addr     string
 }
 
-func (s *Server) Listen() {
-	s.listener, _ = net.Listen("tcp", s.addr)
-}
-
 func (s *Server) ListenTLS(certFile, keyFile string) {
 	// loading key pair
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
@@ -37,26 +33,6 @@ func (s *Server) ListenTLS(certFile, keyFile string) {
 	}
 
 	s.listener, _ = tls.Listen("tcp", s.addr, config)
-}
-
-func ListenAndServe(addr string, handler http.Handler) (err error) {
-	server := &Server{
-		addr: addr,
-	}
-	server.Listen()
-
-	Info(Yellow("server starts on port %s"), addr)
-
-	for c := 0; c < 10; c++ {
-		conn, err := server.listener.Accept()
-		if err != nil {
-			return err
-		}
-		Info(Yellow("New connection from %s\n"), conn.RemoteAddr())
-		go HandleConnection(conn, handler)
-	}
-
-	return nil
 }
 
 func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) (err error) {
