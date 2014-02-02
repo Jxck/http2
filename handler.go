@@ -56,7 +56,11 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 
 	// Recv SETTINGS
 	handler.Conn.ReadFrame(hpack.REQUEST)
+
 	// TODO: Send SETTINGS ACK
+	nilmap := map[SettingsId]uint32{}
+	settingAck := NewSettingsFrame(0x01, nilmap, 0)
+	handler.Conn.WriteFrame(settingAck)
 
 	// Recv HEADERS
 	headers := handler.Conn.ReadFrame(hpack.REQUEST).(*HeadersFrame)
