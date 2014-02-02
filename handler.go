@@ -128,15 +128,12 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	data = NewDataFrame(END_STREAM, 1)
 	handler.Conn.WriteFrame(data)
 
-	//fin := make(chan bool)
-	//for i := 0; i < 30; i++ {
-	//	frame := handler.Conn.ReadFrame(hpack.REQUEST)
-	//	_, ok := frame.(*GoAwayFrame)
-	//	if ok {
-	//		fin <- true
-	//		break
-	//	}
-	//}
-	//<-fin
+	for i := 0; i < 30; i++ {
+		frame := handler.Conn.ReadFrame(hpack.REQUEST)
+		_, ok := frame.(*GoAwayFrame)
+		if ok {
+			break
+		}
+	}
 	return
 }
