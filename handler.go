@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	neturl "net/url"
+	"strconv"
 	"strings"
 )
 
@@ -101,10 +102,12 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 		Host:  header.Get("Authority"),
 	}
 
+	// log.Println(RequestString(req))
+
+	// Handle HTTP
 	res := NewResponseWriter()
 	handler.Handler.ServeHTTP(res, req)
-
-	log.Println(RequestString(req))
+	res.Header().Add("status", strconv.Itoa(res.status))
 	log.Println(res)
 
 	//frame := NewHeadersFrame(END_HEADERS, 1)
