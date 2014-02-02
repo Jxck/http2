@@ -119,14 +119,14 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	frame.Length = uint16(len(frame.HeaderBlock))
 	handler.Conn.WriteFrame(frame)
 
-	//// Send DATA
-	//data := NewDataFrame(0, 1)
-	//data.Data = res.Body.Bytes()
-	//data.Length = uint16(len(data.Data))
-	//stream.Send(data)
+	// Send DATA
+	data := NewDataFrame(0, 1)
+	data.Data = res.body.Bytes()
+	data.Length = uint16(len(data.Data))
+	handler.Conn.WriteFrame(data)
 
-	//data = NewDataFrame(END_STREAM, stream.Id)
-	//stream.Send(data)
+	data = NewDataFrame(END_STREAM, 1)
+	handler.Conn.WriteFrame(data)
 
 	//fin := make(chan bool)
 	//for i := 0; i < 30; i++ {
