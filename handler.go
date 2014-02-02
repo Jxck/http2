@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	neturl "net/url"
+	"strings"
 )
 
 func init() {
@@ -60,7 +61,18 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	// Recv HEADERS
 	headers := handler.Conn.ReadFrame(hpack.REQUEST).(*HeadersFrame)
 	header := headers.Headers
-	log.Println(header)
+
+	// Convert to HTTP/1.1 header
+	host := strings.TrimPrefix(header.Get(":authority"), ":")
+	header.Del(":authority")
+	header.Add("host", host)
+
+	for _, name := range []string{":method", ":path", ":scheme"} {
+		value := header.Get(name)
+		header.Del(name)
+		name = strings.TrimPrefix(name, ":")
+		header.Add(name, value)
+	}
 
 	handler.Conn.ReadFrame(hpack.REQUEST)
 
@@ -72,13 +84,13 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	}
 
 	req := &http.Request{
-		Method:     header.Get("method"),
-		URL:        url,
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 0,
-		Header:     header,
-		// Body io.ReadCloser
+		Method:        header.Get("method"),
+		URL:           url,
+		Proto:         "HTTP/1.1",
+		ProtoMajor:    1,
+		ProtoMinor:    1,
+		Header:        header,
+		Body:          nil,
 		ContentLength: 0,
 		// TransferEncoding []string
 		Close: false,
@@ -88,7 +100,8 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	res := NewResponseWriter()
 	handler.Handler.ServeHTTP(res, req)
 
-	log.Println(res.Headers, res.Body)
+	log.Println(RequestString(req))
+	log.Println(res)
 
 	//frame := NewHeadersFrame(END_HEADERS, 1)
 	//frame.Headers = header
