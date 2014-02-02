@@ -11,6 +11,47 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+// Must Header with prefix
+var MustHeader = map[string]string{
+	":authority": "authority",
+	":method":    "method",
+	":path":      "path",
+	":scheme":    "scheme",
+	":status":    "status",
+	// invert
+	"Authority": ":authority",
+	"Method":    ":method",
+	"Path":      ":path",
+	"Scheme":    ":scheme",
+	"Status":    ":status",
+}
+
+func AddPrefix(header http.Header) http.Header {
+	for key, values := range header {
+		name, ok := MustHeader[key]
+		if ok {
+			header.Del(key)
+			for _, value := range values {
+				header.Add(name, value)
+			}
+		}
+	}
+	return header
+}
+
+func RemovePrefix(header http.Header) http.Header {
+	for key, values := range header {
+		name, ok := MustHeader[key]
+		if ok {
+			header.Del(key)
+			for _, value := range values {
+				header.Add(name, value)
+			}
+		}
+	}
+	return header
+}
+
 func RequestString(req *http.Request) string {
 	str := fmt.Sprintf("%v %v %v", req.Method, req.URL, req.Proto)
 	for k, v := range req.Header {
