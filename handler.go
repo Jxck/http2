@@ -9,7 +9,6 @@ import (
 	"net/http"
 	neturl "net/url"
 	"strconv"
-	"strings"
 )
 
 func init() {
@@ -66,16 +65,7 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	header := headers.Headers
 
 	// Convert to HTTP/1.1 header
-	host := strings.TrimPrefix(header.Get(":authority"), ":")
-	header.Del(":authority")
-	header.Add("host", host)
-
-	for _, name := range []string{":method", ":path", ":scheme"} {
-		value := header.Get(name)
-		header.Del(name)
-		name = strings.TrimPrefix(name, ":")
-		header.Add(name, value)
-	}
+	header = AddPrefix(header)
 
 	handler.Conn.ReadFrame(hpack.REQUEST)
 
