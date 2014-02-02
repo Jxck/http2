@@ -107,16 +107,17 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	// Handle HTTP
 	res := NewResponseWriter()
 	handler.Handler.ServeHTTP(res, req)
-	res.Header().Add("status", strconv.Itoa(res.status))
-	log.Println(res)
+	responseHeader := res.Header()
+	responseHeader.Add(":status", strconv.Itoa(res.status))
 
-	//frame := NewHeadersFrame(END_HEADERS, 1)
-	//frame.Headers = header
+	// Send HEADERS
+	frame := NewHeadersFrame(END_HEADERS, 1)
+	frame.Headers = responseHeader
 
-	//headerSet := hpack.ToHeaderSet(header)
-	//frame.HeaderBlock = stream.Conn.ResponseContext.Encode(headerSet)
-	//frame.Length = uint16(len(frame.HeaderBlock))
-	//stream.Send(frame) // err
+	headerSet := hpack.ToHeaderSet(responseHeader)
+	frame.HeaderBlock = handler.Conn.ResponseContext.Encode(headerSet)
+	frame.Length = uint16(len(frame.HeaderBlock))
+	handler.Conn.WriteFrame(frame)
 
 	//// Send DATA
 	//data := NewDataFrame(0, 1)
