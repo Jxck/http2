@@ -6,26 +6,30 @@ import (
 )
 
 type ResponseWriter struct {
-	Headers *http.Header
-	Body    *bytes.Buffer
+	status int
+	header http.Header
+	body   *bytes.Buffer
 }
 
-func NewResponseWriter() ResponseWriter {
-	buf := make([]byte, 1000)
-	return ResponseWriter{
-		Headers: new(http.Header),
-		Body:    bytes.NewBuffer(buf),
+func NewResponseWriter() *ResponseWriter {
+	return &ResponseWriter{
+		status: 0,
+		header: make(http.Header, 0),
+		body:   bytes.NewBuffer([]byte{}),
 	}
 }
 
-func (res ResponseWriter) Write(wire []byte) (int, error) {
-	return res.Body.Write(wire)
+func (r *ResponseWriter) Header() http.Header {
+	return r.header
 }
 
-func (res ResponseWriter) Header() http.Header {
-	return *res.Headers
+func (r *ResponseWriter) Write(b []byte) (int, error) {
+	if r.status == 0 {
+		r.status = http.StatusOK
+	}
+	return r.body.Write(b)
 }
 
-func (res ResponseWriter) WriteHeader(statusCode int) {
-	// TODO: implement me
+func (r *ResponseWriter) WriteHeader(status int) {
+	r.status = status
 }
