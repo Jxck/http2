@@ -25,7 +25,7 @@ func (r *ResponseWriter) Header() http.Header {
 
 func (r *ResponseWriter) Write(b []byte) (int, error) {
 	if r.status == 0 {
-		r.status = http.StatusOK
+		r.WriteHeader(http.StatusOK)
 	}
 	return r.body.Write(b)
 }
