@@ -54,18 +54,31 @@ func NewConn(rw io.ReadWriter) *Conn {
 	return conn
 }
 
-func (c *Conn) NextStreamId() uint32 {
+func (c *Conn) NextStreamId(cxt CXT) uint32 {
 	id := c.LastStreamId
-	if id == 4294967295 { // 2^32-1
-		// err
+	if id == 4294967295 || id < 0 { // 2^32-1 or invalid
+		log.Println("stream id too big or invalid, return to 0")
+		id = 0
 	}
-	if id == 0 {
-		id = 1
-	} else if id > 0 {
-		id += 2
-	}
-	if id%2 == 0 {
-		id += 1
+	even := (id%2 == 0)
+	if cxt == CLIENT {
+		// id from CLIENT should be ODD
+		if id == 0 {
+			id = 1
+		} else if even {
+			id = id + 1
+		} else {
+			id = id + 2
+		}
+	} else if cxt == SERVER {
+		// id from SERVER should be EVEN
+		if id == 0 {
+			id = 2
+		} else if even {
+			id = id + 2
+		} else {
+			id = id + 1
+		}
 	}
 	c.LastStreamId = id
 	return id
@@ -73,7 +86,7 @@ func (c *Conn) NextStreamId() uint32 {
 
 func (c *Conn) NewStream(cxt CXT) *Stream {
 	return NewStream(
-		c.NextStreamId(),
+		c.NextStreamId(cxt),
 		c,
 		DEFAULT_WINDOW_SIZE,
 	)
