@@ -34,7 +34,9 @@ func main() {
 	url := os.Args[1]
 
 	transport := &http2.Transport{
-		FlowCtl: flowctl,
+		FlowCtl:  flowctl,
+		CertPath: "keys/cert.pem",
+		KeyPath:  "keys/key.pem",
 	}
 	client := &http.Client{
 		Transport: transport,

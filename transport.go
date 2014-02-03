@@ -16,22 +16,20 @@ func init() {
 // Transport implements http.RoundTriper
 // with RoundTrip(request) response
 type Transport struct {
-	URL     *URL
-	Conn    *Conn
-	Upgrade bool
-	FlowCtl bool
+	URL      *URL
+	Conn     *Conn
+	Upgrade  bool
+	FlowCtl  bool
+	CertPath string
+	KeyPath  string
 }
 
 // connect tcp connection with host
 func (transport *Transport) Connect() {
 	address := transport.URL.Host + ":" + transport.URL.Port
 
-	// TODO: move to args
-	certpath := "keys/cert.pem"
-	keypath := "keys/key.pem"
-
 	// loading key pair
-	cert, err := tls.LoadX509KeyPair(certpath, keypath)
+	cert, err := tls.LoadX509KeyPair(transport.CertPath, transport.KeyPath)
 	if err != nil {
 		log.Fatal(err)
 	}
