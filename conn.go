@@ -64,12 +64,11 @@ func (c *Conn) NextStreamId() uint32 {
 }
 
 func (c *Conn) NewStream() *Stream {
-	stream := &Stream{
-		Id:         c.NextStreamId(),
-		Conn:       c,
-		WindowSize: DEFAULT_WINDOW_SIZE,
-	}
-	return stream
+	return NewStream(
+		c.NextStreamId(),
+		c,
+		DEFAULT_WINDOW_SIZE,
+	)
 }
 
 func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {

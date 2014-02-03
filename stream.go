@@ -32,8 +32,17 @@ type Stream struct {
 	Id         uint32
 	Conn       *Conn
 	State      State
-	req        *http.Request
 	WindowSize uint32
+	req        *http.Request
+}
+
+func NewStream(id uint32, c *Conn, windowSize uint32) *Stream {
+	return &Stream{
+		Id:         id,
+		Conn:       c,
+		State:      IDLE,
+		WindowSize: windowSize,
+	}
 }
 
 // send frame using Conn.WriteFrame
