@@ -24,12 +24,12 @@ type Stream struct {
 }
 
 // send frame using Conn.WriteFrame
-func (stream *Stream) Send(frame Frame) {
+func (stream *Stream) send(frame Frame) {
 	stream.Conn.WriteFrame(frame) // err
 }
 
 // receive frame using Conn.ReadFrame
-func (stream *Stream) Recv() Frame {
+func (stream *Stream) recv() Frame {
 	frame := stream.Conn.ReadFrame(hpack.RESPONSE) // err
 	return frame
 }
@@ -50,7 +50,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	frame.Headers = req.Header
 	frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
 	frame.Length = uint16(len(frame.HeaderBlock))
-	stream.Send(frame) // err
+	stream.send(frame) // err
 
 	// if request has body data
 	// send it via DATA Frame
@@ -58,10 +58,10 @@ func (stream *Stream) SendRequest(req *http.Request) {
 		data := NewDataFrame(0, stream.Id)
 		data.Data, _ = ioutil.ReadAll(req.Body) // err
 		data.Length = uint16(len(data.Data))
-		stream.Send(data)
+		stream.send(data)
 
 		data = NewDataFrame(END_STREAM, stream.Id)
-		stream.Send(data)
+		stream.send(data)
 	}
 }
 
@@ -73,7 +73,7 @@ func (stream *Stream) RecvResponse() *http.Response {
 
 	for {
 		// receive frame
-		frame := stream.Recv()
+		frame := stream.recv()
 
 		switch frametype := frame.(type) {
 		case *HeadersFrame:
@@ -145,7 +145,7 @@ func (stream *Stream) WindowUpdate(size uint16) {
 	stream.WindowSize -= s
 	if stream.WindowSize < threshold {
 		frame := NewWindowUpdateFrame(threshold, stream.Id)
-		stream.Send(frame) // err
+		stream.send(frame) // err
 		stream.WindowSize += threshold
 	}
 	stream.Conn.WindowSize -= s
