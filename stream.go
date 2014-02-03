@@ -16,9 +16,22 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+type State int
+
+const (
+	IDLE State = iota
+	RESERVED_LOCAL
+	RESERVED_REMOTE
+	OPEN
+	HALF_CLOSED_LOCAL
+	HALF_CLOSED_REMOTE
+	CLOSED
+)
+
 type Stream struct {
 	Id         uint32
 	Conn       *Conn
+	State      State
 	req        *http.Request
 	WindowSize uint32
 }
