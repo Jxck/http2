@@ -113,10 +113,6 @@ func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
-	// DEGBU
-	// buf := bytes.NewBuffer([]byte{})
-	// frame.Write(buf)
-	// log.Println(buf.Bytes())
 	frame.Write(c.RW) // err
 	Info("%v %v", Red("send"), Indent(frame.Format()))
 }
