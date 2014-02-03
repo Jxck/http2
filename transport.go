@@ -2,12 +2,10 @@ package http2
 
 import (
 	"crypto/tls"
-	"fmt"
 	. "github.com/jxck/color"
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"log"
-	"net"
 	"net/http"
 )
 
@@ -30,8 +28,14 @@ type Transport struct {
 	FlowCtl bool
 }
 
-// dial tls connection with NPN
-func DialNPN(address, certpath, keypath string) *tls.Conn {
+// connect tcp connection with host
+func (transport *Transport) Connect() {
+	address := transport.URL.Host + ":" + transport.URL.Port
+
+	// TODO: move to args
+	certpath := "keys/cert.pem"
+	keypath := "keys/key.pem"
+
 	// loading key pair
 	cert, err := tls.LoadX509KeyPair(certpath, keypath)
 	if err != nil {
@@ -54,50 +58,7 @@ func DialNPN(address, certpath, keypath string) *tls.Conn {
 	Info("%v %v", Yellow("handshake"), state.HandshakeComplete)
 	Info("%v %v", Yellow("protocol"), state.NegotiatedProtocol)
 
-	return conn
-}
-
-// connect tcp connection with host
-func (transport *Transport) Connect() {
-	var conn net.Conn
-	address := transport.URL.Host + ":" + transport.URL.Port
-	if transport.URL.Scheme == "http" {
-		conn, _ = net.Dial("tcp", address) // err
-	} else {
-		// TODO: move to args
-		cert := "keys/cert.pem"
-		key := "keys/key.pem"
-		conn = DialNPN(address, cert, key)
-	}
 	transport.Conn = NewConn(conn)
-}
-
-// send http upgrade header
-func (transport *Transport) SendUpgrade() *Stream {
-	// HTTP/1.1 Upgrade Header
-	upgrade := fmt.Sprintf(""+
-		"GET %s HTTP/1.1\r\n"+
-		"Host: %s\r\n"+
-		"Connection: Upgrade, HTTP2-Settings\r\n"+
-		"Upgrade: %s\r\n"+
-		"HTTP2-Settings: %s\r\n"+
-		"Accept: */*\r\n"+
-		"\r\n",
-		transport.URL.Path,
-		transport.URL.Host,
-		Version,
-		DefaultSettingsBase64)
-
-	transport.Conn.WriteString(upgrade)
-	res := transport.Conn.ReadResponse()
-
-	if res.StatusCode != 101 {
-		Error(Red("faild to Upgrade :("))
-	}
-	Info(Yellow("HTTP Upgrade Success :)"))
-
-	stream := transport.Conn.NewStream()
-	return stream
 }
 
 // send magic octet
@@ -119,22 +80,14 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	}
 
 	var stream *Stream // create stream
-	if transport.Upgrade {
-		// using http upgrade
-		stream = transport.SendUpgrade()
-		transport.SendMagic()
-		transport.Conn.SendSettings(settings) // err
-	} else {
-		// using NPN
-		transport.SendMagic()
-		if !transport.FlowCtl {
-			settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
-		}
-		transport.Conn.SendSettings(settings) // err
-		req = transport.URL.Update(req)
-		stream = transport.Conn.NewStream()
-		stream.SendRequest(req)
+	transport.SendMagic()
+	if !transport.FlowCtl {
+		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 	}
+	transport.Conn.SendSettings(settings) // err
+	req = transport.URL.Update(req)
+	stream = transport.Conn.NewStream()
+	stream.SendRequest(req)
 
 	// receive response from stream
 	res := stream.RecvResponse() // err

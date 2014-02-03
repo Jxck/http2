@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-var nullout, upgrade, flowctl bool
+var nullout, flowctl bool
 var post string
 var loglevel int
 
@@ -20,7 +20,6 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f.BoolVar(&nullout, "n", false, "null output")
-	f.BoolVar(&upgrade, "u", false, "upgrade")
 	f.BoolVar(&flowctl, "f", false, "flow control")
 	f.StringVar(&post, "d", "", "send post data")
 	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
@@ -35,7 +34,6 @@ func main() {
 	url := os.Args[1]
 
 	transport := &http2.Transport{
-		Upgrade: upgrade,
 		FlowCtl: flowctl,
 	}
 	client := &http.Client{
