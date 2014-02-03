@@ -77,7 +77,7 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	// if request has body data
 	// send it via DATA Frame
 	if req.Body != nil {
-		data := NewDataFrame(0, stream.Id)
+		data := NewDataFrame(UNSET, stream.Id)
 		data.Data, _ = ioutil.ReadAll(req.Body) // err
 		data.Length = uint16(len(data.Data))
 		stream.send(data)

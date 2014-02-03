@@ -190,7 +190,8 @@ type HeadersFrame struct {
 }
 
 const (
-	END_STREAM  uint8 = 0x1
+	UNSET       uint8 = 0x0
+	END_STREAM        = 0x1
 	RESERVED          = 0x2
 	END_HEADERS       = 0x4
 	PRIORITY          = 0x8
