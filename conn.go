@@ -17,6 +17,14 @@ const (
 	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
 )
 
+// Request or Response
+type CXT bool
+
+const (
+	REQUEST  CXT = true
+	RESPONSE     = false
+)
+
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
@@ -63,7 +71,7 @@ func (c *Conn) NextStreamId() uint32 {
 	return id
 }
 
-func (c *Conn) NewStream() *Stream {
+func (c *Conn) NewStream(cxt CXT) *Stream {
 	return NewStream(
 		c.NextStreamId(),
 		c,
