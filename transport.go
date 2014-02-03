@@ -9,12 +9,6 @@ import (
 	"net/http"
 )
 
-const (
-	Version               = "HTTP-draft-09/2.0"
-	MagicString           = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
-)
-
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
