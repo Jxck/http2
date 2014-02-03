@@ -73,7 +73,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	transport.Conn.SendSettings(settings) // err
 
 	// create stream
-	stream := transport.Conn.NewStream(REQUEST)
+	stream := transport.Conn.NewStream(CLIENT)
 	req = util.UpdateRequest(req, transport.URL)
 	stream.SendRequest(req)
 

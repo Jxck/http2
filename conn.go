@@ -21,8 +21,8 @@ const (
 type CXT bool
 
 const (
-	REQUEST  CXT = true
-	RESPONSE     = false
+	SERVER CXT = true
+	CLIENT     = false
 )
 
 func init() {
