@@ -52,6 +52,21 @@ func RemovePrefix(header http.Header) http.Header {
 	return header
 }
 
+func UpdateRequest(req *http.Request, url *URL) *http.Request {
+	if req.ContentLength != 0 {
+		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
+	}
+
+	// TODO: manage header duplicat
+	req.Header.Add(":authority", url.Host)
+	req.Header.Add(":method", req.Method)
+	req.Header.Add(":path", url.Path)
+	req.Header.Add(":scheme", url.Scheme)
+	req.Header.Add("accept", "*/*")
+	req.Header.Add("x-http2-version", Version)
+	return req
+}
+
 func RequestString(req *http.Request) string {
 	str := fmt.Sprintf("%v %v %v", req.Method, req.URL, req.Proto)
 	for k, v := range req.Header {

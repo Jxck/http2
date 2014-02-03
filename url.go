@@ -3,7 +3,6 @@ package http2
 import (
 	"fmt"
 	"log"
-	"net/http"
 	neturl "net/url"
 	"strings"
 )
@@ -32,6 +31,9 @@ func NewURL(rawurl string) (*URL, error) {
 	if err != nil {
 		return nil, err
 	}
+	if url.Path == "" {
+		url.Path = "/"
+	}
 	return url, nil
 }
 
@@ -49,21 +51,4 @@ func (url *URL) SplitHostPort() (err error) {
 		url.Host, url.Port = splitted[0], "80"
 	}
 	return
-}
-
-func (url *URL) Update(req *http.Request) *http.Request {
-	if url.Path == "" {
-		url.Path = "/"
-	}
-	if req.ContentLength != 0 {
-		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
-	}
-
-	req.Header.Add(":authority", url.Host)
-	req.Header.Add(":method", req.Method)
-	req.Header.Add(":path", url.Path)
-	req.Header.Add(":scheme", url.Scheme)
-	req.Header.Add("accept", "*/*")
-	req.Header.Add("x-http2-version", Version)
-	return req
 }
