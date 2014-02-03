@@ -139,6 +139,10 @@ func (c *Conn) WriteString(str string) { // err
 	Info("%v\n%s", Red("send"), Blue(str))
 }
 
+func (c *Conn) WriteMagic() {
+	c.WriteString(MagicString)
+}
+
 func (c *Conn) ReadMagic() { // err
 	magic := make([]byte, len(MagicString))
 	c.RW.Read(magic) // err

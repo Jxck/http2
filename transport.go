@@ -63,7 +63,7 @@ func (transport *Transport) Connect() {
 
 // send magic octet
 func (transport *Transport) SendMagic() {
-	transport.Conn.WriteString(MagicString) // err
+	transport.Conn.WriteMagic() // err
 }
 
 // http.RoundTriper implementation
