@@ -53,11 +53,6 @@ func (transport *Transport) Connect() {
 	transport.Conn = NewConn(conn)
 }
 
-// send magic octet
-func (transport *Transport) SendMagic() {
-	transport.Conn.WriteMagic() // err
-}
-
 // http.RoundTriper implementation
 func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	transport.URL, _ = NewURL(req.URL.String()) // err
@@ -72,7 +67,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	}
 
 	var stream *Stream // create stream
-	transport.SendMagic()
+	transport.Conn.WriteMagic()
 	if !transport.FlowCtl {
 		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 	}
