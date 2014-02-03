@@ -13,6 +13,7 @@ func init() {
 }
 
 // Exted net/url with adding Port
+// because tls.Dial needs port number
 type URL struct {
 	*neturl.URL
 	Port string
