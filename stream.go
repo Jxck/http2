@@ -61,10 +61,13 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	stream.req = req
 
 	var flags uint8
+	var nextstate State
 	if req.Method == "GET" {
 		flags = END_STREAM + END_HEADERS
+		nextstate = HALF_CLOSED_LOCAL
 	} else if req.Method == "POST" {
 		flags = END_HEADERS
+		nextstate = OPEN
 	}
 
 	// send request header via HEADERS Frame
@@ -73,17 +76,21 @@ func (stream *Stream) SendRequest(req *http.Request) {
 	frame.HeaderBlock = stream.Conn.EncodeHeader(frame.Headers)
 	frame.Length = uint16(len(frame.HeaderBlock))
 	stream.send(frame) // err
+	stream.State = nextstate
 
 	// if request has body data
 	// send it via DATA Frame
 	if req.Body != nil {
+		// send payload with DATA Frame
 		data := NewDataFrame(UNSET, stream.Id)
 		data.Data, _ = ioutil.ReadAll(req.Body) // err
 		data.Length = uint16(len(data.Data))
 		stream.send(data)
 
+		// send END_STREAM with empty body
 		data = NewDataFrame(END_STREAM, stream.Id)
 		stream.send(data)
+		stream.State = HALF_CLOSED_LOCAL
 	}
 }
 
