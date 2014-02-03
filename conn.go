@@ -40,6 +40,7 @@ type Conn struct {
 	ResponseContext *hpack.Context
 	LastStreamId    uint32
 	WindowSize      uint32
+	Streams         map[uint32]*Stream
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -50,6 +51,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		RequestContext:  hpack.NewContext(hpack.REQUEST, hpack.DEFAULT_HEADER_TABLE_SIZE),
 		ResponseContext: hpack.NewContext(hpack.RESPONSE, hpack.DEFAULT_HEADER_TABLE_SIZE),
 		WindowSize:      DEFAULT_WINDOW_SIZE,
+		Streams:         make(map[uint32]*Stream),
 	}
 	return conn
 }
@@ -85,11 +87,13 @@ func (c *Conn) NextStreamId(cxt CXT) uint32 {
 }
 
 func (c *Conn) NewStream(cxt CXT) *Stream {
-	return NewStream(
+	stream := NewStream(
 		c.NextStreamId(cxt),
 		c,
 		DEFAULT_WINDOW_SIZE,
 	)
+	c.Streams[stream.Id] = stream
+	return stream
 }
 
 func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
