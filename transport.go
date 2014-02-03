@@ -18,7 +18,6 @@ func init() {
 type Transport struct {
 	URL      *URL
 	Conn     *Conn
-	Upgrade  bool
 	FlowCtl  bool
 	CertPath string
 	KeyPath  string
@@ -60,18 +59,20 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// establish tcp connection
 	transport.Connect()
 
-	// default Settings
+	// send Magic Octet
+	transport.Conn.WriteMagic()
+
+	// send settings
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
-
-	var stream *Stream // create stream
-	transport.Conn.WriteMagic()
 	if !transport.FlowCtl {
 		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 	}
 	transport.Conn.SendSettings(settings) // err
+
+	var stream *Stream // create stream
 	req = transport.URL.Update(req)
 	stream = transport.Conn.NewStream()
 	stream.SendRequest(req)
