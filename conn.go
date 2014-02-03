@@ -114,13 +114,13 @@ func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
 		Error("unknown type: %v", fh.Type)
 		return nil // err
 	}
-	Info("%v %v", Green("recv"), Indent(frame.Format()))
+	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
 	frame.Write(c.RW) // err
-	Info("%v %v", Red("send"), Indent(frame.Format()))
+	Info("%v %v", Red("send"), util.Indent(frame.Format()))
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
@@ -160,13 +160,13 @@ func (c *Conn) ReadMagic() { // err
 
 func (c *Conn) ReadResponse() *http.Response {
 	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
-	Debug(Green("recv"), Blue(ResponseString(res)), "\n")
+	Debug(Green("recv"), Blue(util.ResponseString(res)), "\n")
 	return res
 }
 
 func (c *Conn) ReadRequest() *http.Request {
 	req, _ := http.ReadRequest(c.Br) // err
-	Info("%v\n%v\n", Green("recv"), Blue(RequestString(req)))
+	Info("%v\n%v\n", Green("recv"), Blue(util.RequestString(req)))
 	return req
 }
 

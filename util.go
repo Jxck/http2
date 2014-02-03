@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var util = Util{}
+
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
@@ -26,7 +28,9 @@ var MustHeader = map[string]string{
 	"Status":    ":status",
 }
 
-func AddPrefix(header http.Header) http.Header {
+type Util struct{}
+
+func (u Util) AddPrefix(header http.Header) http.Header {
 	for key, values := range header {
 		name, ok := MustHeader[key]
 		if ok {
@@ -39,7 +43,7 @@ func AddPrefix(header http.Header) http.Header {
 	return header
 }
 
-func RemovePrefix(header http.Header) http.Header {
+func (u Util) RemovePrefix(header http.Header) http.Header {
 	for key, values := range header {
 		name, ok := MustHeader[key]
 		if ok {
@@ -52,7 +56,7 @@ func RemovePrefix(header http.Header) http.Header {
 	return header
 }
 
-func UpdateRequest(req *http.Request, url *URL) *http.Request {
+func (u Util) UpdateRequest(req *http.Request, url *URL) *http.Request {
 	if req.ContentLength != 0 {
 		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
 	}
@@ -67,7 +71,7 @@ func UpdateRequest(req *http.Request, url *URL) *http.Request {
 	return req
 }
 
-func RequestString(req *http.Request) string {
+func (u Util) RequestString(req *http.Request) string {
 	str := fmt.Sprintf("%v %v %v", req.Method, req.URL, req.Proto)
 	for k, v := range req.Header {
 		str += fmt.Sprintf("\n%v: %v", k, v[0])
@@ -75,7 +79,7 @@ func RequestString(req *http.Request) string {
 	return str
 }
 
-func ResponseString(res *http.Response) string {
+func (u Util) ResponseString(res *http.Response) string {
 	str := fmt.Sprintf("%v %v", res.Proto, res.Status)
 	for k, v := range res.Header {
 		str += fmt.Sprintf("\n%v: %v", k, v[0])
@@ -83,6 +87,6 @@ func ResponseString(res *http.Response) string {
 	return str
 }
 
-func Indent(v interface{}) string {
+func (u Util) Indent(v interface{}) string {
 	return strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
 }

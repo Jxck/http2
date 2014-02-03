@@ -65,7 +65,7 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	header := headers.Headers
 
 	// Convert to HTTP/1.1 header
-	header = AddPrefix(header)
+	header = util.AddPrefix(header)
 
 	handler.Conn.ReadFrame(hpack.REQUEST)
 
