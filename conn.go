@@ -163,18 +163,6 @@ func (c *Conn) ReadMagic() { // err
 	Info("%v %q", Red("recv"), string(magic))
 }
 
-func (c *Conn) ReadResponse() *http.Response {
-	res, _ := http.ReadResponse(c.Br, &http.Request{Method: "GET"}) // err
-	Debug(Green("recv"), Blue(util.ResponseString(res)), "\n")
-	return res
-}
-
-func (c *Conn) ReadRequest() *http.Request {
-	req, _ := http.ReadRequest(c.Br) // err
-	Info("%v\n%v\n", Green("recv"), Blue(util.RequestString(req)))
-	return req
-}
-
 // Encode Header using HPACK
 func (c *Conn) EncodeHeader(header http.Header) []byte {
 	headerSet := hpack.ToHeaderSet(header)
