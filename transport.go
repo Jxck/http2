@@ -50,14 +50,6 @@ func (transport *Transport) Connect() {
 	Info("%v %v", Yellow("protocol"), state.NegotiatedProtocol)
 
 	transport.Conn = NewConn(conn)
-}
-
-// http.RoundTriper implementation
-func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	transport.URL, _ = NewURL(req.URL.String()) // err
-
-	// establish tcp connection
-	transport.Connect()
 
 	// send Magic Octet
 	transport.Conn.WriteMagic()
@@ -71,6 +63,14 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 	}
 	transport.Conn.SendSettings(settings) // err
+}
+
+// http.RoundTriper implementation
+func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	transport.URL, _ = NewURL(req.URL.String()) // err
+
+	// establish tcp connection and handshake
+	transport.Connect()
 
 	// create stream
 	stream := transport.Conn.NewStream(CLIENT)
