@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version               = "HTTP-draft-09/2.0"
+	Version               = "h2-10"
 	MagicString           = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
 )
