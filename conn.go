@@ -104,13 +104,10 @@ func (c *Conn) ReadFrame() (frame Frame) {
 		}
 		frame.Read(c.RW)
 	case HeadersFrameType:
-		f := &HeadersFrame{
+		frame = &HeadersFrame{
 			FrameHeader: fh,
 		}
-		f.Read(c.RW)
-
-		f.Headers = c.DecodeHeader(f.HeaderBlock)
-		frame = f
+		frame.Read(c.RW)
 	case RstStreamFrameType:
 		frame = &RstStreamFrame{
 			FrameHeader: fh,
