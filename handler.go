@@ -28,7 +28,7 @@ type Handler struct {
 func (handler *Handler) RecvLoop() {
 	fin := make(chan bool)
 	for {
-		frame := handler.Conn.ReadFrame(hpack.REQUEST)
+		frame := handler.Conn.ReadFrame()
 		_, ok := frame.(*GoAwayFrame)
 		if ok {
 			fin <- true
@@ -55,19 +55,19 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	handler.Conn.SendSettings(defaultSettings)
 
 	// Recv SETTINGS
-	handler.Conn.ReadFrame(hpack.REQUEST)
+	handler.Conn.ReadFrame()
 
 	// Send SETTINGS ACK
 	handler.Conn.SendSettingsAck()
 
 	// Recv HEADERS
-	headers := handler.Conn.ReadFrame(hpack.REQUEST).(*HeadersFrame)
+	headers := handler.Conn.ReadFrame().(*HeadersFrame)
 	header := headers.Headers
 
 	// Convert to HTTP/1.1 header
 	header = util.AddPrefix(header)
 
-	handler.Conn.ReadFrame(hpack.REQUEST)
+	handler.Conn.ReadFrame()
 
 	// TODO: fill in other params
 	url := &neturl.URL{
@@ -103,7 +103,7 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	frame.Headers = responseHeader
 
 	headerSet := hpack.ToHeaderSet(responseHeader)
-	frame.HeaderBlock = handler.Conn.ResponseContext.Encode(headerSet)
+	frame.HeaderBlock = handler.Conn.HpackContext.Encode(headerSet)
 	frame.Length = uint16(len(frame.HeaderBlock))
 	handler.Conn.WriteFrame(frame)
 
@@ -117,7 +117,7 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	handler.Conn.WriteFrame(data)
 
 	for i := 0; i < 30; i++ {
-		frame := handler.Conn.ReadFrame(hpack.REQUEST)
+		frame := handler.Conn.ReadFrame()
 		_, ok := frame.(*GoAwayFrame)
 		if ok {
 			break

@@ -67,9 +67,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
-	if !transport.FlowCtl {
-		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
-	}
 	transport.Conn.SendSettings(settings) // err
 
 	// create stream

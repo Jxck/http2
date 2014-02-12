@@ -15,7 +15,7 @@ func TestAddPrefix(t *testing.T) {
 	actual.Add("cookie", "a")
 	actual.Add("cookie", "b")
 	actual.Add("x-http2-version", "draft-09")
-	actual = AddPrefix(actual)
+	actual = util.AddPrefix(actual)
 
 	expected := make(http.Header)
 	expected.Add(":method", "get")
@@ -49,7 +49,7 @@ func TestRemovePrefix(t *testing.T) {
 	expected.Add("cookie", "a")
 	expected.Add("cookie", "b")
 	expected.Add("x-http2-version", "draft-09")
-	expected = AddPrefix(actual)
+	expected = util.AddPrefix(actual)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("\ngot  %v\nwant %v", actual, expected)
