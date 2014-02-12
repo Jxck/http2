@@ -18,7 +18,6 @@ func init() {
 type Transport struct {
 	URL      *URL
 	Conn     *Conn
-	FlowCtl  bool
 	CertPath string
 	KeyPath  string
 }
