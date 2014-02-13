@@ -96,45 +96,27 @@ func (c *Conn) NewStream(cxt CXT) *Stream {
 	return stream
 }
 
+var FrameMap = map[uint8](func(*FrameHeader) Frame){
+	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
+	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
+	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
+	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
+	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
+	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
+}
+
 func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
 	fh := new(FrameHeader)
 	fh.Read(c.RW) // err
 
-	switch fh.Type {
-	case DataFrameType:
-		frame = &DataFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	case HeadersFrameType:
-		frame = &HeadersFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	case RstStreamFrameType:
-		frame = &RstStreamFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	case SettingsFrameType:
-		frame = &SettingsFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	case GoAwayFrameType:
-		frame = &GoAwayFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	case WindowUpdateFrameType:
-		frame = &WindowUpdateFrame{
-			FrameHeader: fh,
-		}
-		frame.Read(c.RW)
-	default:
+	newframe, ok := FrameMap[fh.Type]
+	if !ok {
 		Error("unknown type: %v", fh.Type)
 		return nil // err
 	}
+
+	frame = newframe(fh)
+	frame.Read(c.RW)
 	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame
 }
