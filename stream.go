@@ -45,13 +45,13 @@ func NewStream(id uint32, c *Conn, windowSize uint32) *Stream {
 		State:      IDLE,
 		WindowSize: windowSize,
 		FromConn:   make(chan Frame),
-		ToConn:     make(chan Frame),
+		ToConn:     c.FromStream,
 	}
 }
 
 // send frame using Conn.WriteFrame
 func (stream *Stream) send(frame Frame) {
-	stream.Conn.WriteFrame(frame) // err
+	stream.ToConn <- frame // err
 }
 
 // receive frame using Conn.ReadFrame

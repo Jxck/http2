@@ -54,6 +54,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		Streams:         make(map[uint32](chan Frame)),
 		FromStream:      make(chan Frame),
 	}
+	go conn.WriteLoop()
 	return conn
 }
 
@@ -128,6 +129,12 @@ func (c *Conn) ReadFrame() (frame Frame) {
 func (c *Conn) WriteFrame(frame Frame) { // err
 	frame.Write(c.RW) // err
 	Info("%v %v", Red("send"), util.Indent(frame.Format()))
+}
+
+func (c *Conn) WriteLoop() { // err
+	for frame := range c.FromStream {
+		c.WriteFrame(frame)
+	}
 }
 
 func (c *Conn) SendSettings(settings map[SettingsId]uint32) { // err
