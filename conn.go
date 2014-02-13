@@ -88,8 +88,6 @@ func (c *Conn) NextStreamId(cxt CXT) uint32 {
 	return id
 }
 
-// TODO: Stream は cxt を持つべきではない。
-// 両方から使うから。 ID を生成時に渡すだけ。
 func (c *Conn) NewStream(cxt CXT) *Stream {
 	stream := NewStream(
 		c.NextStreamId(cxt),
