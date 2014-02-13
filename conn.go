@@ -87,6 +87,8 @@ func (c *Conn) NextStreamId(cxt CXT) uint32 {
 	return id
 }
 
+// TODO: Stream は cxt を持つべきではない。
+// 両方から使うから。 ID を生成時に渡すだけ。
 func (c *Conn) NewStream(cxt CXT) *Stream {
 	stream := NewStream(
 		c.NextStreamId(cxt),
@@ -97,6 +99,7 @@ func (c *Conn) NewStream(cxt CXT) *Stream {
 	return stream
 }
 
+// map of FrameType and FrameInitializer
 var FrameMap = map[uint8](func(*FrameHeader) Frame){
 	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
 	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
