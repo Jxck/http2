@@ -115,9 +115,6 @@ func (stream *Stream) RecvResponse() *http.Response {
 			headersFrame.Headers = stream.Conn.DecodeHeader(hpack.RESPONSE, headersFrame.HeaderBlock)
 			resHeader = headersFrame.Headers
 
-			headersFrame.Headers =
-				stream.Conn.DecodeHeader(hpack.RESPONSE, headersFrame.HeaderBlock)
-
 		case *DataFrame:
 			// if DATA Frame
 			dataFrame := frametype
