@@ -109,7 +109,7 @@ var FrameMap = map[uint8](func(*FrameHeader) Frame){
 	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
 }
 
-func (c *Conn) ReadFrame(cxt hpack.CXT) (frame Frame) {
+func (c *Conn) ReadFrame() (frame Frame) {
 	fh := new(FrameHeader)
 	fh.Read(c.RW) // err
 

@@ -56,7 +56,7 @@ func (stream *Stream) send(frame Frame) {
 
 // receive frame using Conn.ReadFrame
 func (stream *Stream) recv() Frame {
-	frame := stream.Conn.ReadFrame(hpack.RESPONSE) // err
+	frame := stream.Conn.ReadFrame() // err
 	return frame
 }
 
