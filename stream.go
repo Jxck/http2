@@ -33,7 +33,7 @@ type Stream struct {
 	State      State
 	WindowSize uint32
 	req        *http.Request
-	FromConn   chan Frame
+	ReadChan   chan Frame
 	ToConn     chan Frame
 }
 
@@ -43,7 +43,7 @@ func NewStream(id uint32, c *Conn, windowSize uint32) *Stream {
 		Conn:       c,
 		State:      IDLE,
 		WindowSize: windowSize,
-		FromConn:   make(chan Frame),
+		ReadChan:   make(chan Frame),
 		ToConn:     c.WriteChan,
 	}
 }

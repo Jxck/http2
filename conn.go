@@ -50,6 +50,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		WriteChan:    make(chan Frame),
 	}
 	go conn.WriteLoop()
+	go conn.ReadLoop()
 	return conn
 }
 
@@ -77,6 +78,20 @@ func (c *Conn) ReadFrame() (frame Frame) {
 	frame.Read(c.RW)
 	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame
+}
+
+func (c *Conn) ReadLoop() {
+	for {
+		frame := c.ReadFrame()
+		streamId := frame.Header().StreamId
+		stream, ok := c.Streams[streamId]
+		if !ok {
+			// Frame がなかったら作る
+			stream = NewStream(streamId, c, DEFAULT_WINDOW_SIZE)
+			c.Streams[streamId] = stream
+		}
+		stream.ReadChan <- frame
+	}
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
