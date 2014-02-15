@@ -30,6 +30,11 @@ var MustHeader = map[string]string{
 
 type Util struct{}
 
+var (
+	NextClientStreamId chan uint32 = util.NextId(1)
+	NextServerStreamId chan uint32 = util.NextId(2)
+)
+
 func (u Util) NextId(id uint32) chan uint32 {
 	idChan := make(chan uint32)
 	go func() {
