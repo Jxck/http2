@@ -30,6 +30,21 @@ var MustHeader = map[string]string{
 
 type Util struct{}
 
+func (u Util) NextId(id uint32) chan uint32 {
+	idChan := make(chan uint32)
+	go func() {
+		for {
+			if id >= 4294967295 || id < 0 { // 2^32-1 or invalid
+				log.Println("stream id too big or invalid, return to 0")
+				id = 0
+			}
+			idChan <- id
+			id = id + 2
+		}
+	}()
+	return idChan
+}
+
 func (u Util) AddPrefix(header http.Header) http.Header {
 	for key, values := range header {
 		name, ok := MustHeader[key]
