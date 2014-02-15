@@ -28,9 +28,6 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
-// Conn has 2 funcs
-// ReadFrame() frame
-// WriteFrame(frame)
 type Conn struct {
 	RW           io.ReadWriter
 	Bw           *bufio.Writer
@@ -39,7 +36,7 @@ type Conn struct {
 	LastStreamId uint32
 	WindowSize   uint32
 	Streams      map[uint32]*Stream
-	FromStream   chan Frame
+	WriteChan    chan Frame
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -50,40 +47,10 @@ func NewConn(rw io.ReadWriter) *Conn {
 		HpackContext: hpack.NewContext(hpack.DEFAULT_HEADER_TABLE_SIZE),
 		WindowSize:   DEFAULT_WINDOW_SIZE,
 		Streams:      make(map[uint32]*Stream),
-		FromStream:   make(chan Frame),
+		WriteChan:    make(chan Frame),
 	}
 	go conn.WriteLoop()
 	return conn
-}
-
-func (c *Conn) NextStreamId(cxt CXT) uint32 {
-	id := c.LastStreamId
-	if id == 4294967295 || id < 0 { // 2^32-1 or invalid
-		log.Println("stream id too big or invalid, return to 0")
-		id = 0
-	}
-	even := (id%2 == 0)
-	if cxt == CLIENT {
-		// id from CLIENT should be ODD
-		if id == 0 {
-			id = 1
-		} else if even {
-			id = id + 1
-		} else {
-			id = id + 2
-		}
-	} else if cxt == SERVER {
-		// id from SERVER should be EVEN
-		if id == 0 {
-			id = 2
-		} else if even {
-			id = id + 2
-		} else {
-			id = id + 1
-		}
-	}
-	c.LastStreamId = id
-	return id
 }
 
 func (c *Conn) NewStream(cxt CXT) *Stream {
@@ -94,16 +61,6 @@ func (c *Conn) NewStream(cxt CXT) *Stream {
 	)
 	c.Streams[stream.Id] = stream
 	return stream
-}
-
-// map of FrameType and FrameInitializer
-var FrameMap = map[uint8](func(*FrameHeader) Frame){
-	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
-	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
-	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
-	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
-	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
-	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
 }
 
 func (c *Conn) ReadFrame() (frame Frame) {
@@ -128,7 +85,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 }
 
 func (c *Conn) WriteLoop() { // err
-	for frame := range c.FromStream {
+	for frame := range c.WriteChan {
 		c.WriteFrame(frame)
 	}
 }
@@ -178,4 +135,44 @@ func (c *Conn) EncodeHeader(header http.Header) []byte {
 func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
 	c.HpackContext.Decode(headerBlock)
 	return c.HpackContext.ES.ToHeader()
+}
+
+func (c *Conn) NextStreamId(cxt CXT) uint32 {
+	id := c.LastStreamId
+	if id == 4294967295 || id < 0 { // 2^32-1 or invalid
+		log.Println("stream id too big or invalid, return to 0")
+		id = 0
+	}
+	even := (id%2 == 0)
+	if cxt == CLIENT {
+		// id from CLIENT should be ODD
+		if id == 0 {
+			id = 1
+		} else if even {
+			id = id + 1
+		} else {
+			id = id + 2
+		}
+	} else if cxt == SERVER {
+		// id from SERVER should be EVEN
+		if id == 0 {
+			id = 2
+		} else if even {
+			id = id + 2
+		} else {
+			id = id + 1
+		}
+	}
+	c.LastStreamId = id
+	return id
+}
+
+// map of FrameType and FrameInitializer
+var FrameMap = map[uint8](func(*FrameHeader) Frame){
+	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
+	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
+	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
+	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
+	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
+	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
 }

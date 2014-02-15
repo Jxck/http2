@@ -44,7 +44,7 @@ func NewStream(id uint32, c *Conn, windowSize uint32) *Stream {
 		State:      IDLE,
 		WindowSize: windowSize,
 		FromConn:   make(chan Frame),
-		ToConn:     c.FromStream,
+		ToConn:     c.WriteChan,
 	}
 }
 
