@@ -18,7 +18,6 @@ func init() {
 type Transport struct {
 	URL      *URL
 	Conn     *Conn
-	FlowCtl  bool
 	CertPath string
 	KeyPath  string
 }
@@ -58,9 +57,6 @@ func (transport *Transport) Connect() {
 	settings := map[SettingsId]uint32{
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
-	}
-	if !transport.FlowCtl {
-		settings[SETTINGS_FLOW_CONTROL_OPTIONS] = 1
 	}
 	transport.Conn.SendSettings(settings) // err
 }

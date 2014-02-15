@@ -3,7 +3,6 @@ package http2
 import (
 	"bytes"
 	. "github.com/jxck/color"
-	"github.com/jxck/hpack"
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"io/ioutil"
@@ -112,8 +111,8 @@ func (stream *Stream) RecvResponse() *http.Response {
 		case *HeadersFrame:
 			// if HEADERS Frame
 			headersFrame := frametype
-			headersFrame.Headers = stream.Conn.DecodeHeader(hpack.RESPONSE, headersFrame.HeaderBlock)
-			resHeader = headersFrame.Headers
+			resHeader = stream.Conn.DecodeHeader(headersFrame.HeaderBlock)
+			headersFrame.Headers = resHeader
 
 		case *DataFrame:
 			// if DATA Frame

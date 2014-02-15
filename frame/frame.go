@@ -17,7 +17,6 @@ func init() {
 }
 
 const (
-	// note: 0x08 dosen't used
 	DataFrameType         uint8 = 0x0
 	HeadersFrameType            = 0x1
 	PriorityFrameType           = 0x2
@@ -26,34 +25,33 @@ const (
 	PushPrimiseFrameType        = 0x5
 	PingFrameType               = 0x6
 	GoAwayFrameType             = 0x7
-	WindowUpdateFrameType       = 0x9
-	ContinuationFrameType       = 0xA
+	WindowUpdateFrameType       = 0x8
+	ContinuationFrameType       = 0x9
 )
 
 // For RST_STREAM and GOAWAY Frame
 type ErrorCode uint32
 
 const (
-	NO_ERROR           ErrorCode = 0
-	PROTOCOL_ERROR               = 1
-	INTERNAL_ERROR               = 2
-	FLOW_CONTROL_ERROR           = 3
-	SETTINGS_TIMEOUT             = 4
-	STREAM_CLOSED                = 5
-	FRAME_SIZE_ERROR             = 6
-	REFUSED_STREAM               = 7
-	CANCEL                       = 8
-	COMPRESSION_ERROR            = 9
-	CONNECT_ERROR                = 10
-	ENHANCE_YOUR_CALM            = 420
+	NO_ERROR            ErrorCode = 0
+	PROTOCOL_ERROR                = 1
+	INTERNAL_ERROR                = 2
+	FLOW_CONTROL_ERROR            = 3
+	SETTINGS_TIMEOUT              = 4
+	STREAM_CLOSED                 = 5
+	FRAME_SIZE_ERROR              = 6
+	REFUSED_STREAM                = 7
+	CANCEL                        = 8
+	COMPRESSION_ERROR             = 9
+	CONNECT_ERROR                 = 10
+	ENHANCE_YOUR_CALM             = 11
+	INADEQUATE_SECURITY           = 12
 )
 
 func (e ErrorCode) Format() string {
-	if e == ENHANCE_YOUR_CALM {
-		return "ENHANCE_YOUR_CALM"
-	}
 	errors := []string{
 		"NO_ERROR",
+		"PROTOCOL_ERROR",
 		"PROTOCOL_ERROR",
 		"INTERNAL_ERROR",
 		"FLOW_CONTROL_ERROR",
@@ -64,6 +62,8 @@ func (e ErrorCode) Format() string {
 		"CANCEL",
 		"COMPRESSION_ERROR",
 		"CONNECT_ERROR",
+		"ENHANCE_YOUR_CALM",
+		"INADEQUATE_SECURITY",
 	}
 	return errors[int(e)]
 }
@@ -192,9 +192,11 @@ type HeadersFrame struct {
 const (
 	UNSET       uint8 = 0x0
 	END_STREAM        = 0x1
-	RESERVED          = 0x2
+	END_SEGMENT       = 0x2
 	END_HEADERS       = 0x4
 	PRIORITY          = 0x8
+	PAD_LOW           = 0x10
+	PAD_HIGH          = 0x20
 )
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
@@ -327,18 +329,16 @@ type SettingsId uint32
 const (
 	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1
 	SETTINGS_ENABLE_PUSH                       = 2
-	SETTINGS_MAX_CONCURRENT_STREAMS            = 4
-	SETTINGS_INITIAL_WINDOW_SIZE               = 7
-	SETTINGS_FLOW_CONTROL_OPTIONS              = 10
+	SETTINGS_MAX_CONCURRENT_STREAMS            = 3
+	SETTINGS_INITIAL_WINDOW_SIZE               = 4
 )
 
 func (s SettingsId) Format() string {
 	m := map[SettingsId]string{
-		1:  "SETTINGS_HEADER_TABLE_SIZE",
-		2:  "SETTINGS_ENABLE_PUSH",
-		4:  "SETTINGS_MAX_CONCURRENT_STREAMS",
-		7:  "SETTINGS_INITIAL_WINDOW_SIZE",
-		10: "SETTINGS_FLOW_CONTROL_OPTIONS",
+		1: "SETTINGS_HEADER_TABLE_SIZE",
+		2: "SETTINGS_ENABLE_PUSH",
+		3: "SETTINGS_MAX_CONCURRENT_STREAMS",
+		4: "SETTINGS_INITIAL_WINDOW_SIZE",
 	}
 	return fmt.Sprintf("%s(%d)", m[s], s)
 }

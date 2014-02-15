@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	Version     = "HTTP-draft-09/2.0"
-	MagicString = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+	Version               = "h2-10"
+	MagicString           = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
 )
 
-// Request or Response
 type CXT bool
 
 const (
@@ -32,27 +32,23 @@ func init() {
 // ReadFrame() frame
 // WriteFrame(frame)
 type Conn struct {
-	RW              io.ReadWriter
-	Bw              *bufio.Writer
-	Br              *bufio.Reader
-	RequestContext  *hpack.Context
-	ResponseContext *hpack.Context
-	LastStreamId    uint32
-	WindowSize      uint32
-	Streams         map[uint32](chan Frame)
-	FromStream      chan Frame
+	RW           io.ReadWriter
+	Bw           *bufio.Writer
+	Br           *bufio.Reader
+	HpackContext *hpack.Context
+	LastStreamId uint32
+	WindowSize   uint32
+	Streams      map[uint32]*Stream
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
-		RW:              rw,
-		Bw:              bufio.NewWriter(rw),
-		Br:              bufio.NewReader(rw),
-		RequestContext:  hpack.NewContext(hpack.REQUEST, hpack.DEFAULT_HEADER_TABLE_SIZE),
-		ResponseContext: hpack.NewContext(hpack.RESPONSE, hpack.DEFAULT_HEADER_TABLE_SIZE),
-		WindowSize:      DEFAULT_WINDOW_SIZE,
-		Streams:         make(map[uint32](chan Frame)),
-		FromStream:      make(chan Frame),
+		RW:           rw,
+		Bw:           bufio.NewWriter(rw),
+		Br:           bufio.NewReader(rw),
+		HpackContext: hpack.NewContext(hpack.DEFAULT_HEADER_TABLE_SIZE),
+		WindowSize:   DEFAULT_WINDOW_SIZE,
+		Streams:      make(map[uint32]*Stream),
 	}
 	go conn.WriteLoop()
 	return conn
@@ -173,17 +169,11 @@ func (c *Conn) ReadMagic() { // err
 // Encode Header using HPACK
 func (c *Conn) EncodeHeader(header http.Header) []byte {
 	headerSet := hpack.ToHeaderSet(header)
-	return c.RequestContext.Encode(headerSet)
+	return c.HpackContext.Encode(headerSet)
 }
 
 // Decode Header using HPACK
-func (c *Conn) DecodeHeader(cxt hpack.CXT, headerBlock []byte) http.Header {
-	if cxt == hpack.RESPONSE {
-		c.ResponseContext.Decode(headerBlock)
-		return c.ResponseContext.ES.ToHeader()
-	} else {
-		c.RequestContext.Decode(headerBlock)
-		return c.RequestContext.ES.ToHeader()
-	}
-	return nil // with err
+func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
+	c.HpackContext.Decode(headerBlock)
+	return c.HpackContext.ES.ToHeader()
 }
