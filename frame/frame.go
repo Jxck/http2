@@ -317,14 +317,14 @@ func (frame *RstStreamFrame) Format() string {
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |  Reserved (8) |            Setting Identifier (24)            |
+// |Identifier (8) |                 Value (32)                  ...
 // +---------------+-----------------------------------------------+
-// |                        Value (32)                             |
-// +---------------------------------------------------------------+
+// ...Value        |
+// +---------------+
 
 const DEFAULT_WINDOW_SIZE uint32 = 65535
 
-type SettingsId uint32
+type SettingsId uint8
 
 const (
 	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1
@@ -344,7 +344,6 @@ func (s SettingsId) Format() string {
 }
 
 type Setting struct {
-	Reserved   uint8
 	SettingsId SettingsId
 	Value      uint32
 }
@@ -365,7 +364,7 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 		settings = append(settings, s)
 	}
 
-	var length uint16 = uint16(8 * len(settings))
+	var length uint16 = uint16(5 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
@@ -375,13 +374,10 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 }
 
 func (frame *SettingsFrame) Read(r io.Reader) {
-	for niv := frame.Length / 8; niv > 0; niv-- {
+	for niv := frame.Length / 5; niv > 0; niv-- {
 		s := *new(Setting)
 
-		var firstByte uint32
-		binary.Read(r, binary.BigEndian, &firstByte) // err
-		s.SettingsId = SettingsId(firstByte & 0xFFFFFF)
-		s.Reserved = uint8(firstByte >> 24)
+		binary.Read(r, binary.BigEndian, &s.SettingsId) // err
 		binary.Read(r, binary.BigEndian, &s.Value) // err
 		frame.Settings = append(frame.Settings, s)
 	}
