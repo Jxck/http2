@@ -44,7 +44,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 	}
 
 	// stream id 0
-	zeroStream := NewStream(0, conn, DEFAULT_WINDOW_SIZE)
+	zeroStream := conn.NewStream(0)
 	conn.Streams[0] = zeroStream
 
 	go conn.WriteLoop()
