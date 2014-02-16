@@ -7,6 +7,7 @@ import (
 	. "github.com/jxck/logger"
 	"log"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -60,6 +61,8 @@ func (transport *Transport) Connect() {
 	}
 	settingsFrame := NewSettingsFrame(0 /*flags*/, settings, 0 /*stream id*/)
 	transport.Conn.WriteFrame(settingsFrame) // err
+
+	time.Sleep(time.Second)
 }
 
 // http.RoundTriper implementation

@@ -74,12 +74,11 @@ func (c *Conn) ReadFrame() (frame Frame) {
 
 	frame = newframe(fh)
 	frame.Read(c.RW)
-	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame
 }
 
 func (c *Conn) ReadLoop() {
-	for {
+	for i := 0; i < 20; i++ {
 		frame := c.ReadFrame()
 		streamId := frame.Header().StreamId
 		stream, ok := c.Streams[streamId]
