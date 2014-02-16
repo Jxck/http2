@@ -1,9 +1,7 @@
 package http2
 
 import (
-	. "github.com/jxck/color"
 	. "github.com/jxck/http2/frame"
-	. "github.com/jxck/logger"
 	"log"
 	"net/http"
 )
@@ -47,7 +45,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32) *Stream {
 
 func (stream *Stream) ReadLoop() {
 	for frame := range stream.ReadChan {
-		Info("%v %v", Green("recv"), util.Indent(frame.Format()))
+		log.Printf("stream %v recv %v\n", stream.Id, frame.Header().Type)
 	}
 }
 

@@ -104,8 +104,8 @@ func NewFrameHeader(length uint16, types uint8, flags uint8, streamid uint32) *F
 	return fh
 }
 
-func (fh *FrameHeader) Read(r io.Reader) {
-	binary.Read(r, binary.BigEndian, fh) // err
+func (fh *FrameHeader) Read(r io.Reader) error {
+	return binary.Read(r, binary.BigEndian, fh) // err
 }
 
 func (fh *FrameHeader) Write(w io.Writer) {

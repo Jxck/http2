@@ -2,6 +2,7 @@ package http2
 
 import (
 	"bufio"
+	"fmt"
 	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
 	. "github.com/jxck/http2/frame"
@@ -62,24 +63,31 @@ func (c *Conn) NewStream(streamid uint32) *Stream {
 	return stream
 }
 
-func (c *Conn) ReadFrame() (frame Frame) {
+func (c *Conn) ReadFrame() (frame Frame, err error) {
 	fh := new(FrameHeader)
-	fh.Read(c.RW) // err
+	err = fh.Read(c.RW) // err
+	if err != nil {
+		return nil, err
+	}
 
 	newframe, ok := FrameMap[fh.Type]
 	if !ok {
-		Error("unknown type: %v", fh.Type)
-		return nil // err
+		return nil, fmt.Errorf("unknown type: %v", fh.Type)
 	}
 
 	frame = newframe(fh)
 	frame.Read(c.RW)
-	return frame
+	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
+	return frame, nil
 }
 
 func (c *Conn) ReadLoop() {
-	for i := 0; i < 20; i++ {
-		frame := c.ReadFrame()
+	for {
+		frame, err := c.ReadFrame()
+		if err != nil {
+			log.Fatal(err)
+			break
+		}
 		streamId := frame.Header().StreamId
 		stream, ok := c.Streams[streamId]
 		if !ok {
