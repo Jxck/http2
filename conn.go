@@ -55,7 +55,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 func (c *Conn) NewStream(streamid uint32) *Stream {
 	stream := NewStream(
 		streamid,
-		c,
+		c.WriteChan,
 		DEFAULT_WINDOW_SIZE,
 	)
 	c.Streams[stream.Id] = stream
@@ -85,7 +85,7 @@ func (c *Conn) ReadLoop() {
 		stream, ok := c.Streams[streamId]
 		if !ok {
 			// Frame がなかったら作る
-			stream = NewStream(streamId, c, DEFAULT_WINDOW_SIZE)
+			stream = NewStream(streamId, c.WriteChan, DEFAULT_WINDOW_SIZE)
 			c.Streams[streamId] = stream
 		}
 		stream.ReadChan <- frame
