@@ -6,6 +6,7 @@ import (
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"log"
+	"net/http"
 )
 
 func init() {
@@ -57,27 +58,28 @@ func (transport *Transport) Connect() {
 		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 	}
-	_ = settings
-	//transport.Conn.SendSettings(settings) // err
+	settingsFrame := NewSettingsFrame(0 /*flags*/, settings, 0 /*stream id*/)
+	transport.Conn.WriteFrame(settingsFrame) // err
 }
 
-//// http.RoundTriper implementation
-//func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-//	transport.URL, _ = NewURL(req.URL.String()) // err
-//
-//	// establish tcp connection and handshake
-//	transport.Connect()
-//
-//	// create stream
-//	stream := transport.Conn.NewStream(<-NextClientStreamId)
-//	req = util.UpdateRequest(req, transport.URL)
-//	stream.SendRequest(req)
-//
-//	// receive response from stream
-//	res := stream.RecvResponse() // err
-//
-//	// send GOAWAY
-//	transport.Conn.SendGoAway(NO_ERROR)
-//
-//	return res, nil
-//}
+// http.RoundTriper implementation
+func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	transport.URL, _ = NewURL(req.URL.String()) // err
+
+	// establish tcp connection and handshake
+	transport.Connect()
+
+	//// create stream
+	//stream := transport.Conn.NewStream(<-NextClientStreamId)
+	//req = util.UpdateRequest(req, transport.URL)
+	//stream.SendRequest(req)
+
+	//// receive response from stream
+	//res := stream.RecvResponse() // err
+
+	//// send GOAWAY
+	//transport.Conn.SendGoAway(NO_ERROR)
+
+	//return res, nil
+	return nil, nil
+}
