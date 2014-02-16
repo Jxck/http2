@@ -17,13 +17,6 @@ const (
 	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
 )
 
-type CXT bool
-
-const (
-	SERVER CXT = true
-	CLIENT     = false
-)
-
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
@@ -59,9 +52,9 @@ func NewConn(rw io.ReadWriter) *Conn {
 	return conn
 }
 
-func (c *Conn) NewStream(cxt CXT) *Stream {
+func (c *Conn) NewStream(streamid uint32) *Stream {
 	stream := NewStream(
-		c.NextStreamId(cxt),
+		streamid,
 		c,
 		DEFAULT_WINDOW_SIZE,
 	)
@@ -139,36 +132,6 @@ func (c *Conn) EncodeHeader(header http.Header) []byte {
 func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
 	c.HpackContext.Decode(headerBlock)
 	return c.HpackContext.ES.ToHeader()
-}
-
-func (c *Conn) NextStreamId(cxt CXT) uint32 {
-	id := c.LastStreamId
-	if id == 4294967295 || id < 0 { // 2^32-1 or invalid
-		log.Println("stream id too big or invalid, return to 0")
-		id = 0
-	}
-	even := (id%2 == 0)
-	if cxt == CLIENT {
-		// id from CLIENT should be ODD
-		if id == 0 {
-			id = 1
-		} else if even {
-			id = id + 1
-		} else {
-			id = id + 2
-		}
-	} else if cxt == SERVER {
-		// id from SERVER should be EVEN
-		if id == 0 {
-			id = 2
-		} else if even {
-			id = id + 2
-		} else {
-			id = id + 1
-		}
-	}
-	c.LastStreamId = id
-	return id
 }
 
 // map of FrameType and FrameInitializer
