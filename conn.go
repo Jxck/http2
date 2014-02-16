@@ -86,7 +86,7 @@ func (c *Conn) ReadLoop() {
 		frame, err := c.ReadFrame()
 		if err != nil {
 			log.Fatal(err)
-			break
+			//break
 		}
 		streamId := frame.Header().StreamId
 		stream, ok := c.Streams[streamId]

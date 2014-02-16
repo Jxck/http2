@@ -61,8 +61,6 @@ func (transport *Transport) Connect() {
 	}
 	settingsFrame := NewSettingsFrame(0 /*flags*/, settings, 0 /*stream id*/)
 	transport.Conn.WriteFrame(settingsFrame) // err
-
-	time.Sleep(time.Second)
 }
 
 // http.RoundTriper implementation
@@ -72,9 +70,20 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// establish tcp connection and handshake
 	transport.Connect()
 
-	//// create stream
-	//stream := transport.Conn.NewStream(<-NextClientStreamId)
-	//req = util.UpdateRequest(req, transport.URL)
+	// create stream
+	stream := transport.Conn.NewStream(<-NextClientStreamId)
+	log.Println(stream)
+	req = util.UpdateRequest(req, transport.URL)
+
+	// send request header via HEADERS Frame
+	var flags uint8 = END_STREAM + END_HEADERS
+	frame := NewHeadersFrame(flags, stream.Id)
+	frame.Headers = req.Header
+	frame.HeaderBlock = transport.Conn.EncodeHeader(frame.Headers)
+	frame.Length = uint16(len(frame.HeaderBlock))
+	stream.Write(frame) // err
+
+	time.Sleep(time.Second)
 	//stream.SendRequest(req)
 
 	//// receive response from stream
