@@ -157,8 +157,19 @@ func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
 }
 
 func (frame *DataFrame) Read(r io.Reader) {
-	frame.Data = make([]byte, frame.Length)
-	binary.Read(r, binary.BigEndian, &frame.Data) // err
+	var frameLen, padLen uint16
+
+	frameLen = frame.Length
+	if (frame.Flags&PAD_LOW == 1) && (frame.Flags&PAD_HIGH == 1) {
+		var padHigh, padLow uint8
+		binary.Read(r, binary.BigEndian, &padHigh) // err
+		binary.Read(r, binary.BigEndian, &padLow)  // err
+		padLen = uint16(padHigh)*256 + uint16(padLow)
+		frameLen = frameLen - 2 // (Pad Higth + Pad Low)
+	}
+	data := make([]byte, frameLen)
+	binary.Read(r, binary.BigEndian, &data)   // err
+	frame.Data = data[:len(data)-int(padLen)] // remove padding
 }
 
 func (frame *DataFrame) Write(w io.Writer) {
@@ -223,19 +234,29 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 }
 
 func (frame *HeadersFrame) Read(r io.Reader) {
-	length := frame.Length
-	if frame.Flags == PRIORITY {
-		binary.Read(r, binary.BigEndian, &frame.Priority) // err
-		length -= 4
+	var frameLen, padLen uint16
+
+	frameLen = frame.Length
+	if (frame.Flags&PAD_LOW == PAD_LOW) && (frame.Flags&PAD_HIGH == PAD_HIGH) {
+		var padHigh, padLow uint8
+		binary.Read(r, binary.BigEndian, &padHigh) // err
+		binary.Read(r, binary.BigEndian, &padLow)  // err
+		padLen = uint16(padHigh)*256 + uint16(padLow)
+		frameLen = frameLen - 2 // (Pad Higth + Pad Low)
 	}
-	b := make([]byte, length)
-	binary.Read(r, binary.BigEndian, &b) // err
-	frame.HeaderBlock = b
+
+	if frame.Flags&PRIORITY == PRIORITY {
+		binary.Read(r, binary.BigEndian, &frame.Priority) // err
+		frameLen = frameLen - 4
+	}
+	data := make([]byte, frameLen)
+	binary.Read(r, binary.BigEndian, &data)          // err
+	frame.HeaderBlock = data[:len(data)-int(padLen)] // remove padding
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) {
 	frame.FrameHeader.Write(w)
-	if frame.Flags == PRIORITY {
+	if frame.Flags&PRIORITY == PRIORITY {
 		binary.Write(w, binary.BigEndian, &frame.Priority) // err
 	}
 	binary.Write(w, binary.BigEndian, &frame.HeaderBlock) // err
@@ -249,16 +270,24 @@ func (frame *HeadersFrame) Format() string {
 	str := Cyan("HEADERS")
 	str += frame.FrameHeader.Format()
 
-	if frame.Flags&0x1 == 1 {
+	if frame.Flags&END_STREAM == END_STREAM {
 		str += "\n; END_STREAM"
 	}
 
-	if frame.Flags&0x4 == 4 {
+	if frame.Flags&END_HEADERS == END_HEADERS {
 		str += "\n; END_HEADERS"
 	}
 
-	if frame.Flags&0x8 == 8 {
+	if frame.Flags&PRIORITY == PRIORITY {
 		str += "\n; PRIORITY"
+	}
+
+	if frame.Flags&PAD_LOW == PAD_LOW {
+		str += "\n; PAD_LOW"
+	}
+
+	if frame.Flags&PAD_HIGH == PAD_HIGH {
+		str += "\n; PAD_HIGH"
 	}
 
 	// TODO: ; First response header
