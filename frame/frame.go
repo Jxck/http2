@@ -68,6 +68,16 @@ func (e ErrorCode) Format() string {
 	return errors[int(e)]
 }
 
+const (
+	UNSET       uint8 = 0x0
+	END_STREAM        = 0x1
+	END_SEGMENT       = 0x2
+	END_HEADERS       = 0x4
+	PRIORITY          = 0x8
+	PAD_LOW           = 0x10
+	PAD_HIGH          = 0x20
+)
+
 type Frame interface {
 	Write(w io.Writer)
 	Read(r io.Reader)
@@ -200,16 +210,6 @@ type HeadersFrame struct {
 	HeaderBlock []byte
 	Headers     http.Header
 }
-
-const (
-	UNSET       uint8 = 0x0
-	END_STREAM        = 0x1
-	END_SEGMENT       = 0x2
-	END_HEADERS       = 0x4
-	PRIORITY          = 0x8
-	PAD_LOW           = 0x10
-	PAD_HIGH          = 0x20
-)
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 	var length uint16 = 0
