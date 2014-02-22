@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	//neturl "net/url"
 	//"strconv"
 	"time"
 )
@@ -28,31 +27,12 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 	Conn := NewConn(conn) // convert to http2.Conn
 	_ = Conn
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Minute)
+
 	/*
 		handler.Conn.ReadFrame()
 
 		// TODO: fill in other params
-		url := &neturl.URL{
-			Scheme: header.Get("scheme"),
-			Host:   header.Get("authority"),
-			Path:   header.Get("path"),
-		}
-
-		req := &http.Request{
-			Method:        header.Get("method"),
-			URL:           url,
-			Proto:         "HTTP/1.1",
-			ProtoMajor:    1,
-			ProtoMinor:    1,
-			Header:        header,
-			Body:          nil,
-			ContentLength: 0,
-			// TransferEncoding []string
-			Close: false,
-			Host:  header.Get("Authority"),
-		}
-
 		// log.Println(RequestString(req))
 
 		// Handle HTTP

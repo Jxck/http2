@@ -5,6 +5,7 @@ import (
 	. "github.com/jxck/http2/frame"
 	"log"
 	"net/http"
+	neturl "net/url"
 )
 
 func init() {
@@ -66,11 +67,34 @@ func (stream *Stream) ReadLoop() {
 				// TODO: Apply Settings
 			}
 		case *HeadersFrame:
-			frame.Headers = stream.DecodeHeader(frame.HeaderBlock)
-
-			for k, v := range frame.Headers {
+			header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
+			frame.Headers = header
+			for k, v := range header {
 				log.Println(k, v)
 			}
+
+			url := &neturl.URL{
+				Scheme: header.Get("scheme"),
+				Host:   header.Get("authority"),
+				Path:   header.Get("path"),
+			}
+
+			req := &http.Request{
+				Method:     header.Get("method"),
+				URL:        url,
+				Proto:      "HTTP/1.1",
+				ProtoMajor: 1,
+				ProtoMinor: 1,
+				//Header:        header,
+				Body:          nil,
+				ContentLength: 0,
+				// TransferEncoding []string
+				Close: false,
+				Host:  header.Get("Authority"),
+			}
+
+		case *GoAwayFrame:
+			log.Println("GOAWAY")
 		}
 	}
 }
