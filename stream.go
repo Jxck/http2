@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	neturl "net/url"
+	"strconv"
 )
 
 func init() {
@@ -32,9 +33,11 @@ type Stream struct {
 	ReadChan     chan Frame
 	WriteChan    chan Frame
 	HpackContext *hpack.Context
+	// fix me below
+	Handler http.Handler
 }
 
-func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context) *Stream {
+func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, handler http.Handler) *Stream {
 	stream := &Stream{
 		Id:           id,
 		State:        IDLE,
@@ -42,6 +45,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
+		Handler:      handler,
 	}
 	go stream.ReadLoop()
 	return stream
@@ -80,18 +84,45 @@ func (stream *Stream) ReadLoop() {
 			}
 
 			req := &http.Request{
-				Method:     header.Get("method"),
-				URL:        url,
-				Proto:      "HTTP/1.1",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				//Header:        header,
+				Method:        header.Get("method"),
+				URL:           url,
+				Proto:         "HTTP/1.1",
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				Header:        header,
 				Body:          nil,
 				ContentLength: 0,
 				// TransferEncoding []string
 				Close: false,
 				Host:  header.Get("Authority"),
 			}
+
+			log.Printf("\n%s\n", util.RequestString(req))
+
+			// Handle HTTP
+			res := NewResponseWriter()
+			stream.Handler.ServeHTTP(res, req)
+			responseHeader := res.Header()
+			responseHeader.Add(":status", strconv.Itoa(res.status))
+
+			// Send HEADERS
+			headersFrame := NewHeadersFrame(END_HEADERS, stream.Id)
+			headersFrame.Headers = responseHeader
+
+			headerSet := hpack.ToHeaderSet(responseHeader)
+			headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
+			headersFrame.Length = uint16(len(headersFrame.HeaderBlock))
+			stream.WriteChan <- headersFrame
+
+			// Send DATA
+			dataFrame := NewDataFrame(UNSET, stream.Id)
+			dataFrame.Data = res.body.Bytes()
+			dataFrame.Length = uint16(len(dataFrame.Data))
+			stream.WriteChan <- dataFrame
+
+			// End Stream
+			endDataFrame := NewDataFrame(END_STREAM, stream.Id)
+			stream.WriteChan <- endDataFrame
 
 		case *GoAwayFrame:
 			log.Println("GOAWAY")
