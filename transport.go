@@ -55,11 +55,7 @@ func (transport *Transport) Connect() {
 	transport.Conn.WriteMagic()
 
 	// send settings
-	settings := map[SettingsId]uint32{
-		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
-	}
-	settingsFrame := NewSettingsFrame(0 /*flags*/, settings, 0 /*stream id*/)
+	settingsFrame := NewSettingsFrame(0 /*flags*/, DefaultSettings, 0 /*stream id*/)
 	transport.Conn.WriteFrame(settingsFrame) // err
 }
 

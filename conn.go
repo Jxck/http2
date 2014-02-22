@@ -48,6 +48,9 @@ func NewConn(rw io.ReadWriter) *Conn {
 	zeroStream := conn.NewStream(0)
 	conn.Streams[0] = zeroStream
 
+	conn.WriteMagic()
+	conn.ReadMagic()
+
 	go conn.WriteLoop()
 	go conn.ReadLoop()
 	return conn
@@ -60,6 +63,8 @@ func (c *Conn) NewStream(streamid uint32) *Stream {
 		DEFAULT_WINDOW_SIZE,
 	)
 	c.Streams[stream.Id] = stream
+	log.Printf("adding new stream (id=%d)\n", stream.Id)
+	log.Printf("new %d streams running\n", len(c.Streams))
 	return stream
 }
 
@@ -82,6 +87,7 @@ func (c *Conn) ReadFrame() (frame Frame, err error) {
 }
 
 func (c *Conn) ReadLoop() {
+	log.Println("start conn.ReadLoop()")
 	for {
 		frame, err := c.ReadFrame()
 		if err != nil {
@@ -91,9 +97,8 @@ func (c *Conn) ReadLoop() {
 		streamId := frame.Header().StreamId
 		stream, ok := c.Streams[streamId]
 		if !ok {
-			// Frame がなかったら作る
-			stream = NewStream(streamId, c.WriteChan, DEFAULT_WINDOW_SIZE)
-			c.Streams[streamId] = stream
+			// create stream id = streamId
+			stream = c.NewStream(streamId)
 		}
 		stream.ReadChan <- frame
 	}
@@ -105,6 +110,7 @@ func (c *Conn) WriteFrame(frame Frame) { // err
 }
 
 func (c *Conn) WriteLoop() { // err
+	log.Println("start conn.WriteLoop()")
 	for frame := range c.WriteChan {
 		c.WriteFrame(frame)
 	}

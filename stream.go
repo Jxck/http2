@@ -44,6 +44,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32) *Stream {
 }
 
 func (stream *Stream) ReadLoop() {
+	log.Printf("start stream.ReadLoop() (id=%d)", stream.Id)
 	for frame := range stream.ReadChan {
 		log.Printf("stream %v recv %v\n", stream.Id, frame.Header().Type)
 		switch frametype := frame.(type) {
@@ -61,6 +62,8 @@ func (stream *Stream) ReadLoop() {
 				// receive ACK
 				// TODO: Apply Settings
 			}
+		case *HeadersFrame:
+			log.Println(frametype)
 		}
 	}
 }
