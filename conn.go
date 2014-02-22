@@ -46,15 +46,21 @@ func NewConn(rw io.ReadWriter) *Conn {
 		WriteChan:    make(chan Frame),
 	}
 
-	// stream id 0
-	zeroStream := conn.NewStream(0)
-	conn.Streams[0] = zeroStream
-
-	conn.WriteMagic()
+	// TODO: Server dosen't send MagicOctet
+	// conn.WriteMagic()
 	conn.ReadMagic()
 
 	go conn.WriteLoop()
 	go conn.ReadLoop()
+
+	// stream id 0
+	zeroStream := conn.NewStream(0)
+	conn.Streams[0] = zeroStream
+
+	// send default settings to id 0
+	settingsFrame := NewSettingsFrame(UNSET, DefaultSettings, 0)
+	zeroStream.Write(settingsFrame)
+
 	return conn
 }
 
@@ -108,13 +114,14 @@ func (c *Conn) ReadLoop() {
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
-	frame.Write(c.RW) // err
 	Info("%v %v", Red("send"), util.Indent(frame.Format()))
+	frame.Write(c.RW) // err
 }
 
 func (c *Conn) WriteLoop() { // err
 	log.Println("start conn.WriteLoop()")
 	for frame := range c.WriteChan {
+		log.Printf("WriteLoop() %T\n", frame)
 		c.WriteFrame(frame)
 	}
 }

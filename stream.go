@@ -48,6 +48,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		Handler:      handler,
 	}
 	go stream.ReadLoop()
+
 	return stream
 }
 
@@ -65,7 +66,7 @@ func (stream *Stream) ReadLoop() {
 
 				// send ACK
 				ack := NewSettingsFrame(1 /*flag*/, nil /*setting*/, stream.Id /*streamid*/)
-				stream.WriteChan <- ack
+				stream.Write(ack)
 			} else if settingsFrame.Flags == 1 {
 				// receive ACK
 				// TODO: Apply Settings
@@ -112,17 +113,17 @@ func (stream *Stream) ReadLoop() {
 			headerSet := hpack.ToHeaderSet(responseHeader)
 			headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
 			headersFrame.Length = uint16(len(headersFrame.HeaderBlock))
-			stream.WriteChan <- headersFrame
+			stream.Write(headersFrame)
 
 			// Send DATA
 			dataFrame := NewDataFrame(UNSET, stream.Id)
 			dataFrame.Data = res.body.Bytes()
 			dataFrame.Length = uint16(len(dataFrame.Data))
-			stream.WriteChan <- dataFrame
+			stream.Write(dataFrame)
 
 			// End Stream
 			endDataFrame := NewDataFrame(END_STREAM, stream.Id)
-			stream.WriteChan <- endDataFrame
+			stream.Write(endDataFrame)
 
 		case *GoAwayFrame:
 			log.Println("GOAWAY")
