@@ -7,7 +7,6 @@ import (
 	. "github.com/jxck/logger"
 	"log"
 	"net/http"
-	"time"
 )
 
 func init() {
@@ -71,15 +70,15 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	log.Println(stream)
 	req = util.UpdateRequest(req, transport.URL)
 
-	// send request header via HEADERS Frame
-	var flags uint8 = END_STREAM + END_HEADERS
-	frame := NewHeadersFrame(flags, stream.Id)
-	frame.Headers = req.Header
-	frame.HeaderBlock = transport.Conn.EncodeHeader(frame.Headers)
-	frame.Length = uint16(len(frame.HeaderBlock))
-	stream.Write(frame) // err
+	//// send request header via HEADERS Frame
+	//var flags uint8 = END_STREAM + END_HEADERS
+	//frame := NewHeadersFrame(flags, stream.Id)
+	//frame.Headers = req.Header
+	//frame.HeaderBlock = transport.Conn.EncodeHeader(frame.Headers)
+	//frame.Length = uint16(len(frame.HeaderBlock))
+	//stream.Write(frame) // err
 
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 	//stream.SendRequest(req)
 
 	//// receive response from stream

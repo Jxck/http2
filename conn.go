@@ -9,7 +9,6 @@ import (
 	. "github.com/jxck/logger"
 	"io"
 	"log"
-	"net/http"
 )
 
 const (
@@ -61,6 +60,7 @@ func (c *Conn) NewStream(streamid uint32) *Stream {
 		streamid,
 		c.WriteChan,
 		DEFAULT_WINDOW_SIZE,
+		c.HpackContext,
 	)
 	c.Streams[stream.Id] = stream
 	log.Printf("adding new stream (id=%d)\n", stream.Id)
@@ -133,18 +133,6 @@ func (c *Conn) ReadMagic() { // err
 		Error("Invalid Magic String") // err
 	}
 	Info("%v %q", Red("recv"), string(magic))
-}
-
-// Encode Header using HPACK
-func (c *Conn) EncodeHeader(header http.Header) []byte {
-	headerSet := hpack.ToHeaderSet(header)
-	return c.HpackContext.Encode(headerSet)
-}
-
-// Decode Header using HPACK
-func (c *Conn) DecodeHeader(headerBlock []byte) http.Header {
-	c.HpackContext.Decode(headerBlock)
-	return c.HpackContext.ES.ToHeader()
 }
 
 // map of FrameType and FrameInitializer
