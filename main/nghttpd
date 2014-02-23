@@ -1,0 +1,1 @@
+nghttpd -v -d . 3000 ./keys/key.pem ./keys/cert.pem
