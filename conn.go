@@ -127,7 +127,7 @@ func (c *Conn) WriteLoop() { // err
 func (c *Conn) WriteString(str string) { // err
 	c.Bw.WriteString(str) // err
 	c.Bw.Flush()          // err
-	Info("%v\n%s", Red("send"), Blue(str))
+	Info("%v %q", Red("send"), str)
 }
 
 func (c *Conn) WriteMagic() {
