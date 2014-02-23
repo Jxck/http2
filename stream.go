@@ -3,6 +3,7 @@ package http2
 import (
 	"github.com/jxck/hpack"
 	. "github.com/jxck/http2/frame"
+	. "github.com/jxck/logger"
 	"log"
 	"net/http"
 	neturl "net/url"
@@ -53,9 +54,9 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 }
 
 func (stream *Stream) ReadLoop() {
-	log.Printf("start stream.ReadLoop() (id=%d)", stream.Id)
+	Debug("start stream.ReadLoop() (id=%d)", stream.Id)
 	for f := range stream.ReadChan {
-		log.Printf("stream %v recv %v\n", stream.Id, f.Header().Type)
+		Debug("stream %v recv %v", stream.Id, f.Header().Type)
 		switch frame := f.(type) {
 		case *SettingsFrame:
 
@@ -74,9 +75,6 @@ func (stream *Stream) ReadLoop() {
 		case *HeadersFrame:
 			header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
 			frame.Headers = header
-			for k, v := range header {
-				log.Println(k, v)
-			}
 
 			url := &neturl.URL{
 				Scheme: header.Get("scheme"),
@@ -98,7 +96,7 @@ func (stream *Stream) ReadLoop() {
 				Host:  header.Get("Authority"),
 			}
 
-			log.Printf("\n%s\n", util.RequestString(req))
+			Notice("%s", util.Indent(util.RequestString(req)))
 
 			// Handle HTTP
 			res := NewResponseWriter()

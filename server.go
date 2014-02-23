@@ -17,6 +17,6 @@ var TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){
 }
 
 var TLSNextProtoHandler = func(server *http.Server, conn *tls.Conn, handler http.Handler) {
-	Info(Yellow("New Connection from %s\n"), conn.RemoteAddr())
+	Notice(Yellow("New Connection from %s"), conn.RemoteAddr())
 	HandleTLSConnection(conn, handler)
 }

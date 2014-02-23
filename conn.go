@@ -72,8 +72,7 @@ func (c *Conn) NewStream(streamid uint32) *Stream {
 		c.HpackContext,
 		c.Handler)
 	c.Streams[stream.Id] = stream
-	log.Printf("adding new stream (id=%d)\n", stream.Id)
-	log.Printf("new %d streams running\n", len(c.Streams))
+	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(c.Streams))
 	return stream
 }
 
@@ -91,12 +90,12 @@ func (c *Conn) ReadFrame() (frame Frame, err error) {
 
 	frame = newframe(fh)
 	frame.Read(c.RW)
-	Info("%v %v", Green("recv"), util.Indent(frame.Format()))
+	Notice("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame, nil
 }
 
 func (c *Conn) ReadLoop() {
-	log.Println("start conn.ReadLoop()")
+	Debug("start conn.ReadLoop()")
 	for {
 		frame, err := c.ReadFrame()
 		if err != nil {
@@ -114,14 +113,14 @@ func (c *Conn) ReadLoop() {
 }
 
 func (c *Conn) WriteFrame(frame Frame) { // err
-	Info("%v %v", Red("send"), util.Indent(frame.Format()))
+	Notice("%v %v", Red("send"), util.Indent(frame.Format()))
 	frame.Write(c.RW) // err
 }
 
 func (c *Conn) WriteLoop() { // err
-	log.Println("start conn.WriteLoop()")
+	Debug("start conn.WriteLoop()")
 	for frame := range c.WriteChan {
-		log.Printf("WriteLoop() %T\n", frame)
+		Debug("WriteLoop() %T", frame)
 		c.WriteFrame(frame)
 	}
 }
