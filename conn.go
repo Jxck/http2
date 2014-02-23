@@ -51,7 +51,6 @@ func NewConn(rw io.ReadWriter) *Conn {
 	conn.ReadMagic()
 
 	go conn.WriteLoop()
-	go conn.ReadLoop()
 
 	// stream id 0
 	zeroStream := conn.NewStream(0)

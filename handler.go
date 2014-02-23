@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"time"
 )
 
 func init() {
@@ -24,7 +23,5 @@ func HandleTLSConnection(conn net.Conn, h http.Handler) {
 
 	Conn := NewConn(conn) // convert to http2.Conn
 	Conn.Handler = h
-
-	time.Sleep(time.Minute)
-	return
+	Conn.ReadLoop()
 }
