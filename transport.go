@@ -48,14 +48,23 @@ func (transport *Transport) Connect() {
 	Info("%v %v", Yellow("handshake"), state.HandshakeComplete)
 	Info("%v %v", Yellow("protocol"), state.NegotiatedProtocol)
 
-	transport.Conn = NewConn(conn)
+	Conn := NewConn(conn)
 
 	// send Magic Octet
-	transport.Conn.WriteMagic()
+	Conn.WriteMagic()
 
-	// send settings
-	settingsFrame := NewSettingsFrame(0 /*flags*/, DefaultSettings, 0 /*stream id*/)
-	transport.Conn.WriteFrame(settingsFrame) // err
+	go Conn.ReadLoop()
+	go Conn.WriteLoop()
+
+	// stream id 0
+	zeroStream := Conn.NewStream(0)
+	Conn.Streams[0] = zeroStream
+
+	// send default settings to id 0
+	settingsFrame := NewSettingsFrame(UNSET, DefaultSettings, 0)
+	zeroStream.Write(settingsFrame)
+
+	transport.Conn = Conn
 }
 
 // http.RoundTriper implementation

@@ -46,20 +46,6 @@ func NewConn(rw io.ReadWriter) *Conn {
 		WriteChan:    make(chan Frame),
 	}
 
-	// TODO: Server dosen't send MagicOctet
-	// conn.WriteMagic()
-	conn.ReadMagic()
-
-	go conn.WriteLoop()
-
-	// stream id 0
-	zeroStream := conn.NewStream(0)
-	conn.Streams[0] = zeroStream
-
-	// send default settings to id 0
-	settingsFrame := NewSettingsFrame(UNSET, DefaultSettings, 0)
-	zeroStream.Write(settingsFrame)
-
 	return conn
 }
 
