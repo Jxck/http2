@@ -48,6 +48,19 @@ type Stream struct {
 	HpackContext *hpack.Context
 	// fix me below
 	Handler http.Handler
+	Bucket  *Bucket
+}
+
+type Bucket struct {
+	Headers []*HeadersFrame
+	Body    []*DataFrame
+}
+
+func NewBucket() *Bucket {
+	return &Bucket{
+		make([]*HeadersFrame, 0),
+		make([]*DataFrame, 0),
+	}
 }
 
 func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, handler http.Handler) *Stream {
@@ -58,7 +71,9 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
-		Handler:      handler,
+		// fix me below
+		Handler: handler,
+		Bucket:  NewBucket(),
 	}
 	go stream.ReadLoop()
 
@@ -93,6 +108,7 @@ func (stream *Stream) ReadLoop() {
 		case *HeadersFrame:
 			stream.ChangeState(OPEN)
 
+			stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
 			if frame.Flags&END_STREAM == END_STREAM {
 				stream.ChangeState(HALF_CLOSED_REMOTE)
 			}
