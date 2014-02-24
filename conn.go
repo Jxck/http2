@@ -1,7 +1,6 @@
 package http2
 
 import (
-	"bufio"
 	"fmt"
 	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
@@ -17,8 +16,6 @@ func init() {
 
 type Conn struct {
 	RW           io.ReadWriter
-	Bw           *bufio.Writer
-	Br           *bufio.Reader
 	HpackContext *hpack.Context
 	LastStreamId uint32
 	WindowSize   uint32
@@ -30,8 +27,6 @@ type Conn struct {
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
 		RW:           rw,
-		Bw:           bufio.NewWriter(rw),
-		Br:           bufio.NewReader(rw),
 		HpackContext: hpack.NewContext(hpack.DEFAULT_HEADER_TABLE_SIZE),
 		WindowSize:   DEFAULT_WINDOW_SIZE,
 		Streams:      make(map[uint32]*Stream),
@@ -56,7 +51,7 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 
 func (conn *Conn) ReadFrame() (frame Frame, err error) {
 	fh := new(FrameHeader)
-	err = fh.Read(conn.RW) // err
+	err = fh.Read(conn.RW)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +101,7 @@ func (conn *Conn) WriteLoop() { // err
 }
 
 func (conn *Conn) WriteString(str string) { // err
-	conn.Bw.WriteString(str) // err
-	conn.Bw.Flush()          // err
+	conn.RW.Write([]byte(str)) // err
 	Info("%v %q", Red("send"), str)
 }
 

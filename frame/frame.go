@@ -1,8 +1,6 @@
 package frame
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	. "github.com/jxck/color"
