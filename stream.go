@@ -26,6 +26,19 @@ const (
 	CLOSED
 )
 
+func (s State) String() string {
+	states := []string{
+		"IDLE State",
+		"RESERVED_LOCAL",
+		"RESERVED_REMOTE",
+		"OPEN",
+		"HALF_CLOSED_LOCAL",
+		"HALF_CLOSED_REMOTE",
+		"CLOSED",
+	}
+	return states[int(s)]
+}
+
 type Stream struct {
 	Id           uint32
 	State        State
@@ -52,10 +65,15 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 	return stream
 }
 
+func (stream *Stream) ChangeState(state State) {
+	Debug("stream (%d) state (%s)", stream.Id, state)
+	stream.State = state
+}
+
 func (stream *Stream) ReadLoop() {
-	Debug("start stream.ReadLoop() (id=%d)", stream.Id)
+	Debug("start stream (%d) ReadLoop()", stream.Id)
 	for f := range stream.ReadChan {
-		Debug("stream %v recv %v", stream.Id, f.Header().Type)
+		Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
 		switch frame := f.(type) {
 		case *SettingsFrame:
 
@@ -73,6 +91,12 @@ func (stream *Stream) ReadLoop() {
 				// TODO: Apply Settings
 			}
 		case *HeadersFrame:
+			stream.ChangeState(OPEN)
+
+			if frame.Flags&END_STREAM == END_STREAM {
+				stream.ChangeState(HALF_CLOSED_REMOTE)
+			}
+
 			header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
 			frame.Headers = header
 
@@ -122,6 +146,7 @@ func (stream *Stream) ReadLoop() {
 			// End Stream
 			endDataFrame := NewDataFrame(END_STREAM, stream.Id)
 			stream.Write(endDataFrame)
+
 		case *DataFrame:
 			log.Println(string(frame.Data))
 		case *GoAwayFrame:
