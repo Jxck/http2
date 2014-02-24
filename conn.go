@@ -50,7 +50,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 }
 
 func (c *Conn) NewStream(streamid uint32) *Stream {
-	c.LastStreamId = streamid
+	c.LastStreamId = streamid // TODO: fixme
 	stream := NewStream(
 		streamid,
 		c.WriteChan,
