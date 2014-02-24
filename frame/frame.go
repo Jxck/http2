@@ -396,7 +396,6 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-// TODO: flags
 func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
 	var settings []Setting
 	for id, val := range setting {
@@ -432,15 +431,6 @@ func (frame *SettingsFrame) Write(w io.Writer) {
 		binary.Write(w, binary.BigEndian, &setting.SettingsId) // err
 		binary.Write(w, binary.BigEndian, &setting.Value)      // err
 	}
-}
-
-// TODO: fixme
-func (frame *SettingsFrame) PayloadBase64URL() string {
-	buf := bytes.NewBuffer(make([]byte, 0))
-	frame.Write(buf)
-	str := base64.URLEncoding.EncodeToString(buf.Bytes()[8:])
-	str = strings.Replace(str, "=", "", -1)
-	return str
 }
 
 func (frame *SettingsFrame) Header() *FrameHeader {
