@@ -87,8 +87,8 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	frame.Length = uint16(len(frame.HeaderBlock))
 	stream.Write(frame) // err
 
-	//// send GOAWAY
-	//transport.Conn.SendGoAway(NO_ERROR)
+	// send GOAWAY
+	// stream.Write(NewGoAwayFrame(0, NO_ERROR, 0))
 
 	//return res, nil
 	time.Sleep(time.Minute)
