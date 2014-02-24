@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"flag"
-	"fmt"
 	"github.com/jxck/http2"
 	"github.com/jxck/logger"
 	"io/ioutil"
@@ -63,6 +62,6 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
-		fmt.Println(string(body))
+		log.Println(string(body))
 	}
 }

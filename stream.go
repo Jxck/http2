@@ -52,7 +52,7 @@ type Stream struct {
 
 type Bucket struct {
 	Headers []*HeadersFrame
-	Body    []*DataFrame
+	Data    []*DataFrame
 }
 
 func NewBucket() *Bucket {
@@ -120,7 +120,12 @@ func (stream *Stream) ReadLoop() {
 				stream.CallBack(stream)
 			}
 		case *DataFrame:
-			log.Println(string(frame.Data))
+			stream.Bucket.Data = append(stream.Bucket.Data, frame)
+
+			if frame.Flags&END_STREAM == END_STREAM {
+				stream.ChangeState(HALF_CLOSED_REMOTE)
+				stream.CallBack(stream)
+			}
 		case *GoAwayFrame:
 			log.Println("GOAWAY")
 		}

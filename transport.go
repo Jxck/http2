@@ -1,13 +1,14 @@
 package http2
 
 import (
+	"bytes"
 	"crypto/tls"
 	. "github.com/jxck/color"
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
 	"log"
 	"net/http"
-	"time"
+	"strconv"
 )
 
 func init() {
@@ -75,6 +76,9 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// establish tcp connection and handshake
 	transport.Connect()
 
+	callback, response := TransportCallBack(req)
+	transport.Conn.CallBack = callback
+
 	// create stream
 	stream := transport.Conn.NewStream(<-NextClientStreamId)
 	req = util.UpdateRequest(req, transport.URL)
@@ -91,6 +95,58 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// stream.Write(NewGoAwayFrame(0, NO_ERROR, 0))
 
 	//return res, nil
-	time.Sleep(time.Minute)
-	return nil, nil
+	res := <-response
+
+	return res, nil
+}
+
+type Body struct {
+	bytes.Buffer
+}
+
+func (b *Body) Close() error {
+	return nil
+}
+
+func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
+	response := make(chan *http.Response)
+	return func(stream *Stream) {
+		headerFrame := stream.Bucket.Headers[0]
+
+		var data bytes.Buffer
+		for _, dataFrame := range stream.Bucket.Data {
+			data.Write(dataFrame.Data)
+		}
+
+		body := &Body{data}
+
+		headers := headerFrame.Headers
+
+		status, _ := strconv.Atoi(headers.Get("status")) // err
+		res := &http.Response{
+			Status:     http.StatusText(status),
+			StatusCode: status,
+			Proto:      "HTTP/1.1",
+			ProtoMajor: 1,
+			ProtoMinor: 1,
+			Header:     headers,
+
+			Body: body,
+
+			// ContentLength records the length of the associated content.  The
+			// value -1 indicates that the length is unknown.  Unless Request.Method
+			// is "HEAD", values >= 0 indicate that the given number of bytes may
+			// be read from Body.
+			ContentLength: int64(body.Len()),
+
+			// TransferEncoding []string
+			// Close bool
+			// Trailer Header
+
+			Request: req,
+		}
+
+		response <- res
+
+	}, response
 }
