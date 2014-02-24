@@ -82,6 +82,7 @@ func (conn *Conn) ReadLoop() {
 		if !ok {
 			// create stream with streamId
 			stream = conn.NewStream(streamId)
+			conn.Streams[streamId] = stream
 		}
 		stream.ReadChan <- frame
 	}
