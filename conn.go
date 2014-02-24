@@ -11,12 +11,6 @@ import (
 	"log"
 )
 
-const (
-	Version               = "h2-10"
-	MagicString           = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-	DefaultSettingsBase64 = "AAAABAAAAGQAAAAHAAD__w"
-)
-
 func init() {
 	log.SetFlags(log.Lshortfile)
 }
