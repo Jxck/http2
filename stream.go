@@ -71,9 +71,8 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
-		// fix me below
-		CallBack: callback,
-		Bucket:   NewBucket(),
+		CallBack:     callback,
+		Bucket:       NewBucket(),
 	}
 	go stream.ReadLoop()
 
@@ -94,13 +93,13 @@ func (stream *Stream) ReadLoop() {
 
 			// if SETTINGS Frame
 			settingsFrame := frame
-			if settingsFrame.Flags == 0 {
+			if settingsFrame.Flags == UNSET {
 				// Apply Settings
 
 				// send ACK
 				ack := NewSettingsFrame(ACK, nil /*setting*/, stream.Id)
 				stream.Write(ack)
-			} else if settingsFrame.Flags == 1 {
+			} else if settingsFrame.Flags == ACK {
 				// receive ACK
 				log.Println("receive SETTINGS ACK")
 				// TODO: Apply Settings
