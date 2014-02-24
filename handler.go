@@ -42,7 +42,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Conn.ReadLoop()
 }
 
-func HandleBucket(handler http.Handler) func(stream *Stream) {
+func HandleBucket(handler http.Handler) CallBack {
 	return func(stream *Stream) {
 		headerFrame := stream.Bucket.Headers[0]
 		header := headerFrame.Headers

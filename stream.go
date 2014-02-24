@@ -46,7 +46,7 @@ type Stream struct {
 	WriteChan    chan Frame
 	HpackContext *hpack.Context
 	// fix me below
-	CallBack func(stream *Stream)
+	CallBack CallBack
 	Bucket   *Bucket
 }
 
@@ -62,7 +62,9 @@ func NewBucket() *Bucket {
 	}
 }
 
-func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, callback func(stream *Stream)) *Stream {
+type CallBack func(stream *Stream)
+
+func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, callback CallBack) *Stream {
 	stream := &Stream{
 		Id:           id,
 		State:        IDLE,
