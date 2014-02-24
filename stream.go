@@ -56,8 +56,8 @@ type Bucket struct {
 
 func NewBucket() *Bucket {
 	return &Bucket{
-		make([]*HeadersFrame, 0),
-		make([]*DataFrame, 0),
+		Headers: make([]*HeadersFrame, 0),
+		Data:    make([]*DataFrame, 0),
 	}
 }
 
