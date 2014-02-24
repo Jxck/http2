@@ -9,7 +9,6 @@ import (
 	. "github.com/jxck/logger"
 	"io"
 	"log"
-	"net/http"
 )
 
 const (
@@ -32,7 +31,7 @@ type Conn struct {
 	Streams      map[uint32]*Stream
 	WriteChan    chan Frame
 	// TODO: fix me below
-	Handler http.Handler
+	CallBack func(stream *Stream)
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -56,7 +55,7 @@ func (c *Conn) NewStream(streamid uint32) *Stream {
 		c.WriteChan,
 		DEFAULT_WINDOW_SIZE,
 		c.HpackContext,
-		c.Handler)
+		c.CallBack)
 	c.Streams[stream.Id] = stream
 	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(c.Streams))
 	return stream

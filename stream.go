@@ -46,8 +46,8 @@ type Stream struct {
 	WriteChan    chan Frame
 	HpackContext *hpack.Context
 	// fix me below
-	Handler http.Handler
-	Bucket  *Bucket
+	CallBack func(stream *Stream)
+	Bucket   *Bucket
 }
 
 type Bucket struct {
@@ -62,7 +62,7 @@ func NewBucket() *Bucket {
 	}
 }
 
-func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, handler http.Handler) *Stream {
+func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, callback func(stream *Stream)) *Stream {
 	stream := &Stream{
 		Id:           id,
 		State:        IDLE,
@@ -71,8 +71,8 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
 		// fix me below
-		Handler: handler,
-		Bucket:  NewBucket(),
+		CallBack: callback,
+		Bucket:   NewBucket(),
 	}
 	go stream.ReadLoop()
 
@@ -115,7 +115,7 @@ func (stream *Stream) ReadLoop() {
 
 			if frame.Flags&END_STREAM == END_STREAM {
 				stream.ChangeState(HALF_CLOSED_REMOTE)
-				HandleBucket(stream)
+				stream.CallBack(stream)
 			}
 		case *DataFrame:
 			log.Println(string(frame.Data))

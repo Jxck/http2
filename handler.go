@@ -25,7 +25,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	defer conn.Close() // err
 
 	Conn := NewConn(conn) // convert to http2.Conn
-	Conn.Handler = handler
+	Conn.CallBack = HandleBucket(handler)
 
 	Conn.ReadMagic()
 
@@ -42,56 +42,58 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Conn.ReadLoop()
 }
 
-func HandleBucket(stream *Stream) {
-	headerFrame := stream.Bucket.Headers[0]
-	header := headerFrame.Headers
+func HandleBucket(handler http.Handler) func(stream *Stream) {
+	return func(stream *Stream) {
+		headerFrame := stream.Bucket.Headers[0]
+		header := headerFrame.Headers
 
-	url := &neturl.URL{
-		Scheme: header.Get("scheme"),
-		Host:   header.Get("authority"),
-		Path:   header.Get("path"),
+		url := &neturl.URL{
+			Scheme: header.Get("scheme"),
+			Host:   header.Get("authority"),
+			Path:   header.Get("path"),
+		}
+
+		req := &http.Request{
+			Method:        header.Get("method"),
+			URL:           url,
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        header,
+			Body:          nil,
+			ContentLength: 0,
+			// TransferEncoding []string
+			Close: false,
+			Host:  header.Get("Authority"),
+		}
+
+		Notice("%s", util.Indent(util.RequestString(req)))
+
+		// Handle HTTP
+		res := NewResponseWriter()
+		handler.ServeHTTP(res, req)
+		responseHeader := res.Header()
+		responseHeader.Add(":status", strconv.Itoa(res.status))
+
+		// Send HEADERS
+		headersFrame := NewHeadersFrame(END_HEADERS, stream.Id)
+		headersFrame.Headers = responseHeader
+
+		headerSet := hpack.ToHeaderSet(responseHeader)
+		headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
+		headersFrame.Length = uint16(len(headersFrame.HeaderBlock))
+		stream.Write(headersFrame)
+
+		// Send DATA
+		dataFrame := NewDataFrame(UNSET, stream.Id)
+		dataFrame.Data = res.body.Bytes()
+		dataFrame.Length = uint16(len(dataFrame.Data))
+		stream.Write(dataFrame)
+
+		// End Stream
+		endDataFrame := NewDataFrame(END_STREAM, stream.Id)
+		stream.Write(endDataFrame)
+
+		stream.ChangeState(CLOSED)
 	}
-
-	req := &http.Request{
-		Method:        header.Get("method"),
-		URL:           url,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Header:        header,
-		Body:          nil,
-		ContentLength: 0,
-		// TransferEncoding []string
-		Close: false,
-		Host:  header.Get("Authority"),
-	}
-
-	Notice("%s", util.Indent(util.RequestString(req)))
-
-	// Handle HTTP
-	res := NewResponseWriter()
-	stream.Handler.ServeHTTP(res, req)
-	responseHeader := res.Header()
-	responseHeader.Add(":status", strconv.Itoa(res.status))
-
-	// Send HEADERS
-	headersFrame := NewHeadersFrame(END_HEADERS, stream.Id)
-	headersFrame.Headers = responseHeader
-
-	headerSet := hpack.ToHeaderSet(responseHeader)
-	headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
-	headersFrame.Length = uint16(len(headersFrame.HeaderBlock))
-	stream.Write(headersFrame)
-
-	// Send DATA
-	dataFrame := NewDataFrame(UNSET, stream.Id)
-	dataFrame.Data = res.body.Bytes()
-	dataFrame.Length = uint16(len(dataFrame.Data))
-	stream.Write(dataFrame)
-
-	// End Stream
-	endDataFrame := NewDataFrame(END_STREAM, stream.Id)
-	stream.Write(endDataFrame)
-
-	stream.ChangeState(CLOSED)
 }
