@@ -1,6 +1,7 @@
 package http2
 
 import (
+	. "github.com/jxck/color"
 	"github.com/jxck/hpack"
 	. "github.com/jxck/http2/frame"
 	. "github.com/jxck/logger"
@@ -79,7 +80,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 }
 
 func (stream *Stream) ChangeState(state State) {
-	Debug("stream (%d) state (%s)", stream.Id, state)
+	Debug("stream (%d) state (%s)", stream.Id, Pink(state.String()))
 	stream.State = state
 }
 
@@ -106,10 +107,12 @@ func (stream *Stream) ReadLoop() {
 		case *HeadersFrame:
 			stream.ChangeState(OPEN)
 
+			// Decode Headers
 			header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
 			frame.Headers = header
 
 			stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
+
 			if frame.Flags&END_STREAM == END_STREAM {
 				stream.ChangeState(HALF_CLOSED_REMOTE)
 				HandleBucket(stream)

@@ -43,7 +43,6 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 }
 
 func HandleBucket(stream *Stream) {
-
 	headerFrame := stream.Bucket.Headers[0]
 	header := headerFrame.Headers
 
@@ -93,4 +92,6 @@ func HandleBucket(stream *Stream) {
 	// End Stream
 	endDataFrame := NewDataFrame(END_STREAM, stream.Id)
 	stream.Write(endDataFrame)
+
+	stream.ChangeState(CLOSED)
 }
