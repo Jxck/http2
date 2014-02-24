@@ -25,7 +25,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	defer conn.Close() // err
 
 	Conn := NewConn(conn) // convert to http2.Conn
-	Conn.CallBack = HandleBucket(handler)
+	Conn.CallBack = HandleCallBack(handler)
 
 	Conn.ReadMagic()
 
@@ -42,7 +42,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Conn.ReadLoop()
 }
 
-func HandleBucket(handler http.Handler) CallBack {
+func HandleCallBack(handler http.Handler) CallBack {
 	return func(stream *Stream) {
 		headerFrame := stream.Bucket.Headers[0]
 		header := headerFrame.Headers

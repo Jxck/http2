@@ -48,22 +48,22 @@ func NewConn(rw io.ReadWriter) *Conn {
 	return conn
 }
 
-func (c *Conn) NewStream(streamid uint32) *Stream {
-	c.LastStreamId = streamid // TODO: fixme
+func (conn *Conn) NewStream(streamid uint32) *Stream {
+	conn.LastStreamId = streamid // TODO: fixme
 	stream := NewStream(
 		streamid,
-		c.WriteChan,
+		conn.WriteChan,
 		DEFAULT_WINDOW_SIZE,
-		c.HpackContext,
-		c.CallBack)
-	c.Streams[stream.Id] = stream
-	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(c.Streams))
+		conn.HpackContext,
+		conn.CallBack)
+	conn.Streams[stream.Id] = stream
+	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(conn.Streams))
 	return stream
 }
 
-func (c *Conn) ReadFrame() (frame Frame, err error) {
+func (conn *Conn) ReadFrame() (frame Frame, err error) {
 	fh := new(FrameHeader)
-	err = fh.Read(c.RW) // err
+	err = fh.Read(conn.RW) // err
 	if err != nil {
 		return nil, err
 	}
@@ -74,55 +74,55 @@ func (c *Conn) ReadFrame() (frame Frame, err error) {
 	}
 
 	frame = newframe(fh)
-	frame.Read(c.RW)
+	frame.Read(conn.RW)
 	Notice("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame, nil
 }
 
-func (c *Conn) ReadLoop() {
+func (conn *Conn) ReadLoop() {
 	Debug("start conn.ReadLoop()")
 	for {
-		frame, err := c.ReadFrame()
+		frame, err := conn.ReadFrame()
 		if err != nil {
 			log.Fatal(err)
 			//break
 		}
 		streamId := frame.Header().StreamId
-		stream, ok := c.Streams[streamId]
+		stream, ok := conn.Streams[streamId]
 		if !ok {
 			// create stream id = streamId
-			stream = c.NewStream(streamId)
+			stream = conn.NewStream(streamId)
 		}
 		stream.ReadChan <- frame
 	}
 }
 
-func (c *Conn) WriteFrame(frame Frame) { // err
+func (conn *Conn) WriteFrame(frame Frame) { // err
 	Notice("%v %v", Red("send"), util.Indent(frame.Format()))
-	frame.Write(c.RW) // err
+	frame.Write(conn.RW) // err
 }
 
-func (c *Conn) WriteLoop() { // err
+func (conn *Conn) WriteLoop() { // err
 	Debug("start conn.WriteLoop()")
-	for frame := range c.WriteChan {
+	for frame := range conn.WriteChan {
 		Debug("WriteLoop() %T", frame)
-		c.WriteFrame(frame)
+		conn.WriteFrame(frame)
 	}
 }
 
-func (c *Conn) WriteString(str string) { // err
-	c.Bw.WriteString(str) // err
-	c.Bw.Flush()          // err
+func (conn *Conn) WriteString(str string) { // err
+	conn.Bw.WriteString(str) // err
+	conn.Bw.Flush()          // err
 	Info("%v %q", Red("send"), str)
 }
 
-func (c *Conn) WriteMagic() {
-	c.WriteString(MagicString)
+func (conn *Conn) WriteMagic() {
+	conn.WriteString(MagicString)
 }
 
-func (c *Conn) ReadMagic() { // err
+func (conn *Conn) ReadMagic() { // err
 	magic := make([]byte, len(MagicString))
-	c.RW.Read(magic) // err
+	conn.RW.Read(magic) // err
 	if string(magic) != MagicString {
 		Error("Invalid Magic String") // err
 	}
