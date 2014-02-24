@@ -68,9 +68,11 @@ func (e ErrorCode) Format() string {
 	return errors[int(e)]
 }
 
+// Flags
 const (
 	UNSET       uint8 = 0x0
 	END_STREAM        = 0x1
+	ACK               = 0x1 // for settings
 	END_SEGMENT       = 0x2
 	END_HEADERS       = 0x4
 	PRIORITY          = 0x8

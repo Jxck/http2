@@ -98,7 +98,7 @@ func (stream *Stream) ReadLoop() {
 				// Apply Settings
 
 				// send ACK
-				ack := NewSettingsFrame(1 /*flag*/, nil /*setting*/, stream.Id /*streamid*/)
+				ack := NewSettingsFrame(ACK, nil /*setting*/, stream.Id)
 				stream.Write(ack)
 			} else if settingsFrame.Flags == 1 {
 				// receive ACK
