@@ -84,8 +84,10 @@ func (conn *Conn) ReadLoop() {
 	for {
 		frame, err := conn.ReadFrame()
 		if err != nil {
-			log.Fatal(err)
-			//break
+			if err == io.EOF {
+				log.Println(err)
+				break
+			}
 		}
 		streamId := frame.Header().StreamId
 		stream, ok := conn.Streams[streamId]
