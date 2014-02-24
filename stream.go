@@ -45,9 +45,8 @@ type Stream struct {
 	ReadChan     chan Frame
 	WriteChan    chan Frame
 	HpackContext *hpack.Context
-	// fix me below
-	CallBack CallBack
-	Bucket   *Bucket
+	CallBack     CallBack
+	Bucket       *Bucket
 }
 
 type Bucket struct {

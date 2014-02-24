@@ -24,8 +24,7 @@ type Conn struct {
 	WindowSize   uint32
 	Streams      map[uint32]*Stream
 	WriteChan    chan Frame
-	// TODO: fix me below
-	CallBack func(stream *Stream)
+	CallBack     func(stream *Stream)
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
@@ -86,7 +85,7 @@ func (conn *Conn) ReadLoop() {
 		streamId := frame.Header().StreamId
 		stream, ok := conn.Streams[streamId]
 		if !ok {
-			// create stream id = streamId
+			// create stream with streamId
 			stream = conn.NewStream(streamId)
 		}
 		stream.ReadChan <- frame

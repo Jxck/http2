@@ -124,25 +124,17 @@ func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 
 		status, _ := strconv.Atoi(headers.Get("status")) // err
 		res := &http.Response{
-			Status:     http.StatusText(status),
-			StatusCode: status,
-			Proto:      "HTTP/1.1",
-			ProtoMajor: 1,
-			ProtoMinor: 1,
-			Header:     headers,
-
-			Body: body,
-
-			// ContentLength records the length of the associated content.  The
-			// value -1 indicates that the length is unknown.  Unless Request.Method
-			// is "HEAD", values >= 0 indicate that the given number of bytes may
-			// be read from Body.
+			Status:        http.StatusText(status),
+			StatusCode:    status,
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        headers,
+			Body:          body,
 			ContentLength: int64(body.Len()),
-
 			// TransferEncoding []string
 			// Close bool
 			// Trailer Header
-
 			Request: req,
 		}
 
