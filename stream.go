@@ -27,7 +27,7 @@ const (
 
 func (s State) String() string {
 	states := []string{
-		"IDLE State",
+		"IDLE",
 		"RESERVED_LOCAL",
 		"RESERVED_REMOTE",
 		"OPEN",
