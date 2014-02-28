@@ -100,14 +100,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	return res, nil
 }
 
-type Body struct {
-	bytes.Buffer
-}
-
-func (b *Body) Close() error {
-	return nil
-}
-
 func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 	response := make(chan *http.Response)
 	return func(stream *Stream) {
