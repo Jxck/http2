@@ -524,8 +524,8 @@ func (frame *GoAwayFrame) Header() *FrameHeader {
 func (frame *GoAwayFrame) Format() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.Format()
-	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(unsupported))",
-		frame.LastStreamID, Red(frame.ErrorCode.Format()))
+	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(%q))",
+		frame.LastStreamID, Red(frame.ErrorCode.Format()), frame.AdditionalDebugData)
 	return str
 }
 
