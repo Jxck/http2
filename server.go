@@ -59,6 +59,13 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			Path:   header.Get("path"),
 		}
 
+		body := &Body{}
+		if len(stream.Bucket.Data) != 0 {
+			for _, data := range stream.Bucket.Data {
+				body.Write(data.Data)
+			}
+		}
+
 		req := &http.Request{
 			Method:        header.Get("method"),
 			URL:           url,
@@ -66,7 +73,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			ProtoMajor:    1,
 			ProtoMinor:    1,
 			Header:        header,
-			Body:          nil,
+			Body:          body,
 			ContentLength: 0,
 			// TransferEncoding []string
 			Close: false,

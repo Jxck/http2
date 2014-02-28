@@ -3,9 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"github.com/jxck/http2"
 	"github.com/jxck/logger"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -28,7 +28,7 @@ func init() {
 type Hello struct{}
 
 func (h *Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello HTTP2.0!")
+	io.Copy(w, r.Body)
 }
 
 func main() {
@@ -37,8 +37,8 @@ func main() {
 	cert := "keys/cert.pem"
 	key := "keys/key.pem"
 
-	// var handler http.Handler = &Hello{}
-	var handler http.Handler = http.FileServer(http.Dir("."))
+	var handler http.Handler = &Hello{}
+	// var handler http.Handler = http.FileServer(http.Dir("/tmp"))
 
 	// setup TLS config
 	config := &tls.Config{
