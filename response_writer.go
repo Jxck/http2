@@ -14,7 +14,7 @@ type ResponseWriter struct {
 func NewResponseWriter() *ResponseWriter {
 	return &ResponseWriter{
 		status: 0,
-		header: make(http.Header, 0),
+		header: make(http.Header),
 		body:   bytes.NewBuffer([]byte{}),
 	}
 }
