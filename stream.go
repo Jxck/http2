@@ -94,7 +94,7 @@ func (stream *Stream) ReadLoop() {
 			// if SETTINGS Frame
 			settingsFrame := frame
 			if settingsFrame.Flags == UNSET {
-				// Apply Settings
+				// TODO: Apply Settings
 
 				// send ACK
 				ack := NewSettingsFrame(ACK, nil /*setting*/, stream.Id)
@@ -102,7 +102,6 @@ func (stream *Stream) ReadLoop() {
 			} else if settingsFrame.Flags == ACK {
 				// receive ACK
 				log.Println("receive SETTINGS ACK")
-				// TODO: Apply Settings
 			}
 		case *HeadersFrame:
 			stream.ChangeState(OPEN)
