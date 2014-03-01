@@ -47,6 +47,7 @@ type Stream struct {
 	HpackContext *hpack.Context
 	CallBack     CallBack
 	Bucket       *Bucket
+	breakloop    chan bool
 }
 
 type Bucket struct {
@@ -73,6 +74,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		HpackContext: hpackContext,
 		CallBack:     callback,
 		Bucket:       NewBucket(),
+		breakloop:    make(chan bool),
 	}
 	go stream.ReadLoop()
 
@@ -86,8 +88,12 @@ func (stream *Stream) ChangeState(state State) {
 
 func (stream *Stream) ReadLoop() {
 	Debug("start stream (%d) ReadLoop()", stream.Id)
+BreakLoop:
 	for {
 		select {
+		case <-stream.breakloop:
+			Debug("stom stream (%d) ReadLoop()", stream.Id)
+			break BreakLoop
 		case f := <-stream.ReadChan:
 			Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
 			switch frame := f.(type) {
@@ -134,6 +140,10 @@ func (stream *Stream) ReadLoop() {
 
 func (stream *Stream) Write(frame Frame) {
 	stream.WriteChan <- frame
+}
+
+func (stream *Stream) Close() {
+	close(stream.breakloop)
 }
 
 // Encode Header using HPACK
