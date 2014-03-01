@@ -86,45 +86,48 @@ func (stream *Stream) ChangeState(state State) {
 
 func (stream *Stream) ReadLoop() {
 	Debug("start stream (%d) ReadLoop()", stream.Id)
-	for f := range stream.ReadChan {
-		Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
-		switch frame := f.(type) {
-		case *SettingsFrame:
+	for {
+		select {
+		case f := <-stream.ReadChan:
+			Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
+			switch frame := f.(type) {
+			case *SettingsFrame:
 
-			// if SETTINGS Frame
-			settingsFrame := frame
-			if settingsFrame.Flags == UNSET {
-				// TODO: Apply Settings
+				// if SETTINGS Frame
+				settingsFrame := frame
+				if settingsFrame.Flags == UNSET {
+					// TODO: Apply Settings
 
-				// send ACK
-				ack := NewSettingsFrame(ACK, nil /*setting*/, stream.Id)
-				stream.Write(ack)
-			} else if settingsFrame.Flags == ACK {
-				// receive ACK
-				log.Println("receive SETTINGS ACK")
+					// send ACK
+					ack := NewSettingsFrame(ACK, nil /*setting*/, stream.Id)
+					stream.Write(ack)
+				} else if settingsFrame.Flags == ACK {
+					// receive ACK
+					log.Println("receive SETTINGS ACK")
+				}
+			case *HeadersFrame:
+				stream.ChangeState(OPEN)
+
+				// Decode Headers
+				header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
+				frame.Headers = header
+
+				stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
+
+				if frame.Flags&END_STREAM == END_STREAM {
+					stream.ChangeState(HALF_CLOSED_REMOTE)
+					stream.CallBack(stream)
+				}
+			case *DataFrame:
+				stream.Bucket.Data = append(stream.Bucket.Data, frame)
+
+				if frame.Flags&END_STREAM == END_STREAM {
+					stream.ChangeState(HALF_CLOSED_REMOTE)
+					stream.CallBack(stream)
+				}
+			case *GoAwayFrame:
+				log.Println("GOAWAY")
 			}
-		case *HeadersFrame:
-			stream.ChangeState(OPEN)
-
-			// Decode Headers
-			header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
-			frame.Headers = header
-
-			stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
-
-			if frame.Flags&END_STREAM == END_STREAM {
-				stream.ChangeState(HALF_CLOSED_REMOTE)
-				stream.CallBack(stream)
-			}
-		case *DataFrame:
-			stream.Bucket.Data = append(stream.Bucket.Data, frame)
-
-			if frame.Flags&END_STREAM == END_STREAM {
-				stream.ChangeState(HALF_CLOSED_REMOTE)
-				stream.CallBack(stream)
-			}
-		case *GoAwayFrame:
-			log.Println("GOAWAY")
 		}
 	}
 }
