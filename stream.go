@@ -139,6 +139,52 @@ BreakLoop:
 }
 
 func (stream *Stream) Write(frame Frame) {
+	flags := frame.Header().Flags
+
+	switch {
+	case frame.Type == HeadersFrameType:
+		switch {
+		case stream.State == IDLE:
+			stream.ChangeState(OPEN)
+		case stream.State == RESERVED_LOCAL:
+			stream.ChangeState(HALF_CLOSED_REMOTE)
+		default:
+			log.Println("unknown stream state")
+		}
+	case frame.Type == RstStreamFrameType:
+		// RST_STREAM を送るとき
+		switch {
+		case stream.State == OPEN:
+			stream.ChangeState(CLOSED)
+		case stream.State == RESERVED_LOCAL:
+			stream.ChangeState(CLOSED)
+		case stream.State == HALF_CLOSED_REMOTE:
+			stream.ChangeState(CLOSED)
+		default:
+			log.Println("unknown stream state")
+		}
+	case frame.Type == PushPrimiseFrameType:
+		// PUSH_PROMISE を送るとき
+		switch {
+		case stream.State == IDLE:
+			// 今後使用するために予約
+			stream.ChangeState(RESERVED_LOCAL)
+		default:
+			log.Println("unknown stream state")
+		}
+	case flags&END_STREAM == END_STREAM:
+		// END_STREAM を送るとき
+		switch {
+		case stream.State == OPEN:
+			// まだ REMOTE が CLOSE してなかったら
+			stream.ChangeState(HALF_CLOSED_LOCAL)
+		case stream.State == HALF_CLOSED_REMOTE:
+			// すでに REMOTE が CLOSE してたら
+			stream.ChangeState(CLOSED)
+		default:
+			log.Println("unknown stream state")
+		}
+	}
 	stream.WriteChan <- frame
 }
 
