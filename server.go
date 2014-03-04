@@ -107,7 +107,5 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// End Stream
 		endDataFrame := NewDataFrame(END_STREAM, stream.Id)
 		stream.Write(endDataFrame)
-
-		stream.ChangeState(CLOSED)
 	}
 }
