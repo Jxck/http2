@@ -192,6 +192,21 @@ func (stream *Stream) Write(frame Frame) {
 	types := header.Type
 
 	switch {
+	case types == DataFrameType:
+		if flags&END_STREAM == END_STREAM {
+			// END_STREAM を送るとき
+			switch {
+			case stream.State == OPEN:
+				// まだ REMOTE が CLOSE してなかったら
+				stream.ChangeState(HALF_CLOSED_LOCAL)
+			case stream.State == HALF_CLOSED_REMOTE:
+				// すでに REMOTE が CLOSE してたら
+				log.Println("close")
+				stream.ChangeState(CLOSED)
+			default:
+				log.Printf("END_STREAM at %v", stream.State)
+			}
+		}
 	case types == HeadersFrameType:
 		switch {
 		case stream.State == IDLE:
@@ -200,6 +215,20 @@ func (stream *Stream) Write(frame Frame) {
 			stream.ChangeState(HALF_CLOSED_REMOTE)
 		default:
 			log.Printf("HEADERS at %v", stream.State)
+		}
+		if flags&END_STREAM == END_STREAM {
+			// END_STREAM を送るとき
+			switch {
+			case stream.State == OPEN:
+				// まだ REMOTE が CLOSE してなかったら
+				stream.ChangeState(HALF_CLOSED_LOCAL)
+			case stream.State == HALF_CLOSED_REMOTE:
+				// すでに REMOTE が CLOSE してたら
+				log.Println("close")
+				stream.ChangeState(CLOSED)
+			default:
+				log.Printf("END_STREAM at %v", stream.State)
+			}
 		}
 	case types == RstStreamFrameType:
 		// RST_STREAM を送るとき
@@ -224,19 +253,6 @@ func (stream *Stream) Write(frame Frame) {
 			stream.ChangeState(RESERVED_LOCAL)
 		default:
 			log.Printf("PP at %v", stream.State)
-		}
-	case flags&END_STREAM == END_STREAM:
-		// END_STREAM を送るとき
-		switch {
-		case stream.State == OPEN:
-			// まだ REMOTE が CLOSE してなかったら
-			stream.ChangeState(HALF_CLOSED_LOCAL)
-		case stream.State == HALF_CLOSED_REMOTE:
-			// すでに REMOTE が CLOSE してたら
-			log.Println("close")
-			stream.ChangeState(CLOSED)
-		default:
-			log.Printf("END_STREAM at %v", stream.State)
 		}
 	}
 	stream.WriteChan <- frame
