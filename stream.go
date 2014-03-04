@@ -82,7 +82,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 }
 
 func (stream *Stream) ChangeState(state State) {
-	Debug("stream (%d) state (%s)", stream.Id, Pink(state.String()))
+	Debug("change stream (%d) state (%s -> %s)", stream.Id, stream.State, Pink(state.String()))
 	stream.State = state
 }
 
@@ -139,38 +139,43 @@ BreakLoop:
 }
 
 func (stream *Stream) Write(frame Frame) {
-	flags := frame.Header().Flags
+	header := frame.Header()
+	flags := header.Flags
+	types := header.Type
 
 	switch {
-	case frame.Type == HeadersFrameType:
+	case types == HeadersFrameType:
 		switch {
 		case stream.State == IDLE:
 			stream.ChangeState(OPEN)
 		case stream.State == RESERVED_LOCAL:
 			stream.ChangeState(HALF_CLOSED_REMOTE)
 		default:
-			log.Println("unknown stream state")
+			log.Printf("HEADERS at %v", stream.State)
 		}
-	case frame.Type == RstStreamFrameType:
+	case types == RstStreamFrameType:
 		// RST_STREAM を送るとき
 		switch {
 		case stream.State == OPEN:
+			log.Println("close")
 			stream.ChangeState(CLOSED)
 		case stream.State == RESERVED_LOCAL:
+			log.Println("close")
 			stream.ChangeState(CLOSED)
 		case stream.State == HALF_CLOSED_REMOTE:
+			log.Println("close")
 			stream.ChangeState(CLOSED)
 		default:
-			log.Println("unknown stream state")
+			log.Printf("RST at %v", stream.State)
 		}
-	case frame.Type == PushPrimiseFrameType:
+	case types == PushPrimiseFrameType:
 		// PUSH_PROMISE を送るとき
 		switch {
 		case stream.State == IDLE:
 			// 今後使用するために予約
 			stream.ChangeState(RESERVED_LOCAL)
 		default:
-			log.Println("unknown stream state")
+			log.Printf("PP at %v", stream.State)
 		}
 	case flags&END_STREAM == END_STREAM:
 		// END_STREAM を送るとき
@@ -180,9 +185,10 @@ func (stream *Stream) Write(frame Frame) {
 			stream.ChangeState(HALF_CLOSED_LOCAL)
 		case stream.State == HALF_CLOSED_REMOTE:
 			// すでに REMOTE が CLOSE してたら
+			log.Println("close")
 			stream.ChangeState(CLOSED)
 		default:
-			log.Println("unknown stream state")
+			log.Printf("END_STREAM at %v", stream.State)
 		}
 	}
 	stream.WriteChan <- frame
