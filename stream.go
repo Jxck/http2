@@ -98,10 +98,8 @@ func (stream *Stream) ChangeState(frame Frame, context bool) {
 			switch {
 			case stream.State == OPEN:
 				if context == RECV {
-					// END_STREAM 受信
 					stream.changeState(HALF_CLOSED_REMOTE)
 				} else {
-					// END_STREAM 送信
 					stream.changeState(HALF_CLOSED_LOCAL)
 				}
 			case stream.State == HALF_CLOSED_REMOTE:
@@ -129,10 +127,8 @@ func (stream *Stream) ChangeState(frame Frame, context bool) {
 				switch {
 				case stream.State == OPEN:
 					if context == RECV {
-						// END_STREAM 受信
 						stream.changeState(HALF_CLOSED_REMOTE)
 					} else {
-						// END_STREAM 送信
 						stream.changeState(HALF_CLOSED_LOCAL)
 					}
 				case stream.State == HALF_CLOSED_REMOTE:
@@ -155,7 +151,6 @@ func (stream *Stream) ChangeState(frame Frame, context bool) {
 			log.Printf("HEADERS at %v", stream.State)
 		}
 	case types == RstStreamFrameType:
-		// RST_STREAM を送受信する
 		switch {
 		case stream.State == OPEN:
 			stream.changeState(CLOSED)
