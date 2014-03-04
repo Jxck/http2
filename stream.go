@@ -99,7 +99,7 @@ BreakLoop:
 			flags := header.Flags
 			types := header.Type
 
-			switch {
+			switch { // TODO:Manage Stream State more carefuly
 			case types == HeadersFrameType:
 				switch {
 				case stream.State == IDLE:
@@ -191,7 +191,7 @@ func (stream *Stream) Write(frame Frame) {
 	flags := header.Flags
 	types := header.Type
 
-	switch {
+	switch { // TODO:Manage Stream State more carefuly
 	case types == DataFrameType:
 		if flags&END_STREAM == END_STREAM {
 			// END_STREAM を送るとき
