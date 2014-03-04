@@ -95,6 +95,58 @@ BreakLoop:
 			Debug("stom stream (%d) ReadLoop()", stream.Id)
 			break BreakLoop
 		case f := <-stream.ReadChan:
+			header := f.Header()
+			flags := header.Flags
+			types := header.Type
+
+			switch {
+			case types == HeadersFrameType:
+				switch {
+				case stream.State == IDLE:
+					stream.ChangeState(OPEN)
+				case stream.State == RESERVED_REMOTE:
+					stream.ChangeState(HALF_CLOSED_LOCAL)
+				default:
+					log.Printf("HEADERS at %v", stream.State)
+				}
+			case types == RstStreamFrameType:
+				// RST_STREAM を受け取るとき
+				switch {
+				case stream.State == OPEN:
+					log.Println("close")
+					stream.ChangeState(CLOSED)
+				case stream.State == RESERVED_REMOTE:
+					log.Println("close")
+					stream.ChangeState(CLOSED)
+				case stream.State == HALF_CLOSED_LOCAL:
+					log.Println("close")
+					stream.ChangeState(CLOSED)
+				default:
+					log.Printf("RST at %v", stream.State)
+				}
+			case types == PushPrimiseFrameType:
+				// PUSH_PROMISE を受け取るとき
+				switch {
+				case stream.State == IDLE:
+					// 今後使用するために予約
+					stream.ChangeState(RESERVED_REMOTE)
+				default:
+					log.Printf("PP at %v", stream.State)
+				}
+			case flags&END_STREAM == END_STREAM:
+				// END_STREAM を受け取るとき
+				switch {
+				case stream.State == OPEN:
+					// OPEN だったら
+					stream.ChangeState(HALF_CLOSED_REMOTE)
+				case stream.State == HALF_CLOSED_LOCAL:
+					// 自分がもう HALF_CLOSE してたら
+					stream.ChangeState(CLOSED)
+				default:
+					log.Printf("END_STREAM at %v", stream.State)
+				}
+			}
+
 			Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
 			switch frame := f.(type) {
 			case *SettingsFrame:
@@ -112,25 +164,21 @@ BreakLoop:
 					log.Println("receive SETTINGS ACK")
 				}
 			case *HeadersFrame:
-				stream.ChangeState(OPEN)
-
 				// Decode Headers
 				header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
 				frame.Headers = header
 
 				stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
 
-				if frame.Flags&END_STREAM == END_STREAM {
-					stream.ChangeState(HALF_CLOSED_REMOTE)
+				if flags&END_STREAM == END_STREAM {
 					stream.CallBack(stream)
 				}
 			case *DataFrame:
 				stream.Bucket.Data = append(stream.Bucket.Data, frame)
-
-				if frame.Flags&END_STREAM == END_STREAM {
-					stream.ChangeState(HALF_CLOSED_REMOTE)
+				if flags&END_STREAM == END_STREAM {
 					stream.CallBack(stream)
 				}
+
 			case *GoAwayFrame:
 				log.Println("GOAWAY")
 			}
