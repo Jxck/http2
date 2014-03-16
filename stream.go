@@ -42,6 +42,7 @@ type Stream struct {
 	Id           uint32
 	State        State
 	WindowSize   uint32
+	WindowUpdate chan uint32
 	ReadChan     chan Frame
 	WriteChan    chan Frame
 	HpackContext *hpack.Context
@@ -69,6 +70,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		Id:           id,
 		State:        IDLE,
 		WindowSize:   windowSize,
+		WindowUpdate: make(chan uint32),
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
@@ -77,6 +79,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		breakloop:    make(chan bool),
 	}
 	go stream.ReadLoop()
+	go stream.WindowUpdateLoop()
 	return stream
 }
 
@@ -184,6 +187,7 @@ BreakLoop:
 			break BreakLoop
 		case f := <-stream.ReadChan:
 			Debug("stream (%d) recv (%v)", stream.Id, FrameName(f.Header().Type))
+			stream.WindowUpdate <- uint32(f.Header().Length)
 
 			stream.ChangeState(f, RECV)
 
@@ -228,6 +232,20 @@ BreakLoop:
 func (stream *Stream) Write(frame Frame) {
 	stream.ChangeState(frame, SEND)
 	stream.WriteChan <- frame
+}
+
+func (stream *Stream) WindowUpdateLoop() {
+	total := stream.WindowSize
+	go func() {
+		for size := range stream.WindowUpdate {
+			total = total - size
+			if total < 10240 {
+				update := stream.WindowSize - total
+				stream.Write(NewWindowUpdateFrame(update, stream.Id))
+				stream.Write(NewWindowUpdateFrame(update, 0))
+			}
+		}
+	}()
 }
 
 func (stream *Stream) Close() {

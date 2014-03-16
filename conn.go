@@ -42,7 +42,8 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 		conn.WriteChan,
 		DEFAULT_WINDOW_SIZE,
 		conn.HpackContext,
-		conn.CallBack)
+		conn.CallBack,
+	)
 	conn.Streams[stream.Id] = stream
 	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(conn.Streams))
 	return stream
