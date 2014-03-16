@@ -27,6 +27,22 @@ const (
 	ContinuationFrameType       = 0x9
 )
 
+func FrameName(i uint8) string {
+	names := []string{
+		"DATA",
+		"HEADERS",
+		"PRIORITY",
+		"RSTSTREAM",
+		"SETTINGS",
+		"PUSHPRIMISE",
+		"PING",
+		"GOAWAY",
+		"WINDOWUPDATE",
+		"CONTINUATION",
+	}
+	return names[i]
+}
+
 // For RST_STREAM and GOAWAY Frame
 type ErrorCode uint32
 
