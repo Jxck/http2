@@ -77,7 +77,6 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 		breakloop:    make(chan bool),
 	}
 	go stream.ReadLoop()
-
 	return stream
 }
 
@@ -168,7 +167,6 @@ func (stream *Stream) ChangeState(frame Frame, context bool) {
 	case types == PushPrimiseFrameType:
 		// TODO: implement me
 	}
-
 }
 
 func (stream *Stream) changeState(state State) {

@@ -315,7 +315,6 @@ func (frame *HeadersFrame) Format() string {
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |                        Error Code (32)                        |
 // +---------------------------------------------------------------+
-
 type RstStreamFrame struct {
 	*FrameHeader
 	ErrorCode ErrorCode
@@ -362,7 +361,6 @@ func (frame *RstStreamFrame) Format() string {
 // +---------------+-----------------------------------------------+
 // ...Value        |
 // +---------------+
-
 const DEFAULT_WINDOW_SIZE uint32 = 65535
 
 type SettingsId uint8
@@ -536,7 +534,6 @@ func (frame *GoAwayFrame) Format() string {
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |X|              Window Size Increment (31)                     |
 // +-+-------------------------------------------------------------+
-
 type WindowUpdateFrame struct {
 	*FrameHeader
 	WindowSizeIncrement uint32

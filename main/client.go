@@ -11,9 +11,11 @@ import (
 	"os"
 )
 
-var nullout bool
-var post string
-var loglevel int
+var (
+	nullout  bool
+	post     string
+	loglevel int
+)
 
 func init() {
 	log.SetFlags(log.Lshortfile)

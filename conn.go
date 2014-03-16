@@ -32,7 +32,6 @@ func NewConn(rw io.ReadWriter) *Conn {
 		Streams:      make(map[uint32]*Stream),
 		WriteChan:    make(chan Frame),
 	}
-
 	return conn
 }
 
