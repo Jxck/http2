@@ -53,7 +53,10 @@ func (transport *Transport) Connect() {
 	Conn := NewConn(conn)
 
 	// send Magic Octet
-	Conn.WriteMagic()
+	err = Conn.WriteMagic()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go Conn.ReadLoop()
 	go Conn.WriteLoop()

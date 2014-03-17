@@ -33,7 +33,10 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Conn := NewConn(conn) // convert to http2.Conn
 	Conn.CallBack = HandlerCallBack(handler)
 
-	Conn.ReadMagic()
+	err := Conn.ReadMagic()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go Conn.WriteLoop()
 
@@ -63,7 +66,10 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		body := &Body{}
 		if len(stream.Bucket.Data) != 0 {
 			for _, data := range stream.Bucket.Data {
-				body.Write(data.Data)
+				_, err := body.Write(data.Data)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 
