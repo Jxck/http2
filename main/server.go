@@ -10,8 +10,10 @@ import (
 	"os"
 )
 
-var verbose bool
-var loglevel int
+var (
+	verbose  bool
+	loglevel int
+)
 
 func init() {
 	log.SetFlags(log.Lshortfile)

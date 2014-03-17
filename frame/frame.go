@@ -497,7 +497,6 @@ func (frame *SettingsFrame) Format() string {
 // +---------------------------------------------------------------+
 // |                  Additional Debug Data (*)                    |
 // +---------------------------------------------------------------+
-
 type GoAwayFrame struct {
 	*FrameHeader
 	LastStreamID        uint32
