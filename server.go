@@ -99,10 +99,25 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		stream.Write(headersFrame)
 
 		// Send DATA
-		dataFrame := NewDataFrame(UNSET, stream.Id)
-		dataFrame.Data = res.body.Bytes()
-		dataFrame.Length = uint16(len(dataFrame.Data))
-		stream.Write(dataFrame)
+		// each DataFrame has data in window size
+		data := res.body.Bytes()
+		length := len(data)
+		window := 4096
+		for i := 0; ; i++ {
+			start := i * window
+			end := start + window
+			if end > length {
+				dataFrame := NewDataFrame(UNSET, stream.Id)
+				dataFrame.Data = data[start:]
+				dataFrame.Length = uint16(len(dataFrame.Data))
+				stream.Write(dataFrame)
+				break
+			}
+			dataFrame := NewDataFrame(UNSET, stream.Id)
+			dataFrame.Data = data[start:end]
+			dataFrame.Length = uint16(len(dataFrame.Data))
+			stream.Write(dataFrame)
+		}
 
 		// End Stream
 		endDataFrame := NewDataFrame(END_STREAM, stream.Id)
