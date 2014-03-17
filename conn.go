@@ -62,7 +62,11 @@ func (conn *Conn) ReadFrame() (frame Frame, err error) {
 	}
 
 	frame = newframe(fh)
-	frame.Read(conn.RW)
+	err = frame.Read(conn.RW)
+	if err != nil {
+		return nil, err
+	}
+
 	Notice("%v %v", Green("recv"), util.Indent(frame.Format()))
 	return frame, nil
 }
@@ -88,35 +92,49 @@ func (conn *Conn) ReadLoop() {
 	}
 }
 
-func (conn *Conn) WriteFrame(frame Frame) { // err
+func (conn *Conn) WriteFrame(frame Frame) (err error) {
 	Notice("%v %v", Red("send"), util.Indent(frame.Format()))
-	frame.Write(conn.RW) // err
+	return frame.Write(conn.RW)
 }
 
-func (conn *Conn) WriteLoop() { // err
+func (conn *Conn) WriteLoop() (err error) {
 	Debug("start conn.WriteLoop()")
 	for frame := range conn.WriteChan {
 		Debug("WriteLoop() %T", frame)
-		conn.WriteFrame(frame)
+		err = conn.WriteFrame(frame)
+		if err != nil {
+			Error("%v", err)
+			return err
+		}
 	}
+	return
 }
 
-func (conn *Conn) WriteString(str string) { // err
-	conn.RW.Write([]byte(str)) // err
+func (conn *Conn) WriteString(str string) (err error) {
+	_, err = conn.RW.Write([]byte(str))
+	if err != nil {
+		return err
+	}
 	Info("%v %q", Red("send"), str)
+	return
 }
 
-func (conn *Conn) WriteMagic() {
-	conn.WriteString(MagicString)
+func (conn *Conn) WriteMagic() error {
+	return conn.WriteString(MagicString)
 }
 
-func (conn *Conn) ReadMagic() { // err
+func (conn *Conn) ReadMagic() (err error) {
 	magic := make([]byte, len(MagicString))
-	conn.RW.Read(magic) // err
+	_, err = conn.RW.Read(magic)
+	if err != nil {
+		return err
+	}
 	if string(magic) != MagicString {
-		Error("Invalid Magic String") // err
+		Error("Invalid Magic String")
+		return fmt.Errorf("Invalid Magic String")
 	}
 	Info("%v %q", Red("recv"), string(magic))
+	return
 }
 
 // map of FrameType and FrameInitializer
