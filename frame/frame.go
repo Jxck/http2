@@ -88,10 +88,12 @@ const (
 	END_STREAM        = 0x1
 	ACK               = 0x1 // for settings
 	END_SEGMENT       = 0x2
+	RESERVED          = 0x2
 	END_HEADERS       = 0x4
-	PRIORITY          = 0x8
-	PAD_LOW           = 0x10
-	PAD_HIGH          = 0x20
+	PAD_LOW           = 0x8
+	PAD_HIGH          = 0x10
+	COMPRESSED        = 0x20
+	PRIORITY          = 0x20
 )
 
 type Frame interface {
