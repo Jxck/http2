@@ -193,7 +193,7 @@ func (stream *Stream) ChangeState(frame Frame, context bool) {
 		default:
 			log.Printf("protocol error?  RST at %v", stream.State)
 		}
-	case types == PushPrimiseFrameType:
+	case types == PushPromiseFrameType:
 		// TODO: implement me
 	}
 }

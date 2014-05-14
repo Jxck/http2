@@ -20,7 +20,7 @@ const (
 	PriorityFrameType           = 0x2
 	RstStreamFrameType          = 0x3
 	SettingsFrameType           = 0x4
-	PushPrimiseFrameType        = 0x5
+	PushPromiseFrameType        = 0x5
 	PingFrameType               = 0x6
 	GoAwayFrameType             = 0x7
 	WindowUpdateFrameType       = 0x8
