@@ -87,7 +87,7 @@ func (u Util) UpdateRequest(req *http.Request, url *URL) *http.Request {
 	req.Header.Add(":path", url.Path)
 	req.Header.Add(":scheme", url.Scheme)
 	req.Header.Add("accept", "*/*")
-	req.Header.Add("x-http2-version", Version)
+	req.Header.Add("x-http2-version", VERSION)
 	return req
 }
 

@@ -38,7 +38,7 @@ func (transport *Transport) Connect() {
 	config := tls.Config{
 		Certificates:       []tls.Certificate{cert},
 		InsecureSkipVerify: true,
-		NextProtos:         []string{Version},
+		NextProtos:         []string{VERSION},
 	}
 	conn, err := tls.Dial("tcp", address, &config)
 	if err != nil {

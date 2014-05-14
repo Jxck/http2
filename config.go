@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	Version            = "h2-10"
+	VERSION            = "h2-10"
 	CONNECTION_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 )
 

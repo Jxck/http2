@@ -18,7 +18,7 @@ func init() {
 }
 
 var TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){
-	Version: TLSNextProtoHandler,
+	VERSION: TLSNextProtoHandler,
 }
 
 var TLSNextProtoHandler = func(server *http.Server, conn *tls.Conn, handler http.Handler) {

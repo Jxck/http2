@@ -37,7 +37,7 @@ func main() {
 	// setup TLS config
 	config := &tls.Config{
 		InsecureSkipVerify: true,
-		NextProtos:         []string{http2.Version},
+		NextProtos:         []string{http2.VERSION},
 	}
 
 	// setup Server
