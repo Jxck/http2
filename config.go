@@ -14,4 +14,4 @@ var DefaultSettings = map[SettingsId]uint32{
 	SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
 }
 
-var NilSettings = map[SettingsId]uint32{}
+var NilSettings = make(map[SettingsId]uint32, 0)
