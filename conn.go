@@ -120,16 +120,16 @@ func (conn *Conn) WriteString(str string) (err error) {
 }
 
 func (conn *Conn) WriteMagic() error {
-	return conn.WriteString(MagicString)
+	return conn.WriteString(CONNECTION_PREFACE)
 }
 
 func (conn *Conn) ReadMagic() (err error) {
-	magic := make([]byte, len(MagicString))
+	magic := make([]byte, len(CONNECTION_PREFACE))
 	_, err = conn.RW.Read(magic)
 	if err != nil {
 		return err
 	}
-	if string(magic) != MagicString {
+	if string(magic) != CONNECTION_PREFACE {
 		Error("Invalid Magic String")
 		return fmt.Errorf("Invalid Magic String")
 	}
