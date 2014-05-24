@@ -16,16 +16,23 @@ func TestStory(t *testing.T) {
 		}
 	}()
 
-	var idle State
+	var idle, open, halfclosed, closed State
 
 	idle = NewIdle()
-	idle.H(headers).R(rst)
+	open, _ = idle.H(headers)
+	closed, _ = open.R(rst)
 
 	idle = NewIdle()
-	idle.H(headers).ES(data).ES(data)
+	open, _ = idle.H(headers)
+	halfclosed, _ = open.ES(data)
+	closed, _ = halfclosed.ES(data)
 
 	idle = NewIdle()
-	idle.H(headers).ES(data).R(rst)
+	open, _ = idle.H(headers)
+	halfclosed, _ = open.ES(data)
+	closed, _ = halfclosed.R(rst)
+
+	_ = closed
 }
 
 func TestSuccess(t *testing.T) {
@@ -39,9 +46,6 @@ func TestSuccess(t *testing.T) {
 
 	NewOpen().ES(data)
 	NewOpen().R(rst)
-
-	NewReserved().H(headers)
-	NewReserved().R(rst)
 
 	NewHalfClosed().ES(data)
 	NewHalfClosed().R(rst)
@@ -59,11 +63,13 @@ func TestFail(t *testing.T) {
 
 	NewOpen().H(headers)
 
-	NewReserved().ES(data)
-
 	NewHalfClosed().H(headers)
 
 	NewClosed().H(headers)
 	NewClosed().ES(data)
 	NewClosed().R(rst)
+}
+
+func TestExtend(t *testing.T) {
+	NewIdle().R(rst)
 }

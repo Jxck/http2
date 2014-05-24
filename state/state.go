@@ -11,32 +11,16 @@ func init() {
 }
 
 type State interface {
-	H(*HeadersFrame) State
-	ES(Frame) State
-	R(*RstStreamFrame) State
+	H(*HeadersFrame) (State, error)
+	ES(Frame) (State, error)
+	R(*RstStreamFrame) (State, error)
 	String() string
-}
-
-type BaseState struct {
-}
-
-func (s *BaseState) H(headers *HeadersFrame) State {
-	panic("PROTOCOL_ERROR: invalid state: H")
-}
-
-func (s *BaseState) ES(Frame) State {
-	panic("PROTOCOL_ERROR: invalid state: ES")
-}
-
-func (s *BaseState) R(*RstStreamFrame) State {
-	panic("PROTOCOL_ERROR: invalid state: R")
 }
 
 /**
  * Idle
  */
 type Idle struct {
-	BaseState
 }
 
 func NewIdle() State {
@@ -49,15 +33,22 @@ func (s Idle) String() string {
 	return "Idle"
 }
 
-func (s *Idle) H(headers *HeadersFrame) State {
-	return NewOpen()
+func (s *Idle) H(frame *HeadersFrame) (State, error) {
+	return NewOpen(), nil
+}
+
+func (s *Idle) ES(frame Frame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
+}
+
+func (s *Idle) R(frame *RstStreamFrame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
 /**
  * Open
  */
 type Open struct {
-	BaseState
 }
 
 func NewOpen() State {
@@ -70,19 +61,26 @@ func (s Open) String() string {
 	return "Open"
 }
 
-func (s *Open) R(*RstStreamFrame) State {
-	return NewClosed()
+func (s *Open) H(frame *HeadersFrame) (State, error) {
+	flags := frame.Header().Flags
+	if flags&END_STREAM == END_STREAM {
+		return NewClosed(), nil
+	}
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
-func (s *Open) ES(Frame) State {
-	return NewHalfClosed()
+func (s *Open) ES(frame Frame) (State, error) {
+	return NewHalfClosed(), nil
+}
+
+func (s *Open) R(frame *RstStreamFrame) (State, error) {
+	return NewClosed(), nil
 }
 
 /**
  * Closed
  */
 type Closed struct {
-	BaseState
 }
 
 func NewClosed() State {
@@ -95,36 +93,22 @@ func (s Closed) String() string {
 	return "Closed"
 }
 
-/**
- * Reserved
- */
-type Reserved struct {
-	BaseState
+func (s *Closed) H(frame *HeadersFrame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
-func NewReserved() State {
-	s := new(Reserved)
-	fmt.Println(s)
-	return s
+func (s *Closed) ES(frame Frame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
-func (s *Reserved) H(headers *HeadersFrame) State {
-	return NewHalfClosed()
-}
-
-func (s *Reserved) R(*RstStreamFrame) State {
-	return NewClosed()
-}
-
-func (s Reserved) String() string {
-	return "Reserved"
+func (s *Closed) R(frame *RstStreamFrame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
 /**
  * HalfClosed
  */
 type HalfClosed struct {
-	BaseState
 }
 
 func NewHalfClosed() State {
@@ -133,12 +117,16 @@ func NewHalfClosed() State {
 	return s
 }
 
-func (s *HalfClosed) R(*RstStreamFrame) State {
-	return NewClosed()
+func (s *HalfClosed) H(frame *HeadersFrame) (State, error) {
+	return nil, fmt.Errorf("illegal state %s at %s", frame, s)
 }
 
-func (s *HalfClosed) ES(Frame) State {
-	return NewClosed()
+func (s *HalfClosed) R(frame *RstStreamFrame) (State, error) {
+	return NewClosed(), nil
+}
+
+func (s *HalfClosed) ES(frame Frame) (State, error) {
+	return NewClosed(), nil
 }
 
 func (s HalfClosed) String() string {
