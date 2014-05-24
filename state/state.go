@@ -38,118 +38,118 @@ func (s *BaseState) R() State {
 }
 
 /**
- * IDLE
+ * Idle
  */
-type IDLE struct {
+type Idle struct {
 	BaseState
 }
 
-func NewIDLE() State {
-	s := new(IDLE)
+func NewIdle() State {
+	s := new(Idle)
 	fmt.Println(s)
 	return s
 }
 
-func (s IDLE) String() string {
-	return "IDLE"
+func (s Idle) String() string {
+	return "Idle"
 }
 
-func (s *IDLE) H() State {
-	return NewOPEN()
+func (s *Idle) H() State {
+	return NewOpen()
 }
 
-func (s *IDLE) PP() State {
-	return NewRESERVED()
+func (s *Idle) PP() State {
+	return NewReserved()
 }
 
 /**
- * OPEN
+ * Open
  */
-type OPEN struct {
+type Open struct {
 	BaseState
 }
 
-func NewOPEN() State {
-	s := new(OPEN)
+func NewOpen() State {
+	s := new(Open)
 	fmt.Println(s)
 	return s
 }
 
-func (s OPEN) String() string {
-	return "OPEN"
+func (s Open) String() string {
+	return "Open"
 }
 
-func (s *OPEN) R() State {
-	return NewCLOSED()
+func (s *Open) R() State {
+	return NewClosed()
 }
 
-func (s *OPEN) ES() State {
-	return NewHALFCLOSED()
+func (s *Open) ES() State {
+	return NewHalfClosed()
 }
 
 /**
- * CLOSED
+ * Closed
  */
-type CLOSED struct {
+type Closed struct {
 	BaseState
 }
 
-func NewCLOSED() State {
-	s := new(CLOSED)
+func NewClosed() State {
+	s := new(Closed)
 	fmt.Println(s)
 	return s
 }
 
-func (s CLOSED) String() string {
-	return "CLOSED"
+func (s Closed) String() string {
+	return "Closed"
 }
 
 /**
- * RESERVED
+ * Reserved
  */
-type RESERVED struct {
+type Reserved struct {
 	BaseState
 }
 
-func NewRESERVED() State {
-	s := new(RESERVED)
+func NewReserved() State {
+	s := new(Reserved)
 	fmt.Println(s)
 	return s
 }
 
-func (s *RESERVED) H() State {
-	return NewHALFCLOSED()
+func (s *Reserved) H() State {
+	return NewHalfClosed()
 }
 
-func (s *RESERVED) R() State {
-	return NewCLOSED()
+func (s *Reserved) R() State {
+	return NewClosed()
 }
 
-func (s RESERVED) String() string {
-	return "RESERVED"
+func (s Reserved) String() string {
+	return "Reserved"
 }
 
 /**
- * HALFCLOSED
+ * HalfClosed
  */
-type HALFCLOSED struct {
+type HalfClosed struct {
 	BaseState
 }
 
-func NewHALFCLOSED() State {
-	s := new(HALFCLOSED)
+func NewHalfClosed() State {
+	s := new(HalfClosed)
 	fmt.Println(s)
 	return s
 }
 
-func (s *HALFCLOSED) R() State {
-	return NewCLOSED()
+func (s *HalfClosed) R() State {
+	return NewClosed()
 }
 
-func (s *HALFCLOSED) ES() State {
-	return NewCLOSED()
+func (s *HalfClosed) ES() State {
+	return NewClosed()
 }
 
-func (s HALFCLOSED) String() string {
-	return "HALFCLOSED"
+func (s HalfClosed) String() string {
+	return "HalfClosed"
 }

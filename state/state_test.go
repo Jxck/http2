@@ -13,22 +13,22 @@ func TestStory(t *testing.T) {
 
 	var idle State
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.H().R()
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.H().ES().ES()
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.H().ES().R()
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.PP().H().ES()
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.PP().H().R()
 
-	idle = NewIDLE()
+	idle = NewIdle()
 	idle.PP().R()
 }
 
@@ -39,17 +39,17 @@ func TestSuccess(t *testing.T) {
 		}
 	}()
 
-	NewIDLE().H()
-	NewIDLE().PP()
+	NewIdle().H()
+	NewIdle().PP()
 
-	NewOPEN().ES()
-	NewOPEN().R()
+	NewOpen().ES()
+	NewOpen().R()
 
-	NewRESERVED().H()
-	NewRESERVED().R()
+	NewReserved().H()
+	NewReserved().R()
 
-	NewHALFCLOSED().ES()
-	NewHALFCLOSED().R()
+	NewHalfClosed().ES()
+	NewHalfClosed().R()
 }
 
 func TestFail(t *testing.T) {
@@ -59,20 +59,20 @@ func TestFail(t *testing.T) {
 		}
 	}()
 
-	NewIDLE().ES()
-	NewIDLE().R()
+	NewIdle().ES()
+	NewIdle().R()
 
-	NewOPEN().H()
-	NewOPEN().PP()
+	NewOpen().H()
+	NewOpen().PP()
 
-	NewRESERVED().PP()
-	NewRESERVED().ES()
+	NewReserved().PP()
+	NewReserved().ES()
 
-	NewHALFCLOSED().H()
-	NewHALFCLOSED().PP()
+	NewHalfClosed().H()
+	NewHalfClosed().PP()
 
-	NewCLOSED().H()
-	NewCLOSED().PP()
-	NewCLOSED().ES()
-	NewCLOSED().R()
+	NewClosed().H()
+	NewClosed().PP()
+	NewClosed().ES()
+	NewClosed().R()
 }
