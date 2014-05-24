@@ -1,8 +1,9 @@
-package main
+package state
 
 import (
 	"fmt"
 	"log"
+	//"github.com/jxck/http2/frame"
 )
 
 func init() {
@@ -151,80 +152,4 @@ func (s *HALFCLOSED) ES() State {
 
 func (s HALFCLOSED) String() string {
 	return "HALFCLOSED"
-}
-
-func Story() {
-	var idle State
-
-	idle = NewIDLE()
-	idle.H().R()
-
-	fmt.Println("=====")
-
-	idle = NewIDLE()
-	idle.H().ES().ES()
-
-	fmt.Println("=====")
-
-	idle = NewIDLE()
-	idle.H().ES().R()
-
-	fmt.Println("=====")
-
-	idle = NewIDLE()
-	idle.PP().H().ES()
-
-	fmt.Println("=====")
-
-	idle = NewIDLE()
-	idle.PP().H().R()
-
-	fmt.Println("=====")
-
-	idle = NewIDLE()
-	idle.PP().R()
-}
-
-func Success() {
-	NewIDLE().H()
-	NewIDLE().PP()
-
-	NewOPEN().ES()
-	NewOPEN().R()
-
-	NewRESERVED().H()
-	NewRESERVED().R()
-
-	NewHALFCLOSED().ES()
-	NewHALFCLOSED().R()
-}
-
-func Fail() {
-	defer func() {
-		recover()
-	}()
-	NewIDLE().ES()
-	NewIDLE().R()
-
-	NewOPEN().H()
-	NewOPEN().PP()
-
-	NewRESERVED().PP()
-	NewRESERVED().ES()
-
-	NewHALFCLOSED().H()
-	NewHALFCLOSED().PP()
-
-	NewCLOSED().H()
-	NewCLOSED().PP()
-	NewCLOSED().ES()
-	NewCLOSED().R()
-
-	log.Fatal()
-}
-
-func main() {
-	Story()
-	Success()
-	Fail()
 }
