@@ -1,8 +1,13 @@
 package state
 
 import (
+	. "github.com/jxck/http2/frame"
 	"testing"
 )
+
+var headers *HeadersFrame = new(HeadersFrame)
+var rst *RstStreamFrame = new(RstStreamFrame)
+var data *DataFrame = new(DataFrame)
 
 func TestStory(t *testing.T) {
 	defer func() {
@@ -14,22 +19,13 @@ func TestStory(t *testing.T) {
 	var idle State
 
 	idle = NewIdle()
-	idle.H().R()
+	idle.H(headers).R(rst)
 
 	idle = NewIdle()
-	idle.H().ES().ES()
+	idle.H(headers).ES(data).ES(data)
 
 	idle = NewIdle()
-	idle.H().ES().R()
-
-	idle = NewIdle()
-	idle.PP().H().ES()
-
-	idle = NewIdle()
-	idle.PP().H().R()
-
-	idle = NewIdle()
-	idle.PP().R()
+	idle.H(headers).ES(data).R(rst)
 }
 
 func TestSuccess(t *testing.T) {
@@ -39,17 +35,16 @@ func TestSuccess(t *testing.T) {
 		}
 	}()
 
-	NewIdle().H()
-	NewIdle().PP()
+	NewIdle().H(headers)
 
-	NewOpen().ES()
-	NewOpen().R()
+	NewOpen().ES(data)
+	NewOpen().R(rst)
 
-	NewReserved().H()
-	NewReserved().R()
+	NewReserved().H(headers)
+	NewReserved().R(rst)
 
-	NewHalfClosed().ES()
-	NewHalfClosed().R()
+	NewHalfClosed().ES(data)
+	NewHalfClosed().R(rst)
 }
 
 func TestFail(t *testing.T) {
@@ -59,20 +54,16 @@ func TestFail(t *testing.T) {
 		}
 	}()
 
-	NewIdle().ES()
-	NewIdle().R()
+	NewIdle().ES(data)
+	NewIdle().R(rst)
 
-	NewOpen().H()
-	NewOpen().PP()
+	NewOpen().H(headers)
 
-	NewReserved().PP()
-	NewReserved().ES()
+	NewReserved().ES(data)
 
-	NewHalfClosed().H()
-	NewHalfClosed().PP()
+	NewHalfClosed().H(headers)
 
-	NewClosed().H()
-	NewClosed().PP()
-	NewClosed().ES()
-	NewClosed().R()
+	NewClosed().H(headers)
+	NewClosed().ES(data)
+	NewClosed().R(rst)
 }

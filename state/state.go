@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
+	. "github.com/jxck/http2/frame"
 	"log"
-	//"github.com/jxck/http2/frame"
 )
 
 func init() {
@@ -11,29 +11,24 @@ func init() {
 }
 
 type State interface {
-	H() State
-	PP() State
-	ES() State
-	R() State
+	H(*HeadersFrame) State
+	ES(Frame) State
+	R(*RstStreamFrame) State
 	String() string
 }
 
 type BaseState struct {
 }
 
-func (s *BaseState) H() State {
+func (s *BaseState) H(headers *HeadersFrame) State {
 	panic("PROTOCOL_ERROR: invalid state: H")
 }
 
-func (s *BaseState) PP() State {
-	panic("PROTOCOL_ERROR: invalid state: PP")
-}
-
-func (s *BaseState) ES() State {
+func (s *BaseState) ES(Frame) State {
 	panic("PROTOCOL_ERROR: invalid state: ES")
 }
 
-func (s *BaseState) R() State {
+func (s *BaseState) R(*RstStreamFrame) State {
 	panic("PROTOCOL_ERROR: invalid state: R")
 }
 
@@ -54,12 +49,8 @@ func (s Idle) String() string {
 	return "Idle"
 }
 
-func (s *Idle) H() State {
+func (s *Idle) H(headers *HeadersFrame) State {
 	return NewOpen()
-}
-
-func (s *Idle) PP() State {
-	return NewReserved()
 }
 
 /**
@@ -79,11 +70,11 @@ func (s Open) String() string {
 	return "Open"
 }
 
-func (s *Open) R() State {
+func (s *Open) R(*RstStreamFrame) State {
 	return NewClosed()
 }
 
-func (s *Open) ES() State {
+func (s *Open) ES(Frame) State {
 	return NewHalfClosed()
 }
 
@@ -117,11 +108,11 @@ func NewReserved() State {
 	return s
 }
 
-func (s *Reserved) H() State {
+func (s *Reserved) H(headers *HeadersFrame) State {
 	return NewHalfClosed()
 }
 
-func (s *Reserved) R() State {
+func (s *Reserved) R(*RstStreamFrame) State {
 	return NewClosed()
 }
 
@@ -142,11 +133,11 @@ func NewHalfClosed() State {
 	return s
 }
 
-func (s *HalfClosed) R() State {
+func (s *HalfClosed) R(*RstStreamFrame) State {
 	return NewClosed()
 }
 
-func (s *HalfClosed) ES() State {
+func (s *HalfClosed) ES(Frame) State {
 	return NewClosed()
 }
 
