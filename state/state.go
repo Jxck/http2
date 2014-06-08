@@ -18,8 +18,8 @@ type State interface {
 }
 
 /**
- * Idle
- */
+* Idle
+*/
 type Idle struct {
 }
 
@@ -46,8 +46,8 @@ func (s *Idle) R(frame *RstStreamFrame) (State, error) {
 }
 
 /**
- * Open
- */
+* Open
+*/
 type Open struct {
 }
 
@@ -78,8 +78,8 @@ func (s *Open) R(frame *RstStreamFrame) (State, error) {
 }
 
 /**
- * Closed
- */
+* Closed
+*/
 type Closed struct {
 }
 
@@ -106,8 +106,8 @@ func (s *Closed) R(frame *RstStreamFrame) (State, error) {
 }
 
 /**
- * HalfClosed
- */
+* HalfClosed
+*/
 type HalfClosed struct {
 }
 
