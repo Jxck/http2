@@ -27,6 +27,15 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Println(`
+# usage
+$ go run main/server.go 3000
+			`)
+		}
+	}()
 	// params
 	addr := ":" + os.Args[1]
 	cert := "keys/cert.pem"

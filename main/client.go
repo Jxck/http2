@@ -31,6 +31,15 @@ func init() {
 }
 
 func main() {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Println(`
+# usage
+$ go run main/client.go http://localhost:3000
+`
+		}
+	}()
 	url := os.Args[1]
 
 	transport := &http2.Transport{
