@@ -6,8 +6,8 @@ http2 implementation in Golang
 
 ## version
 
-http2.0 (draft-10)
-http://tools.ietf.org/html/draft-ietf-httpbis-http2-10
+http2.0 (draft-12)
+http://tools.ietf.org/html/draft-ietf-httpbis-http2-12
 
 
 ## require
