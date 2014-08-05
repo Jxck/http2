@@ -2,10 +2,10 @@ package http2
 
 import (
 	"fmt"
-	. "github.com/jxck/color"
-	"github.com/jxck/hpack"
-	. "github.com/jxck/http2/frame"
-	. "github.com/jxck/logger"
+	. "github.com/Jxck/color"
+	"github.com/Jxck/hpack"
+	. "github.com/Jxck/http2/frame"
+	. "github.com/Jxck/logger"
 	"io"
 	"log"
 )

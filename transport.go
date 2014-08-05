@@ -3,9 +3,9 @@ package http2
 import (
 	"bytes"
 	"crypto/tls"
-	. "github.com/jxck/color"
-	. "github.com/jxck/http2/frame"
-	. "github.com/jxck/logger"
+	. "github.com/Jxck/color"
+	. "github.com/Jxck/http2/frame"
+	. "github.com/Jxck/logger"
 	"log"
 	"net/http"
 	"strconv"

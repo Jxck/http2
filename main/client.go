@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"flag"
-	"github.com/jxck/http2"
-	"github.com/jxck/logger"
+	"github.com/Jxck/http2"
+	"github.com/Jxck/logger"
 	"io/ioutil"
 	"log"
 	"net/http"

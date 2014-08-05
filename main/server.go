@@ -3,8 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"github.com/jxck/http2"
-	"github.com/jxck/logger"
+	"github.com/Jxck/http2"
+	"github.com/Jxck/logger"
 	"log"
 	"net/http"
 	"os"

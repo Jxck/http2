@@ -3,7 +3,7 @@ package frame
 import (
 	"encoding/binary"
 	"fmt"
-	. "github.com/jxck/color"
+	. "github.com/Jxck/color"
 	"io"
 	"log"
 	"net/http"

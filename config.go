@@ -1,7 +1,7 @@
 package http2
 
 import (
-	. "github.com/jxck/http2/frame"
+	. "github.com/Jxck/http2/frame"
 )
 
 const (
