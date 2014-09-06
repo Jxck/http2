@@ -32,12 +32,12 @@ func FrameName(i uint8) string {
 		"DATA",
 		"HEADERS",
 		"PRIORITY",
-		"RSTSTREAM",
+		"RST_STREAM",
 		"SETTINGS",
-		"PUSHPROMISE",
+		"PUSH_PROMISE",
 		"PING",
 		"GOAWAY",
-		"WINDOWUPDATE",
+		"WINDOW_UPDATE",
 		"CONTINUATION",
 	}
 	return names[i]
@@ -62,7 +62,7 @@ const (
 	INADEQUATE_SECURITY           = 12
 )
 
-func (e ErrorCode) Format() string {
+func (e ErrorCode) String() string {
 	errors := []string{
 		"NO_ERROR",
 		"PROTOCOL_ERROR",
@@ -87,12 +87,8 @@ const (
 	UNSET       uint8 = 0x0
 	END_STREAM        = 0x1
 	ACK               = 0x1 // for settings
-	END_SEGMENT       = 0x2
-	RESERVED          = 0x2
 	END_HEADERS       = 0x4
-	PAD_LOW           = 0x8
-	PAD_HIGH          = 0x10
-	COMPRESSED        = 0x20
+	PADDED            = 0x8
 	PRIORITY          = 0x20
 )
 
@@ -100,7 +96,7 @@ type Frame interface {
 	Write(w io.Writer) error
 	Read(r io.Reader) error
 	Header() *FrameHeader
-	Format() string
+	String() string
 }
 
 // Frame Header
@@ -108,17 +104,20 @@ type Frame interface {
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | R |     Length (14)           |   Type (8)    |   Flags (8)   |
+// |                 Length (24)                   |
+// +---------------+---------------+---------------+
+// |   Type (8)    |   Flags (8)   |
 // +-+-+-----------+---------------+-------------------------------+
 // |R|                 Stream Identifier (31)                      |
-// +-+-------------------------------------------------------------+
+// +=+=============================================================+
 // |                   Frame Payload (0...)                      ...
 // +---------------------------------------------------------------+
+
 type FrameHeader struct {
-	Length   uint16
+	Length   uint32 // 24bit
 	Type     uint8
 	Flags    uint8
-	StreamId uint32
+	StreamId uint32 // R+31bit
 }
 
 func NewFrameHeader(length uint16, types uint8, flags uint8, streamid uint32) *FrameHeader {
@@ -139,7 +138,7 @@ func (fh *FrameHeader) Write(w io.Writer) error {
 	return binary.Write(w, binary.BigEndian, fh)
 }
 
-func (fh *FrameHeader) Format() string {
+func (fh *FrameHeader) String() string {
 	str := fmt.Sprintf(
 		" frame <length=%v, flags=%#x, stream_id=%v>",
 		fh.Length, fh.Flags, fh.StreamId,
@@ -152,8 +151,8 @@ func (fh *FrameHeader) Format() string {
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Pad High? (8) |  Pad Low? (8) |
-// +---------------+---------------+-------------------------------+
+// |Pad Length? (8)|
+// +---------------+-----------------------------------------------+
 // |                            Data (*)                         ...
 // +---------------------------------------------------------------+
 // |                           Padding (*)                       ...
@@ -212,9 +211,9 @@ func (frame *DataFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *DataFrame) Format() string {
+func (frame *DataFrame) String() string {
 	str := Cyan("DATA")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 
 	if frame.Flags&0x1 == 1 {
 		str += "\n; END_STREAM"
@@ -238,8 +237,8 @@ func (frame *DataFrame) Format() string {
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Pad High? (8) |  Pad Low? (8) |
-// +-+-------------+---------------+-------------------------------+
+// |Pad Length? (8)|
+// +-+-------------+-----------------------------------------------+
 // |E|                 Stream Dependency? (31)                     |
 // +-+-------------+-----------------------------------------------+
 // |  Weight? (8)  |
@@ -322,9 +321,9 @@ func (frame *HeadersFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *HeadersFrame) Format() string {
+func (frame *HeadersFrame) String() string {
 	str := Cyan("HEADERS")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 
 	if frame.Flags&END_STREAM == END_STREAM {
 		str += "\n; END_STREAM"
@@ -357,7 +356,7 @@ func (frame *HeadersFrame) Format() string {
 
 // PRIORITY
 //
-//  0                   1                   2                   3
+// 0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |E|                  Stream Dependency (31)                     |
@@ -411,9 +410,9 @@ func (frame *RstStreamFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *RstStreamFrame) Format() string {
+func (frame *RstStreamFrame) String() string {
 	str := Cyan("RST_STREAM")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 	str += fmt.Sprintf("\n(Error Code=%d)", frame.ErrorCode)
 	return str
 }
@@ -423,8 +422,8 @@ func (frame *RstStreamFrame) Format() string {
 //  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Identifier (8)|
-// +---------------+-----------------------------------------------+
+// |       Identifier (16)         |
+// +-------------------------------+-------------------------------+
 // |                        Value (32)                             |
 // +---------------------------------------------------------------+
 const DEFAULT_WINDOW_SIZE uint32 = 65535
@@ -432,18 +431,22 @@ const DEFAULT_WINDOW_SIZE uint32 = 65535
 type SettingsId uint8
 
 const (
-	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1
-	SETTINGS_ENABLE_PUSH                       = 2
-	SETTINGS_MAX_CONCURRENT_STREAMS            = 3
-	SETTINGS_INITIAL_WINDOW_SIZE               = 4
+	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1 // 4096
+	SETTINGS_ENABLE_PUSH                       = 2 // 1
+	SETTINGS_MAX_CONCURRENT_STREAMS            = 3 // (infinite)
+	SETTINGS_INITIAL_WINDOW_SIZE               = 4 // 65535
+	SETTINGS_MAX_FRAME_SIZE                    = 5 // 65536
+	SETTINGS_MAX_HEADER_LIST_SIZE              = 6 // (infinite)
 )
 
-func (s SettingsId) Format() string {
+func (s SettingsId) String() string {
 	m := map[SettingsId]string{
 		1: "SETTINGS_HEADER_TABLE_SIZE",
 		2: "SETTINGS_ENABLE_PUSH",
 		3: "SETTINGS_MAX_CONCURRENT_STREAMS",
 		4: "SETTINGS_INITIAL_WINDOW_SIZE",
+		5: "SETTINGS_MAX_FRAME_SIZE",
+		6: "SETTINGS_MAX_HEADER_LIST_SIZE",
 	}
 	return fmt.Sprintf("%s(%d)", m[s], s)
 }
@@ -513,15 +516,15 @@ func (frame *SettingsFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *SettingsFrame) Format() string {
+func (frame *SettingsFrame) String() string {
 	str := Cyan("SETTINGS")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 	if frame.Flags == 1 {
 		str += "\n; ACK"
 	}
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
-		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId.Format(), s.Value)
+		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId.String(), s.Value)
 	}
 	return str
 }
@@ -529,10 +532,10 @@ func (frame *SettingsFrame) Format() string {
 // PUSH_PROMISE
 //
 // 0                   1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Pad High? (8) | Pad Low? (8)  |
-// +-+-------------+---------------+-------------------------------+
+// |Pad Length? (8)|
+// +-+-------------+-----------------------------------------------+
 // |R|                  Promised Stream ID (31)                    |
 // +-+-----------------------------+-------------------------------+
 // |                   Header Block Fragment (*)                 ...
@@ -557,7 +560,7 @@ func (frame *SettingsFrame) Format() string {
 // GOAWAY
 //
 // 0                   1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |R|                  Last-Stream-ID (31)                        |
 // +-+-------------------------------------------------------------+
@@ -622,11 +625,11 @@ func (frame *GoAwayFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *GoAwayFrame) Format() string {
+func (frame *GoAwayFrame) String() string {
 	str := Cyan("GOAWAY")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(%q))",
-		frame.LastStreamID, Red(frame.ErrorCode.Format()), frame.AdditionalDebugData)
+		frame.LastStreamID, Red(frame.ErrorCode.String()), frame.AdditionalDebugData)
 	return str
 }
 
@@ -676,40 +679,17 @@ func (frame *WindowUpdateFrame) Header() *FrameHeader {
 	return frame.FrameHeader
 }
 
-func (frame *WindowUpdateFrame) Format() string {
+func (frame *WindowUpdateFrame) String() string {
 	str := Cyan("WINDOW_UPDATE")
-	str += frame.FrameHeader.Format()
+	str += frame.FrameHeader.String()
 	str += fmt.Sprintf("\n(window_size_increment=%d)", frame.WindowSizeIncrement)
 	return str
 }
 
 // CONTINUATION
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// | Pad High? (8) | Pad Low? (8)  |
-// +---------------+---------------+-------------------------------+
-// |                   Header Block Fragment (*)                 ...
-// +---------------------------------------------------------------+
-// |                           Padding (*)                       ...
-// +---------------------------------------------------------------+
-//
-// ALTSVC
-//
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-// |                          Max-Age (32)                         |
-// +-------------------------------+---------------+---------------+
-// |            Port (16)          | Reserved (8)  | Proto-Len (8) |
-// +-------------------------------+---------------+---------------+
-// |                        Protocol-ID (*)                        |
-// +---------------+-----------------------------------------------+
-// | Host-Len (8)  |                   Host (*)                  ...
-// +---------------+-----------------------------------------------+
-// |                          Origin? (*)                        ...
-// +---------------------------------------------------------------+
-//
-// BLOCKED
-// (type=0xB)
+// 0                   1                   2                   3
+//   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |                   Header Block Fragment (*)                 ...
+//  +---------------------------------------------------------------+
