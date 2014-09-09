@@ -284,8 +284,8 @@ func (stream *Stream) Close() {
 
 // Encode Header using HPACK
 func (stream *Stream) EncodeHeader(header http.Header) []byte {
-	headerSet := hpack.ToHeaderSet(header)
-	return stream.HpackContext.Encode(headerSet)
+	headerList := hpack.ToHeaderList(header)
+	return stream.HpackContext.Encode(*headerList)
 }
 
 // Decode Header using HPACK

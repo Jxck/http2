@@ -99,8 +99,8 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		headersFrame := NewHeadersFrame(END_HEADERS, stream.Id)
 		headersFrame.Headers = responseHeader
 
-		headerSet := hpack.ToHeaderSet(responseHeader)
-		headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
+		headerList := hpack.ToHeaderList(responseHeader)
+		headersFrame.HeaderBlock = stream.HpackContext.Encode(*headerList)
 		headersFrame.Length = uint32(len(headersFrame.HeaderBlock))
 		stream.Write(headersFrame)
 
