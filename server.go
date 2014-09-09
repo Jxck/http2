@@ -101,7 +101,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		headerSet := hpack.ToHeaderSet(responseHeader)
 		headersFrame.HeaderBlock = stream.HpackContext.Encode(headerSet)
-		headersFrame.Length = uint16(len(headersFrame.HeaderBlock))
+		headersFrame.Length = uint32(len(headersFrame.HeaderBlock))
 		stream.Write(headersFrame)
 
 		// Send DATA
@@ -115,13 +115,13 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			if end > length {
 				dataFrame := NewDataFrame(UNSET, stream.Id)
 				dataFrame.Data = data[start:]
-				dataFrame.Length = uint16(len(dataFrame.Data))
+				dataFrame.Length = uint32(len(dataFrame.Data))
 				stream.Write(dataFrame)
 				break
 			}
 			dataFrame := NewDataFrame(UNSET, stream.Id)
 			dataFrame.Data = data[start:end]
-			dataFrame.Length = uint16(len(dataFrame.Data))
+			dataFrame.Length = uint32(len(dataFrame.Data))
 			stream.Write(dataFrame)
 		}
 

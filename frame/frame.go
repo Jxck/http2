@@ -120,7 +120,7 @@ type FrameHeader struct {
 	StreamId uint32 // R+31bit
 }
 
-func NewFrameHeader(length uint16, types uint8, flags uint8, streamid uint32) *FrameHeader {
+func NewFrameHeader(length uint32, types uint8, flags uint8, streamid uint32) *FrameHeader {
 	fh := &FrameHeader{
 		Length:   length,
 		Type:     types,
@@ -163,7 +163,7 @@ type DataFrame struct {
 }
 
 func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
-	var length uint16 = 0
+	var length uint32 = 0
 	fh := NewFrameHeader(length, DataFrameType, flags, streamId)
 
 	dataFrame := &DataFrame{
@@ -174,21 +174,17 @@ func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
 }
 
 func (frame *DataFrame) Read(r io.Reader) (err error) {
-	var frameLen, padLen uint16
+	var frameLen uint32
+	var padLen uint16
 
 	frameLen = frame.Length
-	if (frame.Flags&PAD_LOW == 1) && (frame.Flags&PAD_HIGH == 1) {
-		var padHigh, padLow uint8
-		err = binary.Read(r, binary.BigEndian, &padHigh)
+	if frame.Flags&PADDED == 1 {
+		var padLen uint8
+		err = binary.Read(r, binary.BigEndian, &padLen)
 		if err != nil {
 			return err
 		}
-		err = binary.Read(r, binary.BigEndian, &padLow)
-		if err != nil {
-			return err
-		}
-		padLen = uint16(padHigh)*256 + uint16(padLow)
-		frameLen = frameLen - 2 // (Pad Higth + Pad Low)
+		frameLen = frameLen - 1 // (remove pad length)
 	}
 	data := make([]byte, frameLen)
 	err = binary.Read(r, binary.BigEndian, &data)
@@ -255,7 +251,7 @@ type HeadersFrame struct {
 }
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
-	var length uint16 = 0
+	var length uint32 = 0
 	fh := NewFrameHeader(length, HeadersFrameType, flags, streamId)
 
 	headersFrame := &HeadersFrame{
@@ -266,21 +262,18 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 }
 
 func (frame *HeadersFrame) Read(r io.Reader) (err error) {
-	var frameLen, padLen uint16
+	var frameLen uint32
+	var padLen uint16
 
 	frameLen = frame.Length
-	if (frame.Flags&PAD_LOW == PAD_LOW) && (frame.Flags&PAD_HIGH == PAD_HIGH) {
-		var padHigh, padLow uint8
-		err = binary.Read(r, binary.BigEndian, &padHigh)
+	if (frame.Flags&PADDED == PADDED) {
+		var padding uint8
+		err = binary.Read(r, binary.BigEndian, &padding)
 		if err != nil {
 			return err
 		}
-		err = binary.Read(r, binary.BigEndian, &padLow)
-		if err != nil {
-			return err
-		}
-		padLen = uint16(padHigh)*256 + uint16(padLow)
-		frameLen = frameLen - 2 // (Pad Higth + Pad Low)
+		padLen = uint16(padding)
+		frameLen = frameLen - 1 // (remove pad length)
 	}
 
 	if frame.Flags&PRIORITY == PRIORITY {
@@ -337,12 +330,8 @@ func (frame *HeadersFrame) String() string {
 		str += "\n; PRIORITY"
 	}
 
-	if frame.Flags&PAD_LOW == PAD_LOW {
-		str += "\n; PAD_LOW"
-	}
-
-	if frame.Flags&PAD_HIGH == PAD_HIGH {
-		str += "\n; PAD_HIGH"
+	if frame.Flags&PADDED == PADDED {
+		str += "\n; PADDED"
 	}
 
 	// TODO: ; First response header
@@ -378,7 +367,7 @@ type RstStreamFrame struct {
 }
 
 func NewRstStreamFrame(errorCode ErrorCode, streamId uint32) *RstStreamFrame {
-	var length uint16 = 4
+	var length uint32 = 4
 	var flags uint8 = 0
 
 	fh := NewFrameHeader(length, RstStreamFrameType, flags, streamId)
@@ -471,7 +460,7 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 		settings = append(settings, s)
 	}
 
-	var length uint16 = uint16(5 * len(settings))
+	var length uint32 = uint32(5 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
@@ -576,7 +565,7 @@ type GoAwayFrame struct {
 }
 
 func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *GoAwayFrame {
-	var length uint16 = 8
+	var length uint32 = 8
 	var flags uint8 = 0x00
 	fh := NewFrameHeader(length, GoAwayFrameType, flags, streamId)
 	frame := &GoAwayFrame{
@@ -646,7 +635,7 @@ type WindowUpdateFrame struct {
 }
 
 func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
-	var length uint16 = 4
+	var length uint32 = 4
 
 	// TODO: temp flag
 	var flags uint8 = 0

@@ -91,7 +91,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	frame := NewHeadersFrame(flags, stream.Id)
 	frame.Headers = req.Header
 	frame.HeaderBlock = stream.EncodeHeader(frame.Headers)
-	frame.Length = uint16(len(frame.HeaderBlock))
+	frame.Length = uint32(len(frame.HeaderBlock))
 	stream.Write(frame) // err
 
 	// send GOAWAY

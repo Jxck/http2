@@ -67,7 +67,7 @@ func (conn *Conn) ReadFrame() (frame Frame, err error) {
 		return nil, err
 	}
 
-	Notice("%v %v", Green("recv"), util.Indent(frame.Format()))
+	Notice("%v %v", Green("recv"), util.Indent(frame.String()))
 	return frame, nil
 }
 
@@ -93,7 +93,7 @@ func (conn *Conn) ReadLoop() {
 }
 
 func (conn *Conn) WriteFrame(frame Frame) (err error) {
-	Notice("%v %v", Red("send"), util.Indent(frame.Format()))
+	Notice("%v %v", Red("send"), util.Indent(frame.String()))
 	return frame.Write(conn.RW)
 }
 
