@@ -37,7 +37,7 @@ func main() {
 			log.Println(`
 # usage
 $ go run main/client.go http://localhost:3000
-`
+`)
 		}
 	}()
 	url := os.Args[1]
