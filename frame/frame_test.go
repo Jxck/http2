@@ -22,7 +22,7 @@ func TestFrameHeader(t *testing.T) {
 func TestDataFrame(t *testing.T) {
 	b := []byte("hello")
 	expected := NewDataFrame(1, 2)
-	expected.Length = uint16(len(b))
+	expected.Length = uint32(len(b))
 	expected.Data = b
 
 	buf := bytes.NewBuffer(make([]byte, 0))
@@ -43,7 +43,7 @@ func TestDataFrame(t *testing.T) {
 func TestHeadersFrame(t *testing.T) {
 	b := []byte("test header block")
 	expected := NewHeadersFrame(END_STREAM, 2)
-	expected.Length = uint16(len(b))
+	expected.Length = uint32(len(b))
 	expected.HeaderBlock = b
 
 	buf := bytes.NewBuffer(make([]byte, 0))
@@ -65,7 +65,7 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	b := []byte("test header block")
 	expected := NewHeadersFrame(PRIORITY, 2)
 	expected.Priority = 1
-	expected.Length = uint16(len(b) + 4)
+	expected.Length = uint32(len(b) + 4)
 	expected.HeaderBlock = b
 
 	buf := bytes.NewBuffer(make([]byte, 0))
