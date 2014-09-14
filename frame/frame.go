@@ -130,12 +130,57 @@ func NewFrameHeader(length uint32, types uint8, flags uint8, streamid uint32) *F
 	return fh
 }
 
-func (fh *FrameHeader) Read(r io.Reader) error {
-	return binary.Read(r, binary.BigEndian, fh)
+func (fh *FrameHeader) Read(r io.Reader) (err error) {
+	// read 32 bit
+	var first uint32
+	err = binary.Read(r, binary.BigEndian, &first)
+	if err != nil {
+		return err
+	}
+
+	// last 8 bit for type
+	fh.Type = uint8(first & 0xFF)
+	// first 24 bit for length
+	fh.Length = first >> 8
+
+	// read 8 bit for Flags
+	err = binary.Read(r, binary.BigEndian, &fh.Flags)
+	if err != nil {
+		return err
+	}
+
+	// read 32 bit for StreamId
+	var last uint32
+	err = binary.Read(r, binary.BigEndian, &last)
+	if err != nil {
+		return err
+	}
+	fh.StreamId = last & 127
+
+	return err
 }
 
-func (fh *FrameHeader) Write(w io.Writer) error {
-	return binary.Write(w, binary.BigEndian, fh)
+func (fh *FrameHeader) Write(w io.Writer) (err error) {
+	// write length + type as 32bit
+	var first uint32 = fh.Length<<8 + uint32(fh.Type)
+	err = binary.Write(w, binary.BigEndian, &first)
+	if err != nil {
+		return err
+	}
+
+	// write flags
+	err = binary.Write(w, binary.BigEndian, &fh.Flags)
+	if err != nil {
+		return err
+	}
+
+	// write stream id
+	err = binary.Write(w, binary.BigEndian, &fh.StreamId)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (fh *FrameHeader) String() string {
@@ -266,7 +311,7 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	var padLen uint16
 
 	frameLen = frame.Length
-	if (frame.Flags&PADDED == PADDED) {
+	if frame.Flags&PADDED == PADDED {
 		var padding uint8
 		err = binary.Read(r, binary.BigEndian, &padding)
 		if err != nil {
@@ -417,7 +462,7 @@ func (frame *RstStreamFrame) String() string {
 // +---------------------------------------------------------------+
 const DEFAULT_WINDOW_SIZE uint32 = 65535
 
-type SettingsId uint8
+type SettingsId uint16
 
 const (
 	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1 // 4096
