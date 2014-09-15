@@ -36,7 +36,7 @@ func main() {
 		if err != nil {
 			log.Println(`
 # usage
-$ go run main/client.go http://localhost:3000
+$ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 `)
 		}
 	}()
