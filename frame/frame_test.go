@@ -7,7 +7,13 @@ import (
 )
 
 func TestFrameHeader(t *testing.T) {
-	expected := NewFrameHeader(8, 1, 2, 3)
+	var (
+		length   uint32 = 8
+		types    uint8  = 1
+		flags    uint8  = 2
+		streamid uint32 = 3
+	)
+	expected := NewFrameHeader(length, types, flags, streamid)
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 
@@ -20,8 +26,13 @@ func TestFrameHeader(t *testing.T) {
 }
 
 func TestDataFrame(t *testing.T) {
-	b := []byte("hello")
-	expected := NewDataFrame(1, 2)
+	var (
+		flags    uint8  = 1
+		streamid uint32 = 2
+		b        []byte = []byte("hello")
+	)
+
+	expected := NewDataFrame(flags, streamid)
 	expected.Length = uint32(len(b))
 	expected.Data = b
 
@@ -64,8 +75,9 @@ func TestHeadersFrame(t *testing.T) {
 func TestHeadersPriorityFrame(t *testing.T) {
 	b := []byte("test header block")
 	expected := NewHeadersFrame(PRIORITY, 2)
-	expected.Priority = 1
-	expected.Length = uint32(len(b) + 4)
+	expected.StreamDependency = 1
+	expected.Weight = 2
+	expected.Length = uint32(len(b) + 5)
 	expected.HeaderBlock = b
 
 	buf := bytes.NewBuffer(make([]byte, 0))
@@ -78,8 +90,12 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if actual.Priority != 1 {
-		t.Errorf("got %v\nwant %v", actual.Priority, 1)
+	if actual.StreamDependency != 1 {
+		t.Errorf("got %v\nwant %v", actual.StreamDependency, 1)
+	}
+
+	if actual.Weight != 2 {
+		t.Errorf("got %v\nwant %v", actual.Weight, 2)
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -106,9 +122,9 @@ func TestRstStreamFrame(t *testing.T) {
 }
 
 func TestSettingsFrame(t *testing.T) {
-	settings := map[SettingsId]uint32{
-		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
-		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_WINDOW_SIZE,
+	settings := []Setting{
+		{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
+		{SETTINGS_INITIAL_WINDOW_SIZE, DEFAULT_WINDOW_SIZE},
 	}
 	expected := NewSettingsFrame(0, settings, 2)
 
