@@ -220,11 +220,10 @@ func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
 
 func (frame *DataFrame) Read(r io.Reader) (err error) {
 	var frameLen uint32
-	var padLen uint16
+	var padLen uint8
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == 1 {
-		var padLen uint8
 		err = binary.Read(r, binary.BigEndian, &padLen)
 		if err != nil {
 			return err
@@ -241,6 +240,7 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 }
 
 func (frame *DataFrame) Write(w io.Writer) (err error) {
+	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
 		return err
@@ -265,9 +265,9 @@ func (frame *DataFrame) String() string {
 	if window == 0 {
 		// no data do nothing
 		return str
-	} else if window > 8 {
-		// trim to 8 byte
-		window = 8
+	} else if window > 32 {
+		// trim to 32 byte
+		window = 32
 	}
 	str += fmt.Sprintf("\n%q...", string(frame.Data[:window]))
 	return str
