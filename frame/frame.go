@@ -505,7 +505,7 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 		settings = append(settings, s)
 	}
 
-	var length uint32 = uint32(5 * len(settings))
+	var length uint32 = uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
@@ -515,7 +515,7 @@ func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint3
 }
 
 func (frame *SettingsFrame) Read(r io.Reader) (err error) {
-	for niv := frame.Length / 5; niv > 0; niv-- {
+	for niv := frame.Length / 6; niv > 0; niv-- {
 		s := *new(Setting)
 
 		err = binary.Read(r, binary.BigEndian, &s.SettingsId)
