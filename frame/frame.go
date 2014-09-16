@@ -508,16 +508,7 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func NewSettingsFrame(flags uint8, setting map[SettingsId]uint32, streamId uint32) *SettingsFrame {
-	var settings []Setting
-	for id, val := range setting {
-		s := Setting{
-			SettingsId: id,
-			Value:      val,
-		}
-		settings = append(settings, s)
-	}
-
+func NewSettingsFrame(flags uint8, settings []Setting, streamId uint32) *SettingsFrame {
 	var length uint32 = uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
