@@ -290,9 +290,10 @@ func (frame *DataFrame) String() string {
 // +---------------------------------------------------------------+
 type HeadersFrame struct {
 	*FrameHeader
-	Priority    uint32
-	HeaderBlock []byte
-	Headers     http.Header
+	StreamDependency uint32
+	Weight           uint8
+	HeaderBlock      []byte
+	Headers          http.Header
 }
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
@@ -308,26 +309,32 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 
 func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	var frameLen uint32
-	var padLen uint16
+	var padLen uint8
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == PADDED {
-		var padding uint8
-		err = binary.Read(r, binary.BigEndian, &padding)
+		err = binary.Read(r, binary.BigEndian, &padLen)
 		if err != nil {
 			return err
 		}
-		padLen = uint16(padding)
-		frameLen = frameLen - 1 // (remove pad length)
+		frameLen = frameLen - 1 // remove pad length
 	}
 
 	if frame.Flags&PRIORITY == PRIORITY {
-		err = binary.Read(r, binary.BigEndian, &frame.Priority)
+		// TODO: support stream dependency
+		err = binary.Read(r, binary.BigEndian, &frame.StreamDependency)
 		if err != nil {
 			return err
 		}
-		frameLen = frameLen - 4
+		frameLen = frameLen - 4 // remove stream dependency length
+
+		err = binary.Read(r, binary.BigEndian, &frame.Weight)
+		if err != nil {
+			return err
+		}
+		frameLen = frameLen - 1 // remove weight length
 	}
+
 	data := make([]byte, frameLen)
 	err = binary.Read(r, binary.BigEndian, &data)
 	if err != nil {
@@ -338,12 +345,18 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) (err error) {
+	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
 		return err
 	}
 	if frame.Flags&PRIORITY == PRIORITY {
-		err = binary.Write(w, binary.BigEndian, &frame.Priority)
+		err = binary.Write(w, binary.BigEndian, &frame.StreamDependency)
+		if err != nil {
+			return err
+		}
+
+		err = binary.Write(w, binary.BigEndian, &frame.Weight)
 		if err != nil {
 			return err
 		}
