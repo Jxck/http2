@@ -223,7 +223,7 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 	var padLen uint8
 
 	frameLen = frame.Length
-	if frame.Flags&PADDED == 1 {
+	if frame.Flags&PADDED == PADDED {
 		err = binary.Read(r, binary.BigEndian, &padLen)
 		if err != nil {
 			return err
@@ -256,7 +256,7 @@ func (frame *DataFrame) String() string {
 	str := Cyan("DATA")
 	str += frame.FrameHeader.String()
 
-	if frame.Flags&0x1 == 1 {
+	if frame.Flags&END_STREAM == END_STREAM {
 		str += "\n; END_STREAM"
 	}
 
@@ -557,7 +557,7 @@ func (frame *SettingsFrame) Header() *FrameHeader {
 func (frame *SettingsFrame) String() string {
 	str := Cyan("SETTINGS")
 	str += frame.FrameHeader.String()
-	if frame.Flags == 1 {
+	if frame.Flags == ACK {
 		str += "\n; ACK"
 	}
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
