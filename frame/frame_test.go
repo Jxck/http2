@@ -2,6 +2,7 @@ package frame
 
 import (
 	"bytes"
+	"encoding/hex"
 	"reflect"
 	"testing"
 )
@@ -46,6 +47,51 @@ func TestDataFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
+
+// {
+// 	"error": null,
+// 	"wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
+// 	"frame": {
+// 		"length": 20,
+// 		"frame_payload": {
+// 			"data": "Hello, world!",
+// 			"padding_length": 6,
+// 			"padding": "Howdy!"
+// 		},
+// 		"flags": 8,
+// 		"stream_identifier": 2,
+// 		"type": 0
+// 	},
+// 	"draft": 14,
+// 	"description": "noraml data frame"
+// }
+func TestCase(t *testing.T) {
+	var (
+		flags    uint8  = 8
+		streamId uint32 = 2
+		length   uint32 = 20
+		types    uint8  = 0
+	)
+
+	expected := NewDataFrame(flags, streamId)
+	expected.Length = 20
+	expected.Data = []byte("Hello, world!")
+	expected.FrameHeader.Length = length
+	expected.FrameHeader.Type = types
+
+	var wire = "0000140008000000020648656C6C6F2C20776F726C6421486F77647921"
+	w, _ := hex.DecodeString(wire)
+	buf := bytes.NewBuffer(w)
+	actual, err := ReadFrame(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
