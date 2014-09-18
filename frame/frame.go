@@ -246,9 +246,13 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
-	boundary := len(data) - int(frame.PadLength)
-	frame.Data = data[:boundary]
-	frame.Padding = data[boundary:]
+	if frame.Flags&PADDED == PADDED {
+		boundary := len(data) - int(frame.PadLength)
+		frame.Data = data[:boundary]
+		frame.Padding = data[boundary:]
+	} else {
+		frame.Data = data
+	}
 	return
 }
 
