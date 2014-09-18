@@ -214,7 +214,9 @@ func (fh *FrameHeader) String() string {
 // +---------------------------------------------------------------+
 type DataFrame struct {
 	*FrameHeader
-	Data []byte
+	PadLength uint8
+	Data      []byte
+	Padding   []byte
 }
 
 func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
@@ -230,11 +232,10 @@ func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
 
 func (frame *DataFrame) Read(r io.Reader) (err error) {
 	var frameLen uint32
-	var padLen uint8
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Read(r, binary.BigEndian, &padLen)
+		err = binary.Read(r, binary.BigEndian, &frame.PadLength)
 		if err != nil {
 			return err
 		}
@@ -245,7 +246,9 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
-	frame.Data = data[:len(data)-int(padLen)] // remove padding
+	boundary := len(data) - int(frame.PadLength)
+	frame.Data = data[:boundary]
+	frame.Padding = data[boundary:]
 	return
 }
 
@@ -255,7 +258,26 @@ func (frame *DataFrame) Write(w io.Writer) (err error) {
 	if err != nil {
 		return err
 	}
-	return binary.Write(w, binary.BigEndian, &frame.Data)
+
+	if frame.Flags&PADDED == PADDED {
+		err = binary.Write(w, binary.BigEndian, &frame.PadLength)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = binary.Write(w, binary.BigEndian, &frame.Data)
+	if err != nil {
+		return err
+	}
+
+	if frame.Flags&PADDED == PADDED {
+		err = binary.Write(w, binary.BigEndian, &frame.Padding)
+		if err != nil {
+			return err
+		}
+	}
+	return
 }
 
 func (frame *DataFrame) Header() *FrameHeader {
@@ -741,7 +763,6 @@ func (frame *WindowUpdateFrame) String() string {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //  |                   Header Block Fragment (*)                 ...
 //  +---------------------------------------------------------------+
-
 
 // Reade
 func ReadFrame(r io.Reader) (frame Frame, err error) {

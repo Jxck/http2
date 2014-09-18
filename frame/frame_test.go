@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -79,9 +80,11 @@ func TestCase(t *testing.T) {
 
 	expected := NewDataFrame(flags, streamId)
 	expected.Length = 20
-	expected.Data = []byte("Hello, world!")
 	expected.FrameHeader.Length = length
 	expected.FrameHeader.Type = types
+	expected.PadLength = 6
+	expected.Data = []byte("Hello, world!")
+	expected.Padding = []byte("Howdy!")
 
 	var wire = "0000140008000000020648656C6C6F2C20776F726C6421486F77647921"
 	w, _ := hex.DecodeString(wire)
@@ -93,7 +96,16 @@ func TestCase(t *testing.T) {
 
 	// compare struct
 	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
+		t.Errorf("got %#v\nwant %#v", actual, expected)
+	}
+
+	// compare wire
+	b := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(b)
+	s := strings.ToUpper(hex.EncodeToString(b.Bytes()))
+
+	if !reflect.DeepEqual(wire, s) {
+		t.Errorf("got \n%v\nwant \n%v", wire, s)
 	}
 }
 
