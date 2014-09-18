@@ -50,28 +50,22 @@ func TestDataFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
-type DataFrameJSON struct {
+type TestCase struct {
 	Error string    `json:"error"`
 	Wire  string    `json:"wire"`
-	Frame FrameType `json:"frame"`
+	Frame TestFrame `json:"frame"`
 }
 
-type FrameType struct {
-	Length           uint32      `json:"length"`
-	Payload          PayloadType `json:"frame_payload"`
-	Flags            uint8       `json:"flags"`
-	StreamIdentifier uint32      `json:"stream_identifier"`
-	Type             uint8       `json:"type"`
+type TestFrame struct {
+	Length   uint32                 `json:"length"`
+	Payload  map[string]interface{} `json:"frame_payload"`
+	Flags    uint8                  `json:"flags"`
+	StreamId uint32                 `json:"stream_identifier"`
+	Type     uint8                  `json:"type"`
 }
 
-type PayloadType struct {
-	Data          string `json:"data"`
-	PaddingLength uint8  `json:"padding_length"`
-	Padding       string `json:"padding"`
-}
-
-func TestCase(t *testing.T) {
-	var dataFrameJSON DataFrameJSON
+func TestDataCase(t *testing.T) {
+	var c TestCase
 	DataFrameCase := []byte(`{
 		"error": null,
 		"wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
@@ -90,19 +84,21 @@ func TestCase(t *testing.T) {
 		"description": "noraml data frame"
 	}`)
 
-	err := json.Unmarshal(DataFrameCase, &dataFrameJSON)
+	err := json.Unmarshal(DataFrameCase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	wire := dataFrameJSON.Wire
-	length := dataFrameJSON.Frame.Length
-	flags := dataFrameJSON.Frame.Flags
-	streamId := dataFrameJSON.Frame.StreamIdentifier
-	data := dataFrameJSON.Frame.Payload.Data
-	paddlength := dataFrameJSON.Frame.Payload.PaddingLength
-	padding := dataFrameJSON.Frame.Payload.Padding
-	types := dataFrameJSON.Frame.Type
+	wire := c.Wire
+	length := c.Frame.Length
+
+	flags := c.Frame.Flags
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	data := c.Frame.Payload["data"].(string)
+	paddlength := uint8(c.Frame.Payload["padding_length"].(float64))
+	padding := c.Frame.Payload["padding"].(string)
 
 	expected := NewDataFrame(flags, streamId)
 	expected.Length = length
