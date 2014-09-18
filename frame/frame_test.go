@@ -82,9 +82,7 @@ func TestCase(t *testing.T) {
 	expected.Padding = []byte("Howdy!")
 
 	var wire = "0000140008000000020648656C6C6F2C20776F726C6421486F77647921"
-	w, _ := hex.DecodeString(wire)
-	buf := bytes.NewBuffer(w)
-	actual, err := ReadFrame(buf)
+	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,11 +91,16 @@ func TestCase(t *testing.T) {
 	assert.Equal(t, actual, expected)
 
 	// compare wire
-	b := bytes.NewBuffer(make([]byte, 0))
-	expected.Write(b)
-	s := strings.ToUpper(hex.EncodeToString(b.Bytes()))
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
 
-	assert.Equal(t, wire, s)
+	assert.Equal(t, wire, hexdump)
+}
+
+func hexToBuffer(str string) *bytes.Buffer {
+	w, _ := hex.DecodeString(str)
+	return bytes.NewBuffer(w)
 }
 
 func TestHeadersFrame(t *testing.T) {
