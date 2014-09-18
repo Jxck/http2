@@ -3,7 +3,7 @@ package frame
 import (
 	"bytes"
 	"encoding/hex"
-	"reflect"
+	assert "github.com/Jxck/assertion"
 	"strings"
 	"testing"
 )
@@ -22,9 +22,7 @@ func TestFrameHeader(t *testing.T) {
 	actual := new(FrameHeader)
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestDataFrame(t *testing.T) {
@@ -48,9 +46,7 @@ func TestDataFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 // {
@@ -95,18 +91,14 @@ func TestCase(t *testing.T) {
 	}
 
 	// compare struct
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %#v\nwant %#v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 
 	// compare wire
 	b := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(b)
 	s := strings.ToUpper(hex.EncodeToString(b.Bytes()))
 
-	if !reflect.DeepEqual(wire, s) {
-		t.Errorf("got \n%v\nwant \n%v", wire, s)
-	}
+	assert.Equal(t, wire, s)
 }
 
 func TestHeadersFrame(t *testing.T) {
@@ -125,9 +117,7 @@ func TestHeadersFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestHeadersPriorityFrame(t *testing.T) {
@@ -148,17 +138,7 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if actual.StreamDependency != 1 {
-		t.Errorf("got %v\nwant %v", actual.StreamDependency, 1)
-	}
-
-	if actual.Weight != 2 {
-		t.Errorf("got %v\nwant %v", actual.Weight, 2)
-	}
-
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestRstStreamFrame(t *testing.T) {
@@ -174,9 +154,7 @@ func TestRstStreamFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestSettingsFrame(t *testing.T) {
@@ -196,9 +174,7 @@ func TestSettingsFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestGoAwayFrame(t *testing.T) {
@@ -214,7 +190,5 @@ func TestGoAwayFrame(t *testing.T) {
 	actual.FrameHeader = fh
 	actual.Read(buf)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("got %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
