@@ -3,6 +3,7 @@ package frame
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	assert "github.com/Jxck/assertion"
 	"strings"
 	"testing"
@@ -49,39 +50,67 @@ func TestDataFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
-// {
-// 	"error": null,
-// 	"wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
-// 	"frame": {
-// 		"length": 20,
-// 		"frame_payload": {
-// 			"data": "Hello, world!",
-// 			"padding_length": 6,
-// 			"padding": "Howdy!"
-// 		},
-// 		"flags": 8,
-// 		"stream_identifier": 2,
-// 		"type": 0
-// 	},
-// 	"draft": 14,
-// 	"description": "noraml data frame"
-// }
+type DataFrameJSON struct {
+	Error string    `json:"error"`
+	Wire  string    `json:"wire"`
+	Frame FrameType `json:"frame"`
+}
+
+type FrameType struct {
+	Length           uint32      `json:"length"`
+	Payload          PayloadType `json:"frame_payload"`
+	Flags            uint8       `json:"flags"`
+	StreamIdentifier uint32      `json:"stream_identifier"`
+	Type             uint8       `json:"type"`
+}
+
+type PayloadType struct {
+	Data          string `json:"data"`
+	PaddingLength uint8  `json:"padding_length"`
+	Padding       string `json:"padding"`
+}
+
 func TestCase(t *testing.T) {
-	var (
-		flags    uint8  = 8
-		streamId uint32 = 2
-		length   uint32 = 20
-		types    uint8  = 0
-	)
+	var dataFrameJSON DataFrameJSON
+	DataFrameCase := []byte(`{
+		"error": null,
+		"wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
+		"frame": {
+			"length": 20,
+			"frame_payload": {
+				"data": "Hello, world!",
+				"padding_length": 6,
+				"padding": "Howdy!"
+			},
+			"flags": 8,
+			"stream_identifier": 2,
+			"type": 0
+		},
+		"draft": 14,
+		"description": "noraml data frame"
+	}`)
+
+	err := json.Unmarshal(DataFrameCase, &dataFrameJSON)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := dataFrameJSON.Wire
+	length := dataFrameJSON.Frame.Length
+	flags := dataFrameJSON.Frame.Flags
+	streamId := dataFrameJSON.Frame.StreamIdentifier
+	data := dataFrameJSON.Frame.Payload.Data
+	paddlength := dataFrameJSON.Frame.Payload.PaddingLength
+	padding := dataFrameJSON.Frame.Payload.Padding
+	types := dataFrameJSON.Frame.Type
 
 	expected := NewDataFrame(flags, streamId)
 	expected.Length = length
 	expected.Type = types
-	expected.PadLength = 6
-	expected.Data = []byte("Hello, world!")
-	expected.Padding = []byte("Howdy!")
+	expected.PadLength = paddlength
+	expected.Data = []byte(data)
+	expected.Padding = []byte(padding)
 
-	var wire = "0000140008000000020648656C6C6F2C20776F726C6421486F77647921"
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
