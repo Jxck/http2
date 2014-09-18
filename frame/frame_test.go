@@ -75,9 +75,8 @@ func TestCase(t *testing.T) {
 	)
 
 	expected := NewDataFrame(flags, streamId)
-	expected.Length = 20
-	expected.FrameHeader.Length = length
-	expected.FrameHeader.Type = types
+	expected.Length = length
+	expected.Type = types
 	expected.PadLength = 6
 	expected.Data = []byte("Hello, world!")
 	expected.Padding = []byte("Howdy!")
