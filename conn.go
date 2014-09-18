@@ -50,25 +50,9 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 }
 
 func (conn *Conn) ReadFrame() (frame Frame, err error) {
-	fh := new(FrameHeader)
-	err = fh.Read(conn.RW)
-	if err != nil {
-		return nil, err
-	}
-
-	newframe, ok := FrameMap[fh.Type]
-	if !ok {
-		return nil, fmt.Errorf("unknown type: %v", fh.Type)
-	}
-
-	frame = newframe(fh)
-	err = frame.Read(conn.RW)
-	if err != nil {
-		return nil, err
-	}
-
+	frame, err = ReadFrame(conn.RW)
 	Notice("%v %v", Green("recv"), util.Indent(frame.String()))
-	return frame, nil
+	return frame, err
 }
 
 func (conn *Conn) ReadLoop() {
@@ -135,14 +119,4 @@ func (conn *Conn) ReadMagic() (err error) {
 	}
 	Info("%v %q", Red("recv"), string(magic))
 	return
-}
-
-// map of FrameType and FrameInitializer
-var FrameMap = map[uint8](func(*FrameHeader) Frame){
-	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
-	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
-	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
-	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
-	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
-	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
 }

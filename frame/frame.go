@@ -99,6 +99,16 @@ type Frame interface {
 	String() string
 }
 
+// map of FrameType and FrameInitializer
+var FrameMap = map[uint8](func(*FrameHeader) Frame){
+	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
+	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
+	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
+	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
+	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
+	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
+}
+
 // Frame Header
 //
 //  0                   1                   2                   3
@@ -731,3 +741,26 @@ func (frame *WindowUpdateFrame) String() string {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //  |                   Header Block Fragment (*)                 ...
 //  +---------------------------------------------------------------+
+
+
+// Reade
+func ReadFrame(r io.Reader) (frame Frame, err error) {
+	fh := new(FrameHeader)
+	err = fh.Read(r)
+	if err != nil {
+		return nil, err
+	}
+
+	newframe, ok := FrameMap[fh.Type]
+	if !ok {
+		return nil, fmt.Errorf("unknown type: %v", fh.Type)
+	}
+
+	frame = newframe(fh)
+	err = frame.Read(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return frame, nil
+}
