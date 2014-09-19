@@ -163,6 +163,60 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+func TestHeadersCase(t *testing.T) {
+	var c TestCase
+	HeadersFrameCase := []byte(`{
+    "error": null,
+    "wire": "00000D010000000001746869732069732064756D6D79",
+    "frame": {
+        "length": 13,
+        "frame_payload": {
+            "priority": null,
+            "header_block_fragment": "this is dummy",
+            "padding_length": null,
+            "padding": null
+        },
+        "flags": 0,
+        "stream_identifier": 1,
+        "type": 1
+    },
+    "draft": 14,
+    "description": "noraml headers frame"
+	}`)
+
+	err := json.Unmarshal(HeadersFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+
+	flags := c.Frame.Flags
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	expected := NewHeadersFrame(flags, streamId)
+	expected.Length = length
+	expected.Type = types
+	expected.HeaderBlock = []byte(c.Frame.Payload["header_block_fragment"].(string))
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 func TestRstStreamFrame(t *testing.T) {
 	expected := NewRstStreamFrame(PROTOCOL_ERROR, 1)
 
