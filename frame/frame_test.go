@@ -123,11 +123,6 @@ func TestDataCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
-func hexToBuffer(str string) *bytes.Buffer {
-	w, _ := hex.DecodeString(str)
-	return bytes.NewBuffer(w)
-}
-
 func TestHeadersFrame(t *testing.T) {
 	b := []byte("test header block")
 	expected := NewHeadersFrame(END_STREAM, 2)
@@ -218,4 +213,10 @@ func TestGoAwayFrame(t *testing.T) {
 	actual.Read(buf)
 
 	assert.Equal(t, actual, expected)
+}
+
+// Helper
+func hexToBuffer(str string) *bytes.Buffer {
+	w, _ := hex.DecodeString(str)
+	return bytes.NewBuffer(w)
 }
