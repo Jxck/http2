@@ -369,6 +369,72 @@ func TestSettingsFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+func TestSettingsCase(t *testing.T) {
+	var c TestCase
+	SettingsFrameCase := []byte(`{
+    "error": null,
+    "wire": "00000C040000000000000100002000000300001388",
+    "frame": {
+        "length": 12,
+        "frame_payload": {
+            "settings": [
+                [
+                    1,
+                    8192
+                ],
+                [
+                    3,
+                    5000
+                ]
+            ],
+            "padding_length": null,
+            "padding": null
+        },
+        "flags": 0,
+        "stream_identifier": 0,
+        "type": 4
+    },
+    "draft": 14,
+    "description": "noraml rst stream frame"
+	}`)
+
+	err := json.Unmarshal(SettingsFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+	flags := c.Frame.Flags
+
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+	settings := []Setting{
+		{1, 8192},
+		{3, 5000},
+	}
+
+	expected := NewSettingsFrame(flags, settings, streamId)
+	expected.Length = length
+	expected.Type = types
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 func TestGoAwayFrame(t *testing.T) {
 	expected := NewGoAwayFrame(100, NO_ERROR, 0)
 
