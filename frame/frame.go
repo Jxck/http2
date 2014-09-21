@@ -224,23 +224,29 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 		err = Recovery(recover())
 	}()
 
-	var frameLen uint32
+	var frameLen uint32 = frame.Length
+	var padding bool = frame.Flags&PADDED == PADDED
 
-	frameLen = frame.Length
-	if frame.Flags&PADDED == PADDED {
+	if padding {
+		// read 8 bit for padding length
 		MustRead(r, &frame.PadLength)
 		frameLen = frameLen - 1 // (remove pad length)
 	}
+
+	// read frame length bit for data
 	data := make([]byte, frameLen)
 	MustRead(r, &data)
 
-	if frame.Flags&PADDED == PADDED {
+	if padding {
+		// data + padding
 		boundary := len(data) - int(frame.PadLength)
 		frame.Data = data[:boundary]
 		frame.Padding = data[boundary:]
 	} else {
+		// data only
 		frame.Data = data
 	}
+
 	return err
 }
 
@@ -249,19 +255,23 @@ func (frame *DataFrame) Write(w io.Writer) (err error) {
 		err = Recovery(recover())
 	}()
 
-	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
 		return err
 	}
 
-	if frame.Flags&PADDED == PADDED {
+	var padding bool = frame.Flags&PADDED == PADDED
+
+	if padding {
+		// write padding length
 		MustWrite(w, &frame.PadLength)
 	}
 
+	// write data
 	MustWrite(w, &frame.Data)
 
-	if frame.Flags&PADDED == PADDED {
+	if padding {
+		// write padding data
 		MustWrite(w, &frame.Padding)
 	}
 	return err
@@ -335,23 +345,24 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 		err = Recovery(recover())
 	}()
 
-	var frameLen uint32
+	var frameLen uint32 = frame.Length
+	var padding bool = frame.Flags&PADDED == PADDED
+	var priority bool = frame.Flags&PRIORITY == PRIORITY
 
-	frameLen = frame.Length
-	if frame.Flags&PADDED == PADDED {
+	if padding {
 		MustRead(r, &frame.PadLength)
 		frameLen = frameLen - 1 // remove pad length
 	}
 
-	if frame.Flags&PRIORITY == PRIORITY {
-		// TODO: support stream dependency
-		var streamDependency uint32
-		MustRead(r, &streamDependency)
+	if priority {
+		// read 32bit for e + streamdependency
+		var u32 uint32
+		MustRead(r, &u32)
 
-		if streamDependency&0x80000000 == 0x80000000 {
+		if u32&0x80000000 == 0x80000000 {
 			frame.Exclusive = true
 		}
-		frame.StreamDependency = streamDependency & 0x7FFFFFFF
+		frame.StreamDependency = u32 & 0x7FFFFFFF
 
 		frameLen = frameLen - 4 // remove stream dependency length
 
@@ -362,14 +373,17 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 		frameLen = frameLen - 1 // remove weight length
 	}
 
+	// read frame length bit for data
 	data := make([]byte, frameLen)
 	MustRead(r, &data)
 
-	if frame.Flags&PADDED == PADDED {
+	if padding {
+		// header block + padding
 		boundary := len(data) - int(frame.PadLength)
 		frame.HeaderBlock = data[:boundary]
 		frame.Padding = data[boundary:]
 	} else {
+		// header block only
 		frame.HeaderBlock = data
 	}
 
@@ -387,12 +401,14 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 		return err
 	}
 
-	if frame.Flags&PADDED == PADDED {
+	var padding bool = frame.Flags&PADDED == PADDED
+	var priority bool = frame.Flags&PRIORITY == PRIORITY
+
+	if padding {
 		MustWrite(w, &frame.PadLength)
 	}
 
-	if frame.Flags&PRIORITY == PRIORITY {
-
+	if priority {
 		streamDependency := frame.StreamDependency
 		if frame.Exclusive {
 			streamDependency = streamDependency + 0x80000000
@@ -404,7 +420,7 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 	}
 	MustWrite(w, &frame.HeaderBlock)
 
-	if frame.Flags&PADDED == PADDED {
+	if padding {
 		MustWrite(w, &frame.Padding)
 	}
 
