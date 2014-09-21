@@ -5,7 +5,6 @@ import (
 	"fmt"
 	assert "github.com/Jxck/assertion"
 	"net/http"
-	"reflect"
 	"testing"
 )
 
@@ -29,9 +28,7 @@ func TestAddPrefix(t *testing.T) {
 	expected.Add("cookie", "b")
 	expected.Add("x-http2-version", "draft-09")
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("\ngot  %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestRemovePrefix(t *testing.T) {
@@ -54,9 +51,7 @@ func TestRemovePrefix(t *testing.T) {
 	expected.Add("x-http2-version", "draft-09")
 	expected = util.AddPrefix(actual)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("\ngot  %v\nwant %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestMustWrite(t *testing.T) {
