@@ -324,8 +324,10 @@ func (frame *DataFrame) String() string {
 // +---------------------------------------------------------------+
 // |                           Padding (*)                       ...
 // +---------------------------------------------------------------+
+
 type HeadersFrame struct {
 	*FrameHeader
+	Exclusive        bool
 	StreamDependency uint32
 	Weight           uint8
 	HeaderBlock      []byte
@@ -358,16 +360,25 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 
 	if frame.Flags&PRIORITY == PRIORITY {
 		// TODO: support stream dependency
-		err = binary.Read(r, binary.BigEndian, &frame.StreamDependency)
+		var streamDependency uint32
+		err = binary.Read(r, binary.BigEndian, &streamDependency)
 		if err != nil {
 			return err
 		}
+
+		if streamDependency&0x80000000 == 0x80000000 {
+			frame.Exclusive = true
+		}
+		frame.StreamDependency = streamDependency & 0x7FFFFFFF
+
 		frameLen = frameLen - 4 // remove stream dependency length
 
 		err = binary.Read(r, binary.BigEndian, &frame.Weight)
 		if err != nil {
 			return err
 		}
+		// add 1 for weight
+		frame.Weight = frame.Weight + 1
 		frameLen = frameLen - 1 // remove weight length
 	}
 
@@ -387,12 +398,18 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 		return err
 	}
 	if frame.Flags&PRIORITY == PRIORITY {
-		err = binary.Write(w, binary.BigEndian, &frame.StreamDependency)
+
+		streamDependency := frame.StreamDependency
+		if frame.Exclusive {
+			streamDependency = streamDependency + 0x80000000
+		}
+		err = binary.Write(w, binary.BigEndian, &streamDependency)
 		if err != nil {
 			return err
 		}
 
-		err = binary.Write(w, binary.BigEndian, &frame.Weight)
+		weight := frame.Weight - 1
+		err = binary.Write(w, binary.BigEndian, &weight)
 		if err != nil {
 			return err
 		}

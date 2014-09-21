@@ -217,6 +217,68 @@ func TestHeadersCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+func TestHeadersPriorityCase(t *testing.T) {
+	var c TestCase
+	HeadersFrameCase := []byte(`{
+    "error": null,
+    "wire": "000023012800000003108000001409746869732069732064756D6D79546869732069732070616464696E672E",
+    "frame": {
+        "length": 35,
+        "frame_payload": {
+            "priority": {
+                "stream_dependency": 20,
+                "weight": 10,
+                "exclusive": true
+            },
+            "header_block_fragment": "this is dummy",
+            "padding_length": 16,
+            "padding": "This is padding."
+        },
+        "flags": 40,
+        "stream_identifier": 3,
+        "type": 1
+    },
+    "draft": 14,
+    "description": "noraml headers frame including priority"
+	}`)
+
+	err := json.Unmarshal(HeadersFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+
+	flags := c.Frame.Flags
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	expected := NewHeadersFrame(flags, streamId)
+	expected.Length = length
+	expected.Type = types
+	expected.StreamDependency = 20
+	expected.Weight = 10
+	expected.Exclusive = true
+	expected.HeaderBlock = []byte(c.Frame.Payload["header_block_fragment"].(string))
+
+	t.Log(hexToBuffer(wire).Bytes())
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 func TestRstStreamFrame(t *testing.T) {
 	expected := NewRstStreamFrame(PROTOCOL_ERROR, 1)
 
