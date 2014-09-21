@@ -1,7 +1,6 @@
 package frame
 
 import (
-	"encoding/binary"
 	"fmt"
 	. "github.com/Jxck/color"
 	"io"
@@ -141,12 +140,13 @@ func NewFrameHeader(length uint32, types uint8, flags uint8, streamid uint32) *F
 }
 
 func (fh *FrameHeader) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	// read 32 bit
 	var first uint32
-	err = binary.Read(r, binary.BigEndian, &first)
-	if err != nil {
-		return err
-	}
+	MustRead(r, &first)
 
 	// last 8 bit for type
 	fh.Type = uint8(first & 0xFF)
@@ -154,41 +154,30 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	fh.Length = first >> 8
 
 	// read 8 bit for Flags
-	err = binary.Read(r, binary.BigEndian, &fh.Flags)
-	if err != nil {
-		return err
-	}
+	MustRead(r, &fh.Flags)
 
 	// read 32 bit for StreamId
 	var last uint32
-	err = binary.Read(r, binary.BigEndian, &last)
-	if err != nil {
-		return err
-	}
+	MustRead(r, &last)
 	fh.StreamId = last & 127
 
 	return err
 }
 
 func (fh *FrameHeader) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	// write length + type as 32bit
 	var first uint32 = fh.Length<<8 + uint32(fh.Type)
-	err = binary.Write(w, binary.BigEndian, &first)
-	if err != nil {
-		return err
-	}
+	MustWrite(w, &first)
 
 	// write flags
-	err = binary.Write(w, binary.BigEndian, &fh.Flags)
-	if err != nil {
-		return err
-	}
+	MustWrite(w, &fh.Flags)
 
 	// write stream id
-	err = binary.Write(w, binary.BigEndian, &fh.StreamId)
-	if err != nil {
-		return err
-	}
+	MustWrite(w, &fh.StreamId)
 
 	return err
 }
@@ -231,21 +220,20 @@ func NewDataFrame(flags uint8, streamId uint32) *DataFrame {
 }
 
 func (frame *DataFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	var frameLen uint32
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Read(r, binary.BigEndian, &frame.PadLength)
-		if err != nil {
-			return err
-		}
+		MustRead(r, &frame.PadLength)
 		frameLen = frameLen - 1 // (remove pad length)
 	}
 	data := make([]byte, frameLen)
-	err = binary.Read(r, binary.BigEndian, &data)
-	if err != nil {
-		return err
-	}
+	MustRead(r, &data)
+
 	if frame.Flags&PADDED == PADDED {
 		boundary := len(data) - int(frame.PadLength)
 		frame.Data = data[:boundary]
@@ -253,10 +241,14 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 	} else {
 		frame.Data = data
 	}
-	return
+	return err
 }
 
 func (frame *DataFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
@@ -264,24 +256,15 @@ func (frame *DataFrame) Write(w io.Writer) (err error) {
 	}
 
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Write(w, binary.BigEndian, &frame.PadLength)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &frame.PadLength)
 	}
 
-	err = binary.Write(w, binary.BigEndian, &frame.Data)
-	if err != nil {
-		return err
-	}
+	MustWrite(w, &frame.Data)
 
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Write(w, binary.BigEndian, &frame.Padding)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &frame.Padding)
 	}
-	return
+	return err
 }
 
 func (frame *DataFrame) Header() *FrameHeader {
@@ -348,24 +331,22 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 }
 
 func (frame *HeadersFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	var frameLen uint32
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Read(r, binary.BigEndian, &frame.PadLength)
-		if err != nil {
-			return err
-		}
+		MustRead(r, &frame.PadLength)
 		frameLen = frameLen - 1 // remove pad length
 	}
 
 	if frame.Flags&PRIORITY == PRIORITY {
 		// TODO: support stream dependency
 		var streamDependency uint32
-		err = binary.Read(r, binary.BigEndian, &streamDependency)
-		if err != nil {
-			return err
-		}
+		MustRead(r, &streamDependency)
 
 		if streamDependency&0x80000000 == 0x80000000 {
 			frame.Exclusive = true
@@ -374,20 +355,15 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 
 		frameLen = frameLen - 4 // remove stream dependency length
 
-		err = binary.Read(r, binary.BigEndian, &frame.Weight)
-		if err != nil {
-			return err
-		}
+		MustRead(r, &frame.Weight)
+
 		// add 1 for weight
 		frame.Weight = frame.Weight + 1
 		frameLen = frameLen - 1 // remove weight length
 	}
 
 	data := make([]byte, frameLen)
-	err = binary.Read(r, binary.BigEndian, &data)
-	if err != nil {
-		return err
-	}
+	MustRead(r, &data)
 
 	if frame.Flags&PADDED == PADDED {
 		boundary := len(data) - int(frame.PadLength)
@@ -397,10 +373,14 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 		frame.HeaderBlock = data
 	}
 
-	return
+	return err
 }
 
 func (frame *HeadersFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
@@ -408,10 +388,7 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 	}
 
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Write(w, binary.BigEndian, &frame.PadLength)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &frame.PadLength)
 	}
 
 	if frame.Flags&PRIORITY == PRIORITY {
@@ -420,30 +397,18 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 		if frame.Exclusive {
 			streamDependency = streamDependency + 0x80000000
 		}
-		err = binary.Write(w, binary.BigEndian, &streamDependency)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &streamDependency)
 
 		weight := frame.Weight - 1
-		err = binary.Write(w, binary.BigEndian, &weight)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &weight)
 	}
-	err = binary.Write(w, binary.BigEndian, &frame.HeaderBlock)
-	if err != nil {
-		return err
-	}
+	MustWrite(w, &frame.HeaderBlock)
 
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Write(w, binary.BigEndian, &frame.Padding)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &frame.Padding)
 	}
 
-	return
+	return err
 }
 
 func (frame *HeadersFrame) Header() *FrameHeader {
@@ -515,20 +480,22 @@ func NewRstStreamFrame(errorCode ErrorCode, streamId uint32) *RstStreamFrame {
 }
 
 func (frame *RstStreamFrame) Read(r io.Reader) (err error) {
-	err = binary.Read(r, binary.BigEndian, &frame.ErrorCode)
-	if err != nil {
-		return err
-	}
-	return
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	MustRead(r, &frame.ErrorCode)
+	return err
 }
 
 func (frame *RstStreamFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	frame.FrameHeader.Write(w)
-	err = binary.Write(w, binary.BigEndian, &frame.ErrorCode)
-	if err != nil {
-		return err
-	}
-	return
+	MustWrite(w, &frame.ErrorCode)
+	return err
 }
 
 func (frame *RstStreamFrame) Header() *FrameHeader {
@@ -597,35 +564,31 @@ func NewSettingsFrame(flags uint8, settings []Setting, streamId uint32) *Setting
 }
 
 func (frame *SettingsFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	for niv := frame.Length / 6; niv > 0; niv-- {
 		s := *new(Setting)
 
-		err = binary.Read(r, binary.BigEndian, &s.SettingsId)
-		if err != nil {
-			return err
-		}
-		err = binary.Read(r, binary.BigEndian, &s.Value)
-		if err != nil {
-			return err
-		}
+		MustRead(r, &s.SettingsId)
+		MustRead(r, &s.Value)
 		frame.Settings = append(frame.Settings, s)
 	}
-	return
+	return err
 }
 
 func (frame *SettingsFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	frame.FrameHeader.Write(w)
 	for _, setting := range frame.Settings {
-		err = binary.Write(w, binary.BigEndian, &setting.SettingsId)
-		if err != nil {
-			return err
-		}
-		err = binary.Write(w, binary.BigEndian, &setting.Value)
-		if err != nil {
-			return err
-		}
+		MustWrite(w, &setting.SettingsId)
+		MustWrite(w, &setting.Value)
 	}
-	return
+	return err
 }
 
 func (frame *SettingsFrame) Header() *FrameHeader {
@@ -705,36 +668,26 @@ func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *
 }
 
 func (frame *GoAwayFrame) Read(r io.Reader) (err error) {
-	err = binary.Read(r, binary.BigEndian, &frame.LastStreamID)
-	if err != nil {
-		return err
-	}
-	err = binary.Read(r, binary.BigEndian, &frame.ErrorCode)
-	if err != nil {
-		return err
-	}
-	err = binary.Read(r, binary.BigEndian, &frame.AdditionalDebugData)
-	if err != nil {
-		return err
-	}
-	return
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	MustRead(r, &frame.LastStreamID)
+	MustRead(r, &frame.ErrorCode)
+	MustRead(r, &frame.AdditionalDebugData)
+	return err
 }
 
 func (frame *GoAwayFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	frame.FrameHeader.Write(w)
-	err = binary.Write(w, binary.BigEndian, &frame.LastStreamID)
-	if err != nil {
-		return err
-	}
-	err = binary.Write(w, binary.BigEndian, &frame.ErrorCode)
-	if err != nil {
-		return err
-	}
-	err = binary.Write(w, binary.BigEndian, &frame.AdditionalDebugData)
-	if err != nil {
-		return err
-	}
-	return
+	MustWrite(w, &frame.LastStreamID)
+	MustWrite(w, &frame.ErrorCode)
+	MustWrite(w, &frame.AdditionalDebugData)
+	return err
 }
 
 func (frame *GoAwayFrame) Header() *FrameHeader {
@@ -775,20 +728,26 @@ func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
 	return frame
 }
 
-func (frame *WindowUpdateFrame) Read(r io.Reader) error {
-	return binary.Read(r, binary.BigEndian, &frame.WindowSizeIncrement)
+func (frame *WindowUpdateFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	MustRead(r, &frame.WindowSizeIncrement)
+	return err
 }
 
 func (frame *WindowUpdateFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
 		return err
 	}
-	err = binary.Write(w, binary.BigEndian, &frame.WindowSizeIncrement)
-	if err != nil {
-		return err
-	}
-	return
+	MustWrite(w, &frame.WindowSizeIncrement)
+	return err
 }
 
 func (frame *WindowUpdateFrame) Header() *FrameHeader {
