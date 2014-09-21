@@ -451,6 +451,64 @@ func TestGoAwayFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+func TestGoAwayCase(t *testing.T) {
+	var c TestCase
+	GoAwayFrameCase := []byte(`{
+    "error": null,
+    "wire": "0000170700000000000000001E00000009687061636B2069732062726F6B656E",
+    "frame": {
+      "length": 23,
+      "frame_payload": {
+        "error_code": 9,
+        "additional_debug_data": "hpack is broken",
+        "padding_length": null,
+        "last_stream_id": 30,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 0,
+      "type": 7
+    },
+    "draft": 14,
+    "description": "normal goaway frame"
+  }`)
+
+	err := json.Unmarshal(GoAwayFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	lastStreamId := uint32(c.Frame.Payload["last_stream_id"].(float64))
+	errorCode := ErrorCode(c.Frame.Payload["error_code"].(float64))
+
+	expected := NewGoAwayFrame(lastStreamId, errorCode, streamId)
+	expected.Length = length
+	expected.Type = types
+	expected.AdditionalDebugData = []byte(c.Frame.Payload["additional_debug_data"].(string))
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 // Helper
 func hexToBuffer(str string) *bytes.Buffer {
 	w, _ := hex.DecodeString(str)

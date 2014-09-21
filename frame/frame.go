@@ -690,7 +690,12 @@ func (frame *GoAwayFrame) Read(r io.Reader) (err error) {
 
 	MustRead(r, &frame.LastStreamID)
 	MustRead(r, &frame.ErrorCode)
-	MustRead(r, &frame.AdditionalDebugData)
+
+	if frame.Length > 8 {
+		additionalLength := frame.Length - 8
+		frame.AdditionalDebugData = make([]byte, additionalLength)
+		MustRead(r, &frame.AdditionalDebugData)
+	}
 	return err
 }
 
