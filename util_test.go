@@ -2,7 +2,6 @@ package http2
 
 import (
 	"bytes"
-	"fmt"
 	assert "github.com/Jxck/assertion"
 	"net/http"
 	"testing"
@@ -63,14 +62,8 @@ func TestMustWrite(t *testing.T) {
 
 func TestMustWriteError(t *testing.T) {
 	defer func() {
-		if r := recover(); r != nil {
-			switch e := r.(type) {
-			case error:
-				t.Log(e)
-			default:
-				t.Log(fmt.Errorf("%v", e))
-			}
-		}
+		e := Recovery(recover())
+		t.Log(e)
 	}()
 	var u8 uint8 = 10
 	MustWrite(nil, &u8)
@@ -86,14 +79,8 @@ func TestMustRead(t *testing.T) {
 
 func TestMustReadError(t *testing.T) {
 	defer func() {
-		if r := recover(); r != nil {
-			switch e := r.(type) {
-			case error:
-				t.Log(e)
-			default:
-				t.Log(fmt.Errorf("%v", e))
-			}
-		}
+		e := Recovery(recover())
+		t.Log(e)
 	}()
 	var u8 uint8 = 10
 	MustRead(nil, &u8)

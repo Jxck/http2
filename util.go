@@ -126,3 +126,16 @@ func MustRead(r io.Reader, data interface{}) {
 		panic(err)
 	}
 }
+
+func Recovery(r interface{}) error {
+	if r == nil {
+		return nil
+	}
+
+	switch e := r.(type) {
+	case error:
+		return e
+	default:
+		return fmt.Errorf("%v", e)
+	}
+}
