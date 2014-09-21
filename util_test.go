@@ -1,7 +1,6 @@
 package http2
 
 import (
-	"bytes"
 	assert "github.com/Jxck/assertion"
 	"net/http"
 	"testing"
@@ -51,38 +50,4 @@ func TestRemovePrefix(t *testing.T) {
 	expected = util.AddPrefix(actual)
 
 	assert.Equal(t, actual, expected)
-}
-
-func TestMustWrite(t *testing.T) {
-	var u8 uint8 = 10
-	buf := bytes.NewBuffer(make([]byte, 0))
-	MustWrite(buf, &u8)
-	assert.Equal(t, buf.Bytes()[0], u8)
-}
-
-func TestMustWriteError(t *testing.T) {
-	defer func() {
-		e := Recovery(recover())
-		t.Log(e)
-	}()
-	var u8 uint8 = 10
-	MustWrite(nil, &u8)
-	t.Fatal("can't be here")
-}
-
-func TestMustRead(t *testing.T) {
-	var u8 uint8
-	buf := bytes.NewBuffer([]byte{10})
-	MustRead(buf, &u8)
-	assert.Equal(t, uint8(10), u8)
-}
-
-func TestMustReadError(t *testing.T) {
-	defer func() {
-		e := Recovery(recover())
-		t.Log(e)
-	}()
-	var u8 uint8 = 10
-	MustRead(nil, &u8)
-	t.Fatal("can't be here")
 }
