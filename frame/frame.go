@@ -327,11 +327,13 @@ func (frame *DataFrame) String() string {
 
 type HeadersFrame struct {
 	*FrameHeader
+	PadLength        uint8
 	Exclusive        bool
 	StreamDependency uint32
 	Weight           uint8
 	HeaderBlock      []byte
 	Headers          http.Header
+	Padding          []byte
 }
 
 func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
@@ -347,11 +349,10 @@ func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
 
 func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	var frameLen uint32
-	var padLen uint8
 
 	frameLen = frame.Length
 	if frame.Flags&PADDED == PADDED {
-		err = binary.Read(r, binary.BigEndian, &padLen)
+		err = binary.Read(r, binary.BigEndian, &frame.PadLength)
 		if err != nil {
 			return err
 		}
@@ -387,7 +388,15 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
-	frame.HeaderBlock = data[:len(data)-int(padLen)] // remove padding
+
+	if frame.Flags&PADDED == PADDED {
+		boundary := len(data) - int(frame.PadLength)
+		frame.HeaderBlock = data[:boundary]
+		frame.Padding = data[boundary:]
+	} else {
+		frame.HeaderBlock = data
+	}
+
 	return
 }
 
@@ -397,6 +406,14 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 	if err != nil {
 		return err
 	}
+
+	if frame.Flags&PADDED == PADDED {
+		err = binary.Write(w, binary.BigEndian, &frame.PadLength)
+		if err != nil {
+			return err
+		}
+	}
+
 	if frame.Flags&PRIORITY == PRIORITY {
 
 		streamDependency := frame.StreamDependency
@@ -418,6 +435,14 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 	if err != nil {
 		return err
 	}
+
+	if frame.Flags&PADDED == PADDED {
+		err = binary.Write(w, binary.BigEndian, &frame.Padding)
+		if err != nil {
+			return err
+		}
+	}
+
 	return
 }
 

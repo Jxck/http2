@@ -261,8 +261,9 @@ func TestHeadersPriorityCase(t *testing.T) {
 	expected.Weight = 10
 	expected.Exclusive = true
 	expected.HeaderBlock = []byte(c.Frame.Payload["header_block_fragment"].(string))
+	expected.PadLength = uint8(c.Frame.Payload["padding_length"].(float64))
+	expected.Padding = []byte(c.Frame.Payload["padding"].(string))
 
-	t.Log(hexToBuffer(wire).Bytes())
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
@@ -274,6 +275,7 @@ func TestHeadersPriorityCase(t *testing.T) {
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
+
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
 
 	assert.Equal(t, wire, hexdump)
