@@ -104,6 +104,7 @@ var FrameMap = map[uint8](func(*FrameHeader) Frame){
 	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
 	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
 	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
+	PingFrameType:         func(fh *FrameHeader) Frame { return &PingFrame{FrameHeader: fh} },
 	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
 	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
 }
@@ -650,8 +651,56 @@ func (frame *SettingsFrame) String() string {
 // |                      Opaque Data (64)                         |
 // |                                                               |
 // +---------------------------------------------------------------+
-//
-//
+type PingFrame struct {
+	*FrameHeader
+	OpaqueData []byte
+}
+
+func NewPingFrame(flags uint8, streamId uint32) *PingFrame {
+	var length uint32 = 8
+	fh := NewFrameHeader(length, PingFrameType, flags, streamId)
+	frame := &PingFrame{
+		FrameHeader: fh,
+		OpaqueData:  nil,
+	}
+	return frame
+}
+
+func (frame *PingFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	frame.OpaqueData = make([]byte, 8)
+	MustRead(r, &frame.OpaqueData)
+	return err
+}
+
+func (frame *PingFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	err = frame.FrameHeader.Write(w)
+	if err != nil {
+		return err
+	}
+
+	MustWrite(w, &frame.OpaqueData)
+	return err
+}
+
+func (frame *PingFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *PingFrame) String() string {
+	str := Cyan("PING")
+	str += frame.FrameHeader.String()
+	str += fmt.Sprintf("\nopaque_data=%x", frame.OpaqueData)
+	return str
+}
+
 // GOAWAY
 //
 // 0                   1                   2                   3

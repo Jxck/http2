@@ -451,6 +451,62 @@ func TestGoAwayFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+func TestPingCase(t *testing.T) {
+	var c TestCase
+	PingFrameCase := []byte(`{
+    "error": null,
+    "wire": "0000080600000000006465616462656566",
+    "frame": {
+        "length": 8,
+        "frame_payload": {
+            "opaque_data": "deadbeef",
+            "padding_length": null,
+            "padding": null
+        },
+        "flags": 0,
+        "stream_identifier": 0,
+        "type": 6
+    },
+    "draft": 14,
+    "description": "noraml ping frame"
+  }`)
+
+	err := json.Unmarshal(PingFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+	flags := c.Frame.Flags
+
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	opaqueData := []byte(c.Frame.Payload["opaque_data"].(string))
+
+	expected := NewPingFrame(flags, streamId)
+	expected.OpaqueData = opaqueData
+	expected.Length = length
+	expected.Type = types
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 func TestGoAwayCase(t *testing.T) {
 	var c TestCase
 	GoAwayFrameCase := []byte(`{
