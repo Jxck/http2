@@ -509,6 +509,60 @@ func TestGoAwayCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+func TestWindowUpdate(t *testing.T) {
+	var c TestCase
+	WindowUpdateFrameCase := []byte(`{
+    "error": null,
+    "wire": "000004080000000032000003E8",
+    "frame": {
+        "length": 4,
+        "frame_payload": {
+            "window_size_increment": 1000,
+            "padding_length": null,
+            "padding": null
+        },
+        "flags": 0,
+        "stream_identifier": 50,
+        "type": 8
+    },
+    "draft": 14,
+    "description": "noraml window update frame"
+  }`)
+
+	err := json.Unmarshal(WindowUpdateFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+	length := c.Frame.Length
+
+	streamId := c.Frame.StreamId
+	types := c.Frame.Type
+
+	incrementSize := uint32(c.Frame.Payload["window_size_increment"].(float64))
+
+	expected := NewWindowUpdateFrame(incrementSize, streamId)
+	expected.Length = length
+	expected.Type = types
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 // Helper
 func hexToBuffer(str string) *bytes.Buffer {
 	w, _ := hex.DecodeString(str)
