@@ -790,7 +790,7 @@ func (frame *WindowUpdateFrame) String() string {
 //  |                   Header Block Fragment (*)                 ...
 //  +---------------------------------------------------------------+
 
-// Reade
+// Read
 func ReadFrame(r io.Reader) (frame Frame, err error) {
 	fh := new(FrameHeader)
 	err = fh.Read(r)

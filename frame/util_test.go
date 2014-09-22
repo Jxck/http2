@@ -16,7 +16,9 @@ func TestMustWrite(t *testing.T) {
 func TestMustWriteError(t *testing.T) {
 	defer func() {
 		e := Recovery(recover())
-		t.Log(e)
+		if e == nil {
+			t.Fatal("error is nil")
+		}
 	}()
 	var u8 uint8 = 10
 	MustWrite(nil, &u8)
@@ -33,7 +35,9 @@ func TestMustRead(t *testing.T) {
 func TestMustReadError(t *testing.T) {
 	defer func() {
 		e := Recovery(recover())
-		t.Log(e)
+		if e == nil {
+			t.Fatal("error is nil")
+		}
 	}()
 	var u8 uint8 = 10
 	MustRead(nil, &u8)
