@@ -738,10 +738,7 @@ type WindowUpdateFrame struct {
 func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
 	var length uint32 = 4
 
-	// TODO: temp flag
-	var flags uint8 = 0
-
-	fh := NewFrameHeader(length, WindowUpdateFrameType, flags, streamId)
+	fh := NewFrameHeader(length, WindowUpdateFrameType, UNSET, streamId)
 	frame := &WindowUpdateFrame{
 		FrameHeader:         fh,
 		WindowSizeIncrement: incrementSize,
@@ -767,6 +764,7 @@ func (frame *WindowUpdateFrame) Write(w io.Writer) (err error) {
 	if err != nil {
 		return err
 	}
+
 	MustWrite(w, &frame.WindowSizeIncrement)
 	return err
 }
