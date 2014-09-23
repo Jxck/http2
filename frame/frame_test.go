@@ -65,22 +65,22 @@ type TestFrame struct {
 func TestDataCase(t *testing.T) {
 	var c TestCase
 	DataFrameCase := []byte(`{
-		"error": null,
-		"wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
-		"frame": {
-			"length": 20,
-			"frame_payload": {
-				"data": "Hello, world!",
-				"padding_length": 6,
-				"padding": "Howdy!"
-			},
-			"flags": 8,
-			"stream_identifier": 2,
-			"type": 0
-		},
-		"draft": 14,
-		"description": "noraml data frame"
-	}`)
+    "error": null,
+    "wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
+    "frame": {
+      "length": 20,
+      "frame_payload": {
+        "data": "Hello, world!",
+        "padding_length": 6,
+        "padding": "Howdy!"
+      },
+      "flags": 8,
+      "stream_identifier": 2,
+      "type": 0
+    },
+    "draft": 14,
+    "description": "noraml data frame"
+  }`)
 
 	err := json.Unmarshal(DataFrameCase, &c)
 	if err != nil {
@@ -171,7 +171,7 @@ func TestHeadersCase(t *testing.T) {
     },
     "draft": 14,
     "description": "noraml headers frame"
-	}`)
+  }`)
 
 	err := json.Unmarshal(HeadersFrameCase, &c)
 	if err != nil {
@@ -225,7 +225,7 @@ func TestHeadersPriorityCase(t *testing.T) {
     },
     "draft": 14,
     "description": "noraml headers frame including priority"
-	}`)
+  }`)
 
 	err := json.Unmarshal(HeadersFrameCase, &c)
 	if err != nil {
@@ -299,7 +299,7 @@ func TestRstStreamCase(t *testing.T) {
     },
     "draft": 14,
     "description": "noraml rst stream frame"
-	}`)
+  }`)
 
 	err := json.Unmarshal(RstStreamFrameCase, &c)
 	if err != nil {
@@ -380,7 +380,7 @@ func TestSettingsCase(t *testing.T) {
     },
     "draft": 14,
     "description": "noraml rst stream frame"
-	}`)
+  }`)
 
 	err := json.Unmarshal(SettingsFrameCase, &c)
 	if err != nil {
@@ -555,15 +555,15 @@ func TestWindowUpdate(t *testing.T) {
     "error": null,
     "wire": "000004080000000032000003E8",
     "frame": {
-        "length": 4,
-        "frame_payload": {
-            "window_size_increment": 1000,
-            "padding_length": null,
-            "padding": null
-        },
-        "flags": 0,
-        "stream_identifier": 50,
-        "type": 8
+      "length": 4,
+      "frame_payload": {
+        "window_size_increment": 1000,
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 50,
+      "type": 8
     },
     "draft": 14,
     "description": "noraml window update frame"
@@ -606,21 +606,21 @@ func TestWindowUpdate(t *testing.T) {
 func TestContinuationCase(t *testing.T) {
 	var c TestCase
 	ContinuationFrameCase := []byte(`{
-		"error": null,
-		"wire": "00000D090000000032746869732069732064756D6D79",
-		"frame": {
-			"length": 13,
-			"frame_payload": {
-				"header_block_fragment": "this is dummy",
-				"padding_length": null,
-				"padding": null
-			},
-			"flags": 0,
-			"stream_identifier": 50,
-			"type": 9
-		},
-		"draft": 14,
-		"description": "normal continuation frame without header block fragment"
+    "error": null,
+    "wire": "00000D090000000032746869732069732064756D6D79",
+    "frame": {
+      "length": 13,
+      "frame_payload": {
+        "header_block_fragment": "this is dummy",
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 50,
+      "type": 9
+    },
+    "draft": 14,
+    "description": "normal continuation frame without header block fragment"
   }`)
 
 	err := json.Unmarshal(ContinuationFrameCase, &c)
