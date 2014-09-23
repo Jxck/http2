@@ -687,10 +687,106 @@ func (frame *SettingsFrame) String() string {
 // +---------------------------------------------------------------+
 // |                           Padding (*)                       ...
 // +---------------------------------------------------------------+
-//
-//
-//
-//
+type PushPromiseFrame struct {
+	*FrameHeader
+	PadLength           uint8
+	PromisedStreamId    uint32
+	HeaderBlockFragment []byte
+	Padding             []byte
+}
+
+func NewPushPromiseFrame(flags uint8, streamId uint32) *PushPromiseFrame {
+	var length uint32 = 8
+	fh := NewFrameHeader(length, PushPromiseFrameType, flags, streamId)
+	frame := &PushPromiseFrame{
+		FrameHeader: fh,
+	}
+	return frame
+}
+
+func (frame *PushPromiseFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	var frameLen uint32 = frame.Length
+	var padding bool = frame.Flags&PADDED == PADDED
+
+	if padding {
+		// read 8 bit for padding length
+		MustRead(r, &frame.PadLength)
+		frameLen = frameLen - 1 // (remove pad length)
+	}
+
+	// read promised stream id
+	MustRead(r, &frame.PromisedStreamId)
+	frameLen = frameLen - 4 // remove promised stream id length
+
+	// read frame length bit for data
+	data := make([]byte, frameLen)
+	MustRead(r, &data)
+	if padding {
+		// data + padding
+		boundary := len(data) - int(frame.PadLength)
+		frame.HeaderBlockFragment = data[:boundary]
+		frame.Padding = data[boundary:]
+	} else {
+		// data only
+		frame.HeaderBlockFragment = data
+	}
+
+	return err
+}
+
+func (frame *PushPromiseFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	err = frame.FrameHeader.Write(w)
+	if err != nil {
+		return err
+	}
+
+	var padding bool = frame.Flags&PADDED == PADDED
+
+	if padding {
+		// write padding length
+		MustWrite(w, &frame.PadLength)
+	}
+
+	// write data
+	MustWrite(w, &frame.HeaderBlockFragment)
+
+	if padding {
+		// write padding data
+		MustWrite(w, &frame.Padding)
+	}
+	return err
+}
+
+func (frame *PushPromiseFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *PushPromiseFrame) String() string {
+	str := Cyan("PUSH_PROMISE")
+	str += frame.FrameHeader.String()
+
+	str += fmt.Sprintf("\npromised streamid=%x", frame.PromisedStreamId)
+	// Print first 8 byte of HeaderBlockFragment or all
+	window := len(frame.HeaderBlockFragment)
+	if window == 0 {
+		// no data do nothing
+		return str
+	} else if window > 32 {
+		// trim to 32 byte
+		window = 32
+	}
+	str += fmt.Sprintf("\n%q...", string(frame.HeaderBlockFragment[:window]))
+	return str
+}
+
 // PING
 //
 // 0                   1                   2                   3
