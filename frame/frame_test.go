@@ -158,16 +158,16 @@ func TestHeadersCase(t *testing.T) {
     "error": null,
     "wire": "00000D010000000001746869732069732064756D6D79",
     "frame": {
-        "length": 13,
-        "frame_payload": {
-            "priority": null,
-            "header_block_fragment": "this is dummy",
-            "padding_length": null,
-            "padding": null
-        },
-        "flags": 0,
-        "stream_identifier": 1,
-        "type": 1
+      "length": 13,
+      "frame_payload": {
+        "priority": null,
+        "header_block_fragment": "this is dummy",
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 1,
+      "type": 1
     },
     "draft": 14,
     "description": "noraml headers frame"
@@ -208,20 +208,20 @@ func TestHeadersPriorityCase(t *testing.T) {
     "error": null,
     "wire": "000023012800000003108000001409746869732069732064756D6D79546869732069732070616464696E672E",
     "frame": {
-        "length": 35,
-        "frame_payload": {
-            "priority": {
-                "stream_dependency": 20,
-                "weight": 10,
-                "exclusive": true
-            },
-            "header_block_fragment": "this is dummy",
-            "padding_length": 16,
-            "padding": "This is padding."
+      "length": 35,
+      "frame_payload": {
+        "priority": {
+          "stream_dependency": 20,
+          "weight": 10,
+          "exclusive": true
         },
-        "flags": 40,
-        "stream_identifier": 3,
-        "type": 1
+        "header_block_fragment": "this is dummy",
+        "padding_length": 16,
+        "padding": "This is padding."
+      },
+      "flags": 40,
+      "stream_identifier": 3,
+      "type": 1
     },
     "draft": 14,
     "description": "noraml headers frame including priority"
@@ -287,15 +287,15 @@ func TestRstStreamCase(t *testing.T) {
     "error": null,
     "wire": "00000403000000000500000008",
     "frame": {
-        "length": 4,
-        "frame_payload": {
-            "error_code": 8,
-            "padding_length": null,
-            "padding": null
-        },
-        "flags": 0,
-        "stream_identifier": 5,
-        "type": 3
+      "length": 4,
+      "frame_payload": {
+        "error_code": 8,
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 5,
+      "type": 3
     },
     "draft": 14,
     "description": "noraml rst stream frame"
@@ -359,24 +359,24 @@ func TestSettingsCase(t *testing.T) {
     "error": null,
     "wire": "00000C040000000000000100002000000300001388",
     "frame": {
-        "length": 12,
-        "frame_payload": {
-            "settings": [
-                [
-                    1,
-                    8192
-                ],
-                [
-                    3,
-                    5000
-                ]
-            ],
-            "padding_length": null,
-            "padding": null
-        },
-        "flags": 0,
-        "stream_identifier": 0,
-        "type": 4
+      "length": 12,
+      "frame_payload": {
+        "settings": [
+          [
+            1,
+            8192
+          ],
+          [
+            3,
+            5000
+          ]
+        ],
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 0,
+      "type": 4
     },
     "draft": 14,
     "description": "noraml rst stream frame"
@@ -441,15 +441,15 @@ func TestPingCase(t *testing.T) {
     "error": null,
     "wire": "0000080600000000006465616462656566",
     "frame": {
-        "length": 8,
-        "frame_payload": {
-            "opaque_data": "deadbeef",
-            "padding_length": null,
-            "padding": null
-        },
-        "flags": 0,
-        "stream_identifier": 0,
-        "type": 6
+      "length": 8,
+      "frame_payload": {
+        "opaque_data": "deadbeef",
+        "padding_length": null,
+        "padding": null
+      },
+      "flags": 0,
+      "stream_identifier": 0,
+      "type": 6
     },
     "draft": 14,
     "description": "noraml ping frame"
