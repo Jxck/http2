@@ -1044,6 +1044,7 @@ func (frame *WindowUpdateFrame) String() string {
 type ContinuationFrame struct {
 	*FrameHeader
 	HeaderBlockFragment []byte
+	// TODO: support headers encode/decode
 }
 
 func NewContinuationFrame(flags uint8, streamId uint32, headerBlockFragment []byte) *ContinuationFrame {
