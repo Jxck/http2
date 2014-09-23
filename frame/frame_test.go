@@ -33,9 +33,7 @@ func TestDataFrame(t *testing.T) {
 		b        []byte = []byte("hello")
 	)
 
-	expected := NewDataFrame(flags, streamid)
-	expected.Length = uint32(len(b))
-	expected.Data = b
+	expected := NewDataFrame(flags, streamid, b, nil)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
@@ -90,22 +88,14 @@ func TestDataCase(t *testing.T) {
 	}
 
 	wire := c.Wire
-	length := c.Frame.Length
 
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
 
-	data := c.Frame.Payload["data"].(string)
-	paddlength := uint8(c.Frame.Payload["padding_length"].(float64))
-	padding := c.Frame.Payload["padding"].(string)
+	data := []byte(c.Frame.Payload["data"].(string))
+	padding := []byte(c.Frame.Payload["padding"].(string))
 
-	expected := NewDataFrame(flags, streamId)
-	expected.Length = length
-	expected.Type = types
-	expected.PadLength = paddlength
-	expected.Data = []byte(data)
-	expected.Padding = []byte(padding)
+	expected := NewDataFrame(flags, streamId, data, padding)
 
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
