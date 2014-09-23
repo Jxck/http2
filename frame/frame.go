@@ -470,8 +470,57 @@ func (frame *HeadersFrame) String() string {
 // +-+-------------+-----------------------------------------------+
 // |   Weight (8)  |
 // +-+-------------+
-//
-//
+type PriorityFrame struct {
+	*FrameHeader
+	StreamDependency uint32
+	Weight           uint8
+}
+
+func NewPriorityFrame(streamDependency uint32, weight uint8, streamId uint32) *PriorityFrame {
+	var length uint32 = 5
+	var flags uint8 = 0
+
+	fh := NewFrameHeader(length, PriorityFrameType, flags, streamId)
+	frame := &PriorityFrame{
+		FrameHeader:      fh,
+		StreamDependency: streamDependency,
+		Weight:           weight,
+	}
+	return frame
+}
+
+func (frame *PriorityFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	MustRead(r, &frame.StreamDependency)
+	MustRead(r, &frame.Weight)
+	return err
+}
+
+func (frame *PriorityFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	frame.FrameHeader.Write(w)
+	MustWrite(w, &frame.StreamDependency)
+	MustWrite(w, &frame.Weight)
+	return err
+}
+
+func (frame *PriorityFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *PriorityFrame) String() string {
+	str := Cyan("RRIORITY")
+	str += frame.FrameHeader.String()
+	str += fmt.Sprintf("\n(Stream Dependency=%d, Weight)", frame.StreamDependency, frame.Weight)
+	return str
+}
+
 // RST_STREAM
 //
 // 0                   1                   2                   3
