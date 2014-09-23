@@ -114,10 +114,8 @@ func TestDataCase(t *testing.T) {
 }
 
 func TestHeadersFrame(t *testing.T) {
-	b := []byte("test header block")
-	expected := NewHeadersFrame(END_STREAM, 2)
-	expected.Length = uint32(len(b))
-	expected.HeaderBlock = b
+	hb := []byte("test header block")
+	expected := NewHeadersFrame(END_STREAM, 2, nil, hb, nil)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
@@ -133,12 +131,13 @@ func TestHeadersFrame(t *testing.T) {
 }
 
 func TestHeadersPriorityFrame(t *testing.T) {
-	b := []byte("test header block")
-	expected := NewHeadersFrame(PRIORITY, 2)
-	expected.StreamDependency = 1
-	expected.Weight = 2
-	expected.Length = uint32(len(b) + 5)
-	expected.HeaderBlock = b
+	hb := []byte("test header block")
+	dt := &DependencyTree{
+		Exclusive:        true,
+		StreamDependency: 1,
+		Weight:           2,
+	}
+	expected := NewHeadersFrame(PRIORITY, 2, dt, hb, nil)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
@@ -180,16 +179,12 @@ func TestHeadersCase(t *testing.T) {
 	}
 
 	wire := c.Wire
-	length := c.Frame.Length
 
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
 
-	expected := NewHeadersFrame(flags, streamId)
-	expected.Length = length
-	expected.Type = types
-	expected.HeaderBlock = []byte(c.Frame.Payload["header_block_fragment"].(string))
+	headerBlock := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	expected := NewHeadersFrame(flags, streamId, nil, headerBlock, nil)
 
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
@@ -238,21 +233,20 @@ func TestHeadersPriorityCase(t *testing.T) {
 	}
 
 	wire := c.Wire
-	length := c.Frame.Length
 
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
 
-	expected := NewHeadersFrame(flags, streamId)
-	expected.Length = length
-	expected.Type = types
-	expected.StreamDependency = 20
-	expected.Weight = 10
-	expected.Exclusive = true
-	expected.HeaderBlock = []byte(c.Frame.Payload["header_block_fragment"].(string))
-	expected.PadLength = uint8(c.Frame.Payload["padding_length"].(float64))
-	expected.Padding = []byte(c.Frame.Payload["padding"].(string))
+	dependencyTree := &DependencyTree{
+		Exclusive:        true,
+		StreamDependency: 20,
+		Weight:           10,
+	}
+
+	hb := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	padding := []byte(c.Frame.Payload["padding"].(string))
+
+	expected := NewHeadersFrame(flags, streamId, dependencyTree, hb, padding)
 
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {

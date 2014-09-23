@@ -331,21 +331,40 @@ func (frame *DataFrame) String() string {
 
 type HeadersFrame struct {
 	*FrameHeader
-	PadLength        uint8
+	PadLength      uint8
+	DependencyTree *DependencyTree
+	HeaderBlock    []byte
+	Headers        http.Header
+	Padding        []byte
+}
+
+type DependencyTree struct {
 	Exclusive        bool
 	StreamDependency uint32
 	Weight           uint8
-	HeaderBlock      []byte
-	Headers          http.Header
-	Padding          []byte
 }
 
-func NewHeadersFrame(flags uint8, streamId uint32) *HeadersFrame {
-	var length uint32 = 0
-	fh := NewFrameHeader(length, HeadersFrameType, flags, streamId)
+func NewHeadersFrame(flags uint8, streamId uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
+	var padded bool = flags&PADDED == PADDED
+	var priority bool = flags&PRIORITY == PRIORITY
+
+	length := len(headerBlock)
+	if padded {
+		length = length + len(padding) + 1
+	}
+
+	if priority {
+		length = length + 5
+	}
+
+	fh := NewFrameHeader(uint32(length), HeadersFrameType, flags, streamId)
 
 	headersFrame := &HeadersFrame{
-		FrameHeader: fh,
+		FrameHeader:    fh,
+		PadLength:      uint8(len(padding)),
+		DependencyTree: dependencyTree,
+		HeaderBlock:    headerBlock,
+		Padding:        padding,
 	}
 
 	return headersFrame
@@ -366,22 +385,26 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	}
 
 	if priority {
+		dependencyTree := new(DependencyTree)
+
 		// read 32bit for e + streamdependency
 		var u32 uint32
 		MustRead(r, &u32)
 
 		if u32&0x80000000 == 0x80000000 {
-			frame.Exclusive = true
+			dependencyTree.Exclusive = true
 		}
-		frame.StreamDependency = u32 & 0x7FFFFFFF
+		dependencyTree.StreamDependency = u32 & 0x7FFFFFFF
 
 		frameLen = frameLen - 4 // remove stream dependency length
 
-		MustRead(r, &frame.Weight)
+		MustRead(r, &dependencyTree.Weight)
 
 		// add 1 for weight
-		frame.Weight = frame.Weight + 1
+		dependencyTree.Weight = dependencyTree.Weight + 1
 		frameLen = frameLen - 1 // remove weight length
+
+		frame.DependencyTree = dependencyTree
 	}
 
 	// read frame length bit for data
@@ -420,13 +443,13 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 	}
 
 	if priority {
-		streamDependency := frame.StreamDependency
-		if frame.Exclusive {
+		streamDependency := frame.DependencyTree.StreamDependency
+		if frame.DependencyTree.Exclusive {
 			streamDependency = streamDependency + 0x80000000
 		}
 		MustWrite(w, &streamDependency)
 
-		weight := frame.Weight - 1
+		weight := frame.DependencyTree.Weight - 1
 		MustWrite(w, &weight)
 	}
 	MustWrite(w, &frame.HeaderBlock)
