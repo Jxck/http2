@@ -603,6 +603,57 @@ func TestWindowUpdate(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+func TestContinuationCase(t *testing.T) {
+	var c TestCase
+	ContinuationFrameCase := []byte(`{
+		"error": null,
+		"wire": "00000D090000000032746869732069732064756D6D79",
+		"frame": {
+			"length": 13,
+			"frame_payload": {
+				"header_block_fragment": "this is dummy",
+				"padding_length": null,
+				"padding": null
+			},
+			"flags": 0,
+			"stream_identifier": 50,
+			"type": 9
+		},
+		"draft": 14,
+		"description": "normal continuation frame without header block fragment"
+  }`)
+
+	err := json.Unmarshal(ContinuationFrameCase, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wire := c.Wire
+
+	streamId := c.Frame.StreamId
+	flags := c.Frame.Flags
+
+	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
+
+	expected := NewContinuationFrame(flags, streamId, headerBlockFragment)
+
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// compare struct
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+
+	assert.Equal(t, wire, hexdump)
+}
+
 // Helper
 func hexToBuffer(str string) *bytes.Buffer {
 	w, _ := hex.DecodeString(str)

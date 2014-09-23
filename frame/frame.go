@@ -107,6 +107,7 @@ var FrameMap = map[uint8](func(*FrameHeader) Frame){
 	PingFrameType:         func(fh *FrameHeader) Frame { return &PingFrame{FrameHeader: fh} },
 	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
 	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
+	ContinuationFrameType: func(fh *FrameHeader) Frame { return &ContinuationFrame{FrameHeader: fh} },
 }
 
 // Frame Header
@@ -1039,6 +1040,52 @@ func (frame *WindowUpdateFrame) String() string {
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //  |                   Header Block Fragment (*)                 ...
 //  +---------------------------------------------------------------+
+type ContinuationFrame struct {
+	*FrameHeader
+	HeaderBlockFragment []byte
+}
+
+func NewContinuationFrame(flags uint8, streamId uint32, headerBlockFragment []byte) *ContinuationFrame {
+	length := len(headerBlockFragment)
+
+	fh := NewFrameHeader(uint32(length), ContinuationFrameType, flags, streamId)
+	frame := &ContinuationFrame{
+		FrameHeader:         fh,
+		HeaderBlockFragment: headerBlockFragment,
+	}
+	return frame
+}
+
+func (frame *ContinuationFrame) Read(r io.Reader) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	frame.HeaderBlockFragment = make([]byte, frame.Length)
+	MustRead(r, &frame.HeaderBlockFragment)
+	return err
+}
+
+func (frame *ContinuationFrame) Write(w io.Writer) (err error) {
+	defer func() {
+		err = Recovery(recover())
+	}()
+
+	frame.FrameHeader.Write(w)
+	MustWrite(w, &frame.HeaderBlockFragment)
+	return err
+}
+
+func (frame *ContinuationFrame) Header() *FrameHeader {
+	return frame.FrameHeader
+}
+
+func (frame *ContinuationFrame) String() string {
+	str := Cyan("CONTINUATION")
+	str += frame.FrameHeader.String()
+	str += fmt.Sprintf("\n(=%x)", frame.HeaderBlockFragment)
+	return str
+}
 
 // Read
 func ReadFrame(r io.Reader) (frame Frame, err error) {
