@@ -497,7 +497,7 @@ func (frame *HeadersFrame) String() string {
 
 // PRIORITY
 //
-// 0                   1                   2                   3
+//  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |E|                  Stream Dependency (31)                     |
@@ -571,8 +571,8 @@ func (frame *PriorityFrame) String() string {
 
 // RST_STREAM
 //
-// 0                   1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |                        Error Code (32)                        |
 // +---------------------------------------------------------------+
@@ -723,7 +723,7 @@ func (frame *SettingsFrame) String() string {
 
 // PUSH_PROMISE
 //
-// 0                   1                   2                   3
+//  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |Pad Length? (8)|
@@ -848,8 +848,8 @@ func (frame *PushPromiseFrame) String() string {
 
 // PING
 //
-// 0                   1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |                                                               |
 // |                      Opaque Data (64)                         |
@@ -907,7 +907,7 @@ func (frame *PingFrame) String() string {
 
 // GOAWAY
 //
-// 0                   1                   2                   3
+//  0                   1                   2                   3
 //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |R|                  Last-Stream-ID (31)                        |
@@ -926,6 +926,7 @@ type GoAwayFrame struct {
 func NewGoAwayFrame(streamId uint32, lastStreamId uint32, errorCode ErrorCode, additionalDebugData []byte) *GoAwayFrame {
 	var length = 8 + len(additionalDebugData)
 	fh := NewFrameHeader(uint32(length), GoAwayFrameType, UNSET, streamId)
+
 	frame := &GoAwayFrame{
 		FrameHeader:         fh,
 		LastStreamID:        lastStreamId,
@@ -978,8 +979,8 @@ func (frame *GoAwayFrame) String() string {
 
 // WINDOW_UPDATE
 //
-// 0                   1                   2                   3
-// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |R|              Window Size Increment (31)                     |
 // +-+-------------------------------------------------------------+
@@ -1035,11 +1036,11 @@ func (frame *WindowUpdateFrame) String() string {
 
 // CONTINUATION
 //
-// 0                   1                   2                   3
-//   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//  |                   Header Block Fragment (*)                 ...
-//  +---------------------------------------------------------------+
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                   Header Block Fragment (*)                 ...
+// +---------------------------------------------------------------+
 type ContinuationFrame struct {
 	*FrameHeader
 	HeaderBlockFragment []byte
