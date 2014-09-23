@@ -920,17 +920,17 @@ type GoAwayFrame struct {
 	*FrameHeader
 	LastStreamID        uint32
 	ErrorCode           ErrorCode
-	AdditionalDebugData []byte // unsupported
+	AdditionalDebugData []byte
 }
 
-func NewGoAwayFrame(lastStreamId uint32, errorCode ErrorCode, streamId uint32) *GoAwayFrame {
-	var length uint32 = 8
-	var flags uint8 = 0x00
-	fh := NewFrameHeader(length, GoAwayFrameType, flags, streamId)
+func NewGoAwayFrame(streamId uint32, lastStreamId uint32, errorCode ErrorCode, additionalDebugData []byte) *GoAwayFrame {
+	var length = 8 + len(additionalDebugData)
+	fh := NewFrameHeader(uint32(length), GoAwayFrameType, UNSET, streamId)
 	frame := &GoAwayFrame{
-		FrameHeader:  fh,
-		LastStreamID: lastStreamId,
-		ErrorCode:    errorCode,
+		FrameHeader:         fh,
+		LastStreamID:        lastStreamId,
+		ErrorCode:           errorCode,
+		AdditionalDebugData: additionalDebugData,
 	}
 
 	return frame

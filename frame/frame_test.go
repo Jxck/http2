@@ -420,7 +420,7 @@ func TestSettingsCase(t *testing.T) {
 }
 
 func TestGoAwayFrame(t *testing.T) {
-	expected := NewGoAwayFrame(100, NO_ERROR, 0)
+	expected := NewGoAwayFrame(101, 100, NO_ERROR, nil)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
@@ -526,8 +526,9 @@ func TestGoAwayCase(t *testing.T) {
 
 	lastStreamId := uint32(c.Frame.Payload["last_stream_id"].(float64))
 	errorCode := ErrorCode(c.Frame.Payload["error_code"].(float64))
+	additional := []byte(c.Frame.Payload["additional_debug_data"].(string))
 
-	expected := NewGoAwayFrame(lastStreamId, errorCode, streamId)
+	expected := NewGoAwayFrame(streamId, lastStreamId, errorCode, additional)
 	expected.Length = length
 	expected.Type = types
 	expected.AdditionalDebugData = []byte(c.Frame.Payload["additional_debug_data"].(string))
