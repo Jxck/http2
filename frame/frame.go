@@ -161,7 +161,7 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	// read 32 bit for StreamId
 	var last uint32
 	MustRead(r, &last)
-	fh.StreamId = last & 127
+	fh.StreamId = last & 0x7FFFFFFF
 
 	return err
 }

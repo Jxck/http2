@@ -5,25 +5,33 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	assert "github.com/Jxck/assertion"
+	"reflect"
 	"strings"
 	"testing"
+	"testing/quick"
 )
 
-func TestFrameHeader(t *testing.T) {
-	var (
-		length   uint32 = 8
-		types    uint8  = 1
-		flags    uint8  = 2
-		streamid uint32 = 3
-	)
-	expected := NewFrameHeader(length, types, flags, streamid)
-	buf := bytes.NewBuffer(make([]byte, 0))
-	expected.Write(buf)
+func TestFrameHeaderQuickCheck(t *testing.T) {
+	f := func(length uint32, types uint8, flags uint8, streamId uint32) bool {
+		length = length >> 8
+		streamId = streamId >> 1
 
-	actual := new(FrameHeader)
-	actual.Read(buf)
+		expected := NewFrameHeader(length, types, flags, streamId)
+		buf := bytes.NewBuffer(make([]byte, 0))
+		expected.Write(buf)
 
-	assert.Equal(t, actual, expected)
+		actual := new(FrameHeader)
+		actual.Read(buf)
+		return reflect.DeepEqual(actual, expected)
+	}
+
+	c := &quick.Config{
+		MaxCountScale: 10,
+	}
+
+	if err := quick.Check(f, c); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestDataFrame(t *testing.T) {
