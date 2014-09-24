@@ -13,20 +13,22 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+type FrameType uint8
+
 const (
-	DataFrameType         uint8 = 0x0
-	HeadersFrameType            = 0x1
-	PriorityFrameType           = 0x2
-	RstStreamFrameType          = 0x3
-	SettingsFrameType           = 0x4
-	PushPromiseFrameType        = 0x5
-	PingFrameType               = 0x6
-	GoAwayFrameType             = 0x7
-	WindowUpdateFrameType       = 0x8
-	ContinuationFrameType       = 0x9
+	DataFrameType         FrameType = 0x0
+	HeadersFrameType                = 0x1
+	PriorityFrameType               = 0x2
+	RstStreamFrameType              = 0x3
+	SettingsFrameType               = 0x4
+	PushPromiseFrameType            = 0x5
+	PingFrameType                   = 0x6
+	GoAwayFrameType                 = 0x7
+	WindowUpdateFrameType           = 0x8
+	ContinuationFrameType           = 0x9
 )
 
-func FrameName(i uint8) string {
+func (frameType FrameType) String() string {
 	names := []string{
 		"DATA",
 		"HEADERS",
@@ -39,7 +41,7 @@ func FrameName(i uint8) string {
 		"WINDOW_UPDATE",
 		"CONTINUATION",
 	}
-	return names[i]
+	return names[int(frameType)]
 }
 
 // For RST_STREAM and GOAWAY Frame
@@ -99,7 +101,7 @@ type Frame interface {
 }
 
 // map of FrameType and FrameInitializer
-var FrameMap = map[uint8](func(*FrameHeader) Frame){
+var FrameMap = map[FrameType](func(*FrameHeader) Frame){
 	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
 	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
 	PriorityFrameType:     func(fh *FrameHeader) Frame { return &PriorityFrame{FrameHeader: fh} },
@@ -128,12 +130,12 @@ var FrameMap = map[uint8](func(*FrameHeader) Frame){
 
 type FrameHeader struct {
 	Length   uint32 // 24bit
-	Type     uint8
+	Type     FrameType
 	Flags    uint8
 	StreamId uint32 // R+31bit
 }
 
-func NewFrameHeader(length uint32, types uint8, flags uint8, streamid uint32) *FrameHeader {
+func NewFrameHeader(length uint32, types FrameType, flags uint8, streamid uint32) *FrameHeader {
 	fh := &FrameHeader{
 		Length:   length,
 		Type:     types,
@@ -153,7 +155,7 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	MustRead(r, &first)
 
 	// last 8 bit for type
-	fh.Type = uint8(first & 0xFF)
+	fh.Type = FrameType(first & 0xFF)
 	// first 24 bit for length
 	fh.Length = first >> 8
 

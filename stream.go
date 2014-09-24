@@ -216,7 +216,7 @@ BreakLoop:
 			Debug("stom stream (%d) ReadLoop()", stream.Id)
 			break BreakLoop
 		case f := <-stream.ReadChan:
-			Debug("stream (%d) recv (%v)", stream.Id, FrameName(f.Header().Type))
+			Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
 			stream.WindowUpdate <- uint32(f.Header().Length)
 
 			stream.ChangeState(f, RECV)

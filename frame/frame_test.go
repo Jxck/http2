@@ -33,7 +33,7 @@ type TestFrame struct {
 
 // Frame Header
 func TestFrameHeaderQuickCheck(t *testing.T) {
-	f := func(length uint32, types uint8, flags uint8, streamId uint32) bool {
+	f := func(length uint32, types FrameType, flags uint8, streamId uint32) bool {
 		// setup data
 		length = length >> 8
 		streamId = streamId >> 1
