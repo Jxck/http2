@@ -102,8 +102,10 @@ type Frame interface {
 var FrameMap = map[uint8](func(*FrameHeader) Frame){
 	DataFrameType:         func(fh *FrameHeader) Frame { return &DataFrame{FrameHeader: fh} },
 	HeadersFrameType:      func(fh *FrameHeader) Frame { return &HeadersFrame{FrameHeader: fh} },
+	PriorityFrameType:     func(fh *FrameHeader) Frame { return &PriorityFrame{FrameHeader: fh} },
 	RstStreamFrameType:    func(fh *FrameHeader) Frame { return &RstStreamFrame{FrameHeader: fh} },
 	SettingsFrameType:     func(fh *FrameHeader) Frame { return &SettingsFrame{FrameHeader: fh} },
+	PushPromiseFrameType:  func(fh *FrameHeader) Frame { return &PushPromiseFrame{FrameHeader: fh} },
 	PingFrameType:         func(fh *FrameHeader) Frame { return &PingFrame{FrameHeader: fh} },
 	GoAwayFrameType:       func(fh *FrameHeader) Frame { return &GoAwayFrame{FrameHeader: fh} },
 	WindowUpdateFrameType: func(fh *FrameHeader) Frame { return &WindowUpdateFrame{FrameHeader: fh} },
@@ -745,9 +747,7 @@ type PushPromiseFrame struct {
 }
 
 func NewPushPromiseFrame(flags uint8, streamId, promisedStreamId uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
-
 	var padded bool = flags&PADDED == PADDED
-
 	length := 4 + len(headerBlockFragment)
 
 	if padded {
@@ -816,7 +816,10 @@ func (frame *PushPromiseFrame) Write(w io.Writer) (err error) {
 		MustWrite(w, &frame.PadLength)
 	}
 
-	// write data
+	// write Promised Stream ID
+	MustWrite(w, &frame.PromisedStreamId)
+
+	// write Header Block Fragmetn
 	MustWrite(w, &frame.HeaderBlockFragment)
 
 	if padded {

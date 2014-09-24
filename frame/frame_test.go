@@ -430,7 +430,55 @@ func TestSettingsCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
-// TODO: PUSH_PROMISE Frame
+// PUSH_PROMISE Frame
+func TestPushPromiseCase(t *testing.T) {
+	var c TestCase
+	casestr := []byte(`{
+    "error": null,
+    "wire": "000018050800000009060000000B746869732069732064756D6D79486F77647921",
+    "frame": {
+      "length": 24,
+      "frame_payload": {
+        "header_block_fragment": "this is dummy",
+        "padding_length": 6,
+        "promised_stream_id": 11,
+        "padding": "Howdy!"
+      },
+      "flags": 8,
+      "stream_identifier": 9,
+      "type": 5
+    },
+    "draft": 14,
+    "description": "noraml push promise frame"
+  }`)
+
+	err := json.Unmarshal(casestr, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// trace data
+	wire := c.Wire
+	flags := c.Frame.Flags
+	streamId := c.Frame.StreamId
+	promisedStreamId := uint32(c.Frame.Payload["promised_stream_id"].(float64))
+	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	padding := []byte(c.Frame.Payload["padding"].(string))
+
+	// compare struct
+	expected := NewPushPromiseFrame(flags, streamId, promisedStreamId, headerBlockFragment, padding)
+	actual, err := ReadFrame(hexToBuffer(wire))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, actual, expected)
+
+	// compare wire
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
+	assert.Equal(t, wire, hexdump)
+}
 
 // PING Frame
 func TestPingCase(t *testing.T) {
