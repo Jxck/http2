@@ -11,6 +11,10 @@ import (
 	"testing/quick"
 )
 
+var maxLength = 0xFFFFFF
+var maxPadLength = 0xFF
+var count float64 = 100
+
 func TestFrameHeaderQuickCheck(t *testing.T) {
 	f := func(length uint32, types uint8, flags uint8, streamId uint32) bool {
 		length = length >> 8
@@ -26,7 +30,7 @@ func TestFrameHeaderQuickCheck(t *testing.T) {
 	}
 
 	c := &quick.Config{
-		MaxCountScale: 10,
+		MaxCountScale: count,
 	}
 
 	if err := quick.Check(f, c); err != nil {
@@ -34,26 +38,39 @@ func TestFrameHeaderQuickCheck(t *testing.T) {
 	}
 }
 
-func TestDataFrame(t *testing.T) {
-	var (
-		flags    uint8  = 1
-		streamid uint32 = 2
-		b        []byte = []byte("hello")
-	)
+func TestDataFrameQuickCheck(t *testing.T) {
+	f := func(flags uint8, streamId uint32, data []byte) bool {
+		streamId = streamId >> 1
+		if len(data) > maxLength {
+			data = data[:maxLength-1]
+		}
 
-	expected := NewDataFrame(flags, streamid, b, nil)
+		var window = len(data)
+		if len(data) > maxPadLength {
+			window = len(data) - maxPadLength
+		}
 
-	buf := bytes.NewBuffer(make([]byte, 0))
-	expected.Write(buf)
+		expected := NewDataFrame(flags, streamId, data[:window], data[window:])
+		buf := bytes.NewBuffer(make([]byte, 0))
+		expected.Write(buf)
 
-	fh := new(FrameHeader)
-	fh.Read(buf)
+		fh := new(FrameHeader)
+		fh.Read(buf)
 
-	actual := new(DataFrame)
-	actual.FrameHeader = fh
-	actual.Read(buf)
+		actual := new(DataFrame)
+		actual.FrameHeader = fh
+		actual.Read(buf)
 
-	assert.Equal(t, actual, expected)
+		return reflect.DeepEqual(actual, expected)
+	}
+
+	c := &quick.Config{
+		MaxCountScale: count,
+	}
+
+	if err := quick.Check(f, c); err != nil {
+		t.Error(err)
+	}
 }
 
 type TestCase struct {

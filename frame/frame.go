@@ -217,6 +217,8 @@ func NewDataFrame(flags uint8, streamId uint32, data []byte, padding []byte) *Da
 
 	if padded {
 		length = length + len(padding) + 1
+	} else {
+		padding = nil
 	}
 
 	fh := NewFrameHeader(uint32(length), DataFrameType, flags, streamId)
