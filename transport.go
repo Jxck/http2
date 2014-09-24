@@ -66,7 +66,7 @@ func (transport *Transport) Connect() {
 	Conn.Streams[0] = zeroStream
 
 	// send default settings to id 0
-	settingsFrame := NewSettingsFrame(UNSET, DefaultSettings, 0)
+	settingsFrame := NewSettingsFrame(UNSET, 0, DefaultSettings)
 	zeroStream.Write(settingsFrame)
 
 	transport.Conn = Conn
@@ -88,10 +88,9 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 
 	// send request header via HEADERS Frame
 	var flags uint8 = END_STREAM + END_HEADERS
-	frame := NewHeadersFrame(flags, stream.Id)
+	headerBlock := stream.EncodeHeader(req.Header)
+	frame := NewHeadersFrame(flags, stream.Id, nil, headerBlock, nil)
 	frame.Headers = req.Header
-	frame.HeaderBlock = stream.EncodeHeader(frame.Headers)
-	frame.Length = uint32(len(frame.HeaderBlock))
 	stream.Write(frame) // err
 
 	// send GOAWAY

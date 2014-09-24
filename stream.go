@@ -230,7 +230,7 @@ BreakLoop:
 					// TODO: Apply Settings
 
 					// send ACK
-					ack := NewSettingsFrame(ACK, NilSettings, stream.Id)
+					ack := NewSettingsFrame(ACK, stream.Id, NilSettings)
 					stream.Write(ack)
 				} else if settingsFrame.Flags == ACK {
 					// receive ACK

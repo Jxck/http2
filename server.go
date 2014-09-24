@@ -45,7 +45,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Conn.Streams[0] = zeroStream
 
 	// send default settings to id 0
-	settingsFrame := NewSettingsFrame(UNSET, DefaultSettings, 0)
+	settingsFrame := NewSettingsFrame(UNSET, 0, DefaultSettings)
 	zeroStream.Write(settingsFrame)
 
 	Conn.ReadLoop()
@@ -96,12 +96,12 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
 		// Send HEADERS
-		headersFrame := NewHeadersFrame(END_HEADERS, stream.Id)
+		headerList := hpack.ToHeaderList(responseHeader)
+		headerBlock := stream.HpackContext.Encode(*headerList)
+
+		headersFrame := NewHeadersFrame(END_HEADERS, stream.Id, nil, headerBlock, nil)
 		headersFrame.Headers = responseHeader
 
-		headerList := hpack.ToHeaderList(responseHeader)
-		headersFrame.HeaderBlock = stream.HpackContext.Encode(*headerList)
-		headersFrame.Length = uint32(len(headersFrame.HeaderBlock))
 		stream.Write(headersFrame)
 
 		// Send DATA
@@ -113,20 +113,16 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			start := i * window
 			end := start + window
 			if end > length {
-				dataFrame := NewDataFrame(UNSET, stream.Id)
-				dataFrame.Data = data[start:]
-				dataFrame.Length = uint32(len(dataFrame.Data))
+				dataFrame := NewDataFrame(UNSET, stream.Id, data[start:], nil)
 				stream.Write(dataFrame)
 				break
 			}
-			dataFrame := NewDataFrame(UNSET, stream.Id)
-			dataFrame.Data = data[start:end]
-			dataFrame.Length = uint32(len(dataFrame.Data))
+			dataFrame := NewDataFrame(UNSET, stream.Id, data[start:end], nil)
 			stream.Write(dataFrame)
 		}
 
 		// End Stream in empty DATA Frame
-		endDataFrame := NewDataFrame(END_STREAM, stream.Id)
+		endDataFrame := NewDataFrame(END_STREAM, stream.Id, nil, nil)
 		stream.Write(endDataFrame)
 	}
 }
