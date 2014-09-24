@@ -487,7 +487,7 @@ type PriorityFrame struct {
 	Weight           uint8
 }
 
-func NewPriorityFrame(exclusive bool, streamDependency uint32, weight uint8, streamId uint32) *PriorityFrame {
+func NewPriorityFrame(streamId uint32, exclusive bool, streamDependency uint32, weight uint8) *PriorityFrame {
 	var length uint32 = 5
 
 	fh := NewFrameHeader(length, PriorityFrameType, UNSET, streamId)
@@ -557,11 +557,10 @@ type RstStreamFrame struct {
 	ErrorCode ErrorCode
 }
 
-func NewRstStreamFrame(errorCode ErrorCode, streamId uint32) *RstStreamFrame {
+func NewRstStreamFrame(streamId uint32, errorCode ErrorCode) *RstStreamFrame {
 	var length uint32 = 4
-	var flags uint8 = 0
 
-	fh := NewFrameHeader(length, RstStreamFrameType, flags, streamId)
+	fh := NewFrameHeader(length, RstStreamFrameType, UNSET, streamId)
 	frame := &RstStreamFrame{
 		FrameHeader: fh,
 		ErrorCode:   errorCode,
@@ -643,7 +642,7 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func NewSettingsFrame(flags uint8, settings []Setting, streamId uint32) *SettingsFrame {
+func NewSettingsFrame(flags uint8, streamId uint32, settings []Setting) *SettingsFrame {
 	var length uint32 = uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
@@ -719,11 +718,23 @@ type PushPromiseFrame struct {
 	Padding             []byte
 }
 
-func NewPushPromiseFrame(flags uint8, streamId uint32) *PushPromiseFrame {
-	var length uint32 = 8
-	fh := NewFrameHeader(length, PushPromiseFrameType, flags, streamId)
+func NewPushPromiseFrame(flags uint8, streamId, promisedStreamId uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
+
+	var padded bool = flags&PADDED == PADDED
+
+	length := 4 + len(headerBlockFragment)
+
+	if padded {
+		length = length + len(padding) + 1
+	}
+
+	fh := NewFrameHeader(uint32(length), PushPromiseFrameType, flags, streamId)
 	frame := &PushPromiseFrame{
-		FrameHeader: fh,
+		FrameHeader:         fh,
+		PadLength:           uint8(len(padding)),
+		PromisedStreamId:    promisedStreamId,
+		HeaderBlockFragment: headerBlockFragment,
+		Padding:             padding,
 	}
 	return frame
 }

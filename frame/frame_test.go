@@ -318,7 +318,7 @@ func TestRstStreamCase(t *testing.T) {
 	streamId := c.Frame.StreamId
 	types := c.Frame.Type
 
-	expected := NewRstStreamFrame(8, streamId)
+	expected := NewRstStreamFrame(streamId, 8)
 	expected.Length = length
 	expected.Type = types
 
@@ -344,7 +344,7 @@ func TestSettingsFrame(t *testing.T) {
 		{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
 		{SETTINGS_INITIAL_WINDOW_SIZE, DEFAULT_WINDOW_SIZE},
 	}
-	expected := NewSettingsFrame(0, settings, 2)
+	expected := NewSettingsFrame(2, 0, settings)
 
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
@@ -404,7 +404,7 @@ func TestSettingsCase(t *testing.T) {
 		{3, 5000},
 	}
 
-	expected := NewSettingsFrame(flags, settings, streamId)
+	expected := NewSettingsFrame(flags, streamId, settings)
 	expected.Length = length
 	expected.Type = types
 
