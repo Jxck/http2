@@ -33,7 +33,7 @@ type TestFrame struct {
 
 // Frame Header
 func TestFrameHeaderQuickCheck(t *testing.T) {
-	f := func(length uint32, types FrameType, flags uint8, streamId uint32) bool {
+	f := func(length uint32, types FrameType, flags Flag, streamId uint32) bool {
 		// setup data
 		length = length >> 8
 		streamId = streamId >> 1
@@ -61,7 +61,7 @@ func TestFrameHeaderQuickCheck(t *testing.T) {
 
 // DATA Frame
 func TestDataFrameQuickCheck(t *testing.T) {
-	f := func(flags uint8, streamId uint32, data []byte) bool {
+	f := func(flags Flag, streamId uint32, data []byte) bool {
 		// setup data
 		streamId = streamId >> 1
 		if len(data) > maxLength {
@@ -123,7 +123,7 @@ func TestDataCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	data := []byte(c.Frame.Payload["data"].(string))
 	padding := []byte(c.Frame.Payload["padding"].(string))
@@ -211,7 +211,7 @@ func TestHeadersCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	headerBlock := []byte(c.Frame.Payload["header_block_fragment"].(string))
 
@@ -262,7 +262,7 @@ func TestHeadersPriorityCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	hb := []byte(c.Frame.Payload["header_block_fragment"].(string))
 	padding := []byte(c.Frame.Payload["padding"].(string))
@@ -408,7 +408,7 @@ func TestSettingsCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	settings := []Setting{
 		{1, 8192},
@@ -459,7 +459,7 @@ func TestPushPromiseCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	promisedStreamId := uint32(c.Frame.Payload["promised_stream_id"].(float64))
 	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
@@ -508,7 +508,7 @@ func TestPingCase(t *testing.T) {
 
 	// trace data
 	wire := c.Wire
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
 	opaqueData := []byte(c.Frame.Payload["opaque_data"].(string))
 
@@ -668,7 +668,7 @@ func TestContinuationCase(t *testing.T) {
 	// trace data
 	wire := c.Wire
 	streamId := c.Frame.StreamId
-	flags := c.Frame.Flags
+	flags := Flag(c.Frame.Flags)
 	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
 
 	// compare struct

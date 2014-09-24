@@ -84,13 +84,15 @@ func (e ErrorCode) String() string {
 }
 
 // Flags
+type Flag uint8
+
 const (
-	UNSET       uint8 = 0x0
-	END_STREAM        = 0x1
-	ACK               = 0x1 // for settings
-	END_HEADERS       = 0x4
-	PADDED            = 0x8
-	PRIORITY          = 0x20
+	UNSET       Flag = 0x0
+	END_STREAM       = 0x1
+	ACK              = 0x1 // for settings
+	END_HEADERS      = 0x4
+	PADDED           = 0x8
+	PRIORITY         = 0x20
 )
 
 type Frame interface {
@@ -131,11 +133,11 @@ var FrameMap = map[FrameType](func(*FrameHeader) Frame){
 type FrameHeader struct {
 	Length   uint32 // 24bit
 	Type     FrameType
-	Flags    uint8
+	Flags    Flag
 	StreamId uint32 // R+31bit
 }
 
-func NewFrameHeader(length uint32, types FrameType, flags uint8, streamid uint32) *FrameHeader {
+func NewFrameHeader(length uint32, types FrameType, flags Flag, streamid uint32) *FrameHeader {
 	fh := &FrameHeader{
 		Length:   length,
 		Type:     types,
@@ -214,7 +216,7 @@ type DataFrame struct {
 	Padding   []byte
 }
 
-func NewDataFrame(flags uint8, streamId uint32, data []byte, padding []byte) *DataFrame {
+func NewDataFrame(flags Flag, streamId uint32, data []byte, padding []byte) *DataFrame {
 	var padded bool = flags&PADDED == PADDED
 
 	length := len(data)
@@ -351,7 +353,7 @@ type DependencyTree struct {
 	Weight           uint8
 }
 
-func NewHeadersFrame(flags uint8, streamId uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
+func NewHeadersFrame(flags Flag, streamId uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
 	var padded bool = flags&PADDED == PADDED
 	var priority bool = flags&PRIORITY == PRIORITY
 
@@ -671,7 +673,7 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func NewSettingsFrame(flags uint8, streamId uint32, settings []Setting) *SettingsFrame {
+func NewSettingsFrame(flags Flag, streamId uint32, settings []Setting) *SettingsFrame {
 	var length uint32 = uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
 	frame := &SettingsFrame{
@@ -747,7 +749,7 @@ type PushPromiseFrame struct {
 	Padding             []byte
 }
 
-func NewPushPromiseFrame(flags uint8, streamId, promisedStreamId uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
+func NewPushPromiseFrame(flags Flag, streamId, promisedStreamId uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
 	var padded bool = flags&PADDED == PADDED
 	length := 4 + len(headerBlockFragment)
 
@@ -866,7 +868,7 @@ type PingFrame struct {
 	OpaqueData []byte
 }
 
-func NewPingFrame(flags uint8, streamId uint32, opaqueData []byte) *PingFrame {
+func NewPingFrame(flags Flag, streamId uint32, opaqueData []byte) *PingFrame {
 	var length uint32 = 8
 	fh := NewFrameHeader(length, PingFrameType, flags, streamId)
 	frame := &PingFrame{
@@ -1053,7 +1055,7 @@ type ContinuationFrame struct {
 	// TODO: support headers encode/decode
 }
 
-func NewContinuationFrame(flags uint8, streamId uint32, headerBlockFragment []byte) *ContinuationFrame {
+func NewContinuationFrame(flags Flag, streamId uint32, headerBlockFragment []byte) *ContinuationFrame {
 	length := len(headerBlockFragment)
 
 	fh := NewFrameHeader(uint32(length), ContinuationFrameType, flags, streamId)
