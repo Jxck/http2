@@ -862,12 +862,12 @@ type PingFrame struct {
 	OpaqueData []byte
 }
 
-func NewPingFrame(flags uint8, streamId uint32) *PingFrame {
+func NewPingFrame(flags uint8, streamId uint32, opaqueData []byte) *PingFrame {
 	var length uint32 = 8
 	fh := NewFrameHeader(length, PingFrameType, flags, streamId)
 	frame := &PingFrame{
 		FrameHeader: fh,
-		OpaqueData:  nil,
+		OpaqueData:  opaqueData,
 	}
 	return frame
 }
@@ -991,7 +991,7 @@ type WindowUpdateFrame struct {
 	WindowSizeIncrement uint32
 }
 
-func NewWindowUpdateFrame(incrementSize, streamId uint32) *WindowUpdateFrame {
+func NewWindowUpdateFrame(streamId, incrementSize uint32) *WindowUpdateFrame {
 	var length uint32 = 4
 
 	fh := NewFrameHeader(length, WindowUpdateFrameType, UNSET, streamId)

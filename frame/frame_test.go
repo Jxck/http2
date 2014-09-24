@@ -11,67 +11,11 @@ import (
 	"testing/quick"
 )
 
-var maxLength = 0xFFFFFF
-var maxPadLength = 0xFF
-var count float64 = 100
-
-func TestFrameHeaderQuickCheck(t *testing.T) {
-	f := func(length uint32, types uint8, flags uint8, streamId uint32) bool {
-		length = length >> 8
-		streamId = streamId >> 1
-
-		expected := NewFrameHeader(length, types, flags, streamId)
-		buf := bytes.NewBuffer(make([]byte, 0))
-		expected.Write(buf)
-
-		actual := new(FrameHeader)
-		actual.Read(buf)
-		return reflect.DeepEqual(actual, expected)
-	}
-
-	c := &quick.Config{
-		MaxCountScale: count,
-	}
-
-	if err := quick.Check(f, c); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestDataFrameQuickCheck(t *testing.T) {
-	f := func(flags uint8, streamId uint32, data []byte) bool {
-		streamId = streamId >> 1
-		if len(data) > maxLength {
-			data = data[:maxLength-1]
-		}
-
-		var window = len(data)
-		if len(data) > maxPadLength {
-			window = len(data) - maxPadLength
-		}
-
-		expected := NewDataFrame(flags, streamId, data[:window], data[window:])
-		buf := bytes.NewBuffer(make([]byte, 0))
-		expected.Write(buf)
-
-		fh := new(FrameHeader)
-		fh.Read(buf)
-
-		actual := new(DataFrame)
-		actual.FrameHeader = fh
-		actual.Read(buf)
-
-		return reflect.DeepEqual(actual, expected)
-	}
-
-	c := &quick.Config{
-		MaxCountScale: count,
-	}
-
-	if err := quick.Check(f, c); err != nil {
-		t.Error(err)
-	}
-}
+var (
+	maxLength    int     = 0xFFFFFF
+	maxPadLength int     = 0xFF
+	count        float64 = 100
+)
 
 type TestCase struct {
 	Error string    `json:"error"`
@@ -85,6 +29,71 @@ type TestFrame struct {
 	Flags    uint8                  `json:"flags"`
 	StreamId uint32                 `json:"stream_identifier"`
 	Type     uint8                  `json:"type"`
+}
+
+// Frame Header
+func TestFrameHeaderQuickCheck(t *testing.T) {
+	f := func(length uint32, types uint8, flags uint8, streamId uint32) bool {
+		// setup data
+		length = length >> 8
+		streamId = streamId >> 1
+
+		// expected
+		expected := NewFrameHeader(length, types, flags, streamId)
+		buf := bytes.NewBuffer(make([]byte, 0))
+		expected.Write(buf)
+
+		// actual
+		actual := new(FrameHeader)
+		actual.Read(buf)
+
+		return reflect.DeepEqual(actual, expected)
+	}
+
+	c := &quick.Config{
+		MaxCountScale: count,
+	}
+
+	if err := quick.Check(f, c); err != nil {
+		t.Error(err)
+	}
+}
+
+// DATA Frame
+func TestDataFrameQuickCheck(t *testing.T) {
+	f := func(flags uint8, streamId uint32, data []byte) bool {
+		// setup data
+		streamId = streamId >> 1
+		if len(data) > maxLength {
+			data = data[:maxLength-1]
+		}
+
+		var window = len(data)
+		if len(data) > maxPadLength {
+			window = len(data) - maxPadLength
+		}
+
+		// expected
+		buf := bytes.NewBuffer(make([]byte, 0))
+		expected := NewDataFrame(flags, streamId, data[:window], data[window:])
+		expected.Write(buf)
+
+		// actual
+		fh := new(FrameHeader)
+		fh.Read(buf)
+		actual := FrameMap[DataFrameType](fh)
+		actual.Read(buf)
+
+		return reflect.DeepEqual(actual, expected)
+	}
+
+	c := &quick.Config{
+		MaxCountScale: count,
+	}
+
+	if err := quick.Check(f, c); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestDataCase(t *testing.T) {
@@ -112,32 +121,29 @@ func TestDataCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-
 	data := []byte(c.Frame.Payload["data"].(string))
 	padding := []byte(c.Frame.Payload["padding"].(string))
 
+	// compare struct
 	expected := NewDataFrame(flags, streamId, data, padding)
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
+// HEADERS Frame
 func TestHeadersFrame(t *testing.T) {
 	hb := []byte("test header block")
 	expected := NewHeadersFrame(END_STREAM, 2, nil, hb, nil)
@@ -203,27 +209,24 @@ func TestHeadersCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-
 	headerBlock := []byte(c.Frame.Payload["header_block_fragment"].(string))
-	expected := NewHeadersFrame(flags, streamId, nil, headerBlock, nil)
 
+	// compare struct
+	expected := NewHeadersFrame(flags, streamId, nil, headerBlock, nil)
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
@@ -257,39 +260,36 @@ func TestHeadersPriorityCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-
 	flags := c.Frame.Flags
 	streamId := c.Frame.StreamId
-
+	hb := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	padding := []byte(c.Frame.Payload["padding"].(string))
 	dependencyTree := &DependencyTree{
 		Exclusive:        true,
 		StreamDependency: 20,
 		Weight:           10,
 	}
 
-	hb := []byte(c.Frame.Payload["header_block_fragment"].(string))
-	padding := []byte(c.Frame.Payload["padding"].(string))
-
+	// compare struct
 	expected := NewHeadersFrame(flags, streamId, dependencyTree, hb, padding)
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
+// TODO: PRIORITY Frame
+
+// RST_STREAM Frame
 func TestRstStreamFrame(t *testing.T) {
 	expected := NewRstStreamFrame(PROTOCOL_ERROR, 1)
 
@@ -331,33 +331,27 @@ func TestRstStreamCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-	length := c.Frame.Length
-
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
 
+	// compare struct
 	expected := NewRstStreamFrame(streamId, 8)
-	expected.Length = length
-	expected.Type = types
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
 
 	assert.Equal(t, wire, hexdump)
 }
 
+// SETTINGS Frame
 func TestSettingsFrame(t *testing.T) {
 	settings := []Setting{
 		{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
@@ -412,54 +406,33 @@ func TestSettingsCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-	length := c.Frame.Length
 	flags := c.Frame.Flags
-
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
 	settings := []Setting{
 		{1, 8192},
 		{3, 5000},
 	}
 
+	// compare struct
 	expected := NewSettingsFrame(flags, streamId, settings)
-	expected.Length = length
-	expected.Type = types
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
-func TestGoAwayFrame(t *testing.T) {
-	expected := NewGoAwayFrame(101, 100, NO_ERROR, nil)
+// TODO: PUSH_PROMISE Frame
 
-	buf := bytes.NewBuffer(make([]byte, 0))
-	expected.Write(buf)
-
-	fh := new(FrameHeader)
-	fh.Read(buf)
-
-	actual := new(GoAwayFrame)
-	actual.FrameHeader = fh
-	actual.Read(buf)
-
-	assert.Equal(t, actual, expected)
-}
-
+// PING Frame
 func TestPingCase(t *testing.T) {
 	var c TestCase
 	PingFrameCase := []byte(`{
@@ -485,35 +458,42 @@ func TestPingCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-	length := c.Frame.Length
 	flags := c.Frame.Flags
-
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
-
 	opaqueData := []byte(c.Frame.Payload["opaque_data"].(string))
 
-	expected := NewPingFrame(flags, streamId)
-	expected.OpaqueData = opaqueData
-	expected.Length = length
-	expected.Type = types
-
+	// compare struct
+	expected := NewPingFrame(flags, streamId, opaqueData)
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
+}
+
+// GOAWAY Frame
+func TestGoAwayFrame(t *testing.T) {
+	expected := NewGoAwayFrame(101, 100, NO_ERROR, nil)
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	expected.Write(buf)
+
+	fh := new(FrameHeader)
+	fh.Read(buf)
+
+	actual := new(GoAwayFrame)
+	actual.FrameHeader = fh
+	actual.Read(buf)
+
+	assert.Equal(t, actual, expected)
 }
 
 func TestGoAwayCase(t *testing.T) {
@@ -543,38 +523,29 @@ func TestGoAwayCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-	length := c.Frame.Length
-
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
-
 	lastStreamId := uint32(c.Frame.Payload["last_stream_id"].(float64))
 	errorCode := ErrorCode(c.Frame.Payload["error_code"].(float64))
 	additional := []byte(c.Frame.Payload["additional_debug_data"].(string))
 
+	// compare struct
 	expected := NewGoAwayFrame(streamId, lastStreamId, errorCode, additional)
-	expected.Length = length
-	expected.Type = types
-	expected.AdditionalDebugData = []byte(c.Frame.Payload["additional_debug_data"].(string))
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
+// WINDOW_UPDATE Frame
 func TestWindowUpdate(t *testing.T) {
 	var c TestCase
 	WindowUpdateFrameCase := []byte(`{
@@ -600,35 +571,27 @@ func TestWindowUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-	length := c.Frame.Length
-
 	streamId := c.Frame.StreamId
-	types := c.Frame.Type
-
 	incrementSize := uint32(c.Frame.Payload["window_size_increment"].(float64))
 
-	expected := NewWindowUpdateFrame(incrementSize, streamId)
-	expected.Length = length
-	expected.Type = types
-
+	// compare struct
+	expected := NewWindowUpdateFrame(streamId, incrementSize)
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
+// CONTINUATION Frame
 func TestContinuationCase(t *testing.T) {
 	var c TestCase
 	ContinuationFrameCase := []byte(`{
@@ -654,29 +617,24 @@ func TestContinuationCase(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// trace data
 	wire := c.Wire
-
 	streamId := c.Frame.StreamId
 	flags := c.Frame.Flags
-
 	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
 
+	// compare struct
 	expected := NewContinuationFrame(flags, streamId, headerBlockFragment)
-
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// compare struct
 	assert.Equal(t, actual, expected)
 
 	// compare wire
 	buf := bytes.NewBuffer(make([]byte, 0))
 	expected.Write(buf)
-
 	hexdump := strings.ToUpper(hex.EncodeToString(buf.Bytes()))
-
 	assert.Equal(t, wire, hexdump)
 }
 
