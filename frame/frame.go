@@ -434,7 +434,6 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 		err = Recovery(recover())
 	}()
 
-	// TODO: support padding
 	err = frame.FrameHeader.Write(w)
 	if err != nil {
 		return err

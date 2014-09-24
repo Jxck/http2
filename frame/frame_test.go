@@ -98,7 +98,7 @@ func TestDataFrameQuickCheck(t *testing.T) {
 
 func TestDataCase(t *testing.T) {
 	var c TestCase
-	DataFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
     "frame": {
@@ -116,7 +116,7 @@ func TestDataCase(t *testing.T) {
     "description": "noraml data frame"
   }`)
 
-	err := json.Unmarshal(DataFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func TestHeadersPriorityFrame(t *testing.T) {
 
 func TestHeadersCase(t *testing.T) {
 	var c TestCase
-	HeadersFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "00000D010000000001746869732069732064756D6D79",
     "frame": {
@@ -204,7 +204,7 @@ func TestHeadersCase(t *testing.T) {
     "description": "noraml headers frame"
   }`)
 
-	err := json.Unmarshal(HeadersFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func TestHeadersCase(t *testing.T) {
 
 func TestHeadersPriorityCase(t *testing.T) {
 	var c TestCase
-	HeadersFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "000023012800000003108000001409746869732069732064756D6D79546869732069732070616464696E672E",
     "frame": {
@@ -255,7 +255,7 @@ func TestHeadersPriorityCase(t *testing.T) {
     "description": "noraml headers frame including priority"
   }`)
 
-	err := json.Unmarshal(HeadersFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -308,7 +308,7 @@ func TestRstStreamFrame(t *testing.T) {
 
 func TestRstStreamCase(t *testing.T) {
 	var c TestCase
-	RstStreamFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "00000403000000000500000008",
     "frame": {
@@ -326,7 +326,7 @@ func TestRstStreamCase(t *testing.T) {
     "description": "noraml rst stream frame"
   }`)
 
-	err := json.Unmarshal(RstStreamFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -374,7 +374,7 @@ func TestSettingsFrame(t *testing.T) {
 
 func TestSettingsCase(t *testing.T) {
 	var c TestCase
-	SettingsFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "00000C040000000000000100002000000300001388",
     "frame": {
@@ -401,7 +401,7 @@ func TestSettingsCase(t *testing.T) {
     "description": "noraml rst stream frame"
   }`)
 
-	err := json.Unmarshal(SettingsFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -433,7 +433,7 @@ func TestSettingsCase(t *testing.T) {
 // PUSH_PROMISE Frame
 func TestPushPromiseCase(t *testing.T) {
 	var c TestCase
-	casestr := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "000018050800000009060000000B746869732069732064756D6D79486F77647921",
     "frame": {
@@ -452,7 +452,7 @@ func TestPushPromiseCase(t *testing.T) {
     "description": "noraml push promise frame"
   }`)
 
-	err := json.Unmarshal(casestr, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -483,7 +483,7 @@ func TestPushPromiseCase(t *testing.T) {
 // PING Frame
 func TestPingCase(t *testing.T) {
 	var c TestCase
-	PingFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "0000080600000000006465616462656566",
     "frame": {
@@ -501,7 +501,7 @@ func TestPingCase(t *testing.T) {
     "description": "noraml ping frame"
   }`)
 
-	err := json.Unmarshal(PingFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -546,7 +546,7 @@ func TestGoAwayFrame(t *testing.T) {
 
 func TestGoAwayCase(t *testing.T) {
 	var c TestCase
-	GoAwayFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "0000170700000000000000001E00000009687061636B2069732062726F6B656E",
     "frame": {
@@ -566,7 +566,7 @@ func TestGoAwayCase(t *testing.T) {
     "description": "normal goaway frame"
   }`)
 
-	err := json.Unmarshal(GoAwayFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -596,7 +596,7 @@ func TestGoAwayCase(t *testing.T) {
 // WINDOW_UPDATE Frame
 func TestWindowUpdate(t *testing.T) {
 	var c TestCase
-	WindowUpdateFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "000004080000000032000003E8",
     "frame": {
@@ -614,7 +614,7 @@ func TestWindowUpdate(t *testing.T) {
     "description": "noraml window update frame"
   }`)
 
-	err := json.Unmarshal(WindowUpdateFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -642,7 +642,7 @@ func TestWindowUpdate(t *testing.T) {
 // CONTINUATION Frame
 func TestContinuationCase(t *testing.T) {
 	var c TestCase
-	ContinuationFrameCase := []byte(`{
+	framecase := []byte(`{
     "error": null,
     "wire": "00000D090000000032746869732069732064756D6D79",
     "frame": {
@@ -660,7 +660,7 @@ func TestContinuationCase(t *testing.T) {
     "description": "normal continuation frame without header block fragment"
   }`)
 
-	err := json.Unmarshal(ContinuationFrameCase, &c)
+	err := json.Unmarshal(framecase, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
