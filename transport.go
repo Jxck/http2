@@ -89,6 +89,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	// send request header via HEADERS Frame
 	var flags Flag = END_STREAM + END_HEADERS
 	headerBlock := stream.EncodeHeader(req.Header)
+	Trace("encoded header block %v", headerBlock)
 	frame := NewHeadersFrame(flags, stream.Id, nil, headerBlock, nil)
 	frame.Headers = req.Header
 	stream.Write(frame) // err
