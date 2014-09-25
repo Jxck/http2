@@ -689,7 +689,7 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 	}()
 
 	for niv := frame.Length / 6; niv > 0; niv-- {
-		s := *new(Setting)
+		s := Setting{}
 
 		MustRead(r, &s.SettingsId)
 		MustRead(r, &s.Value)

@@ -13,7 +13,6 @@ const (
 
 var DefaultSettings = []Setting{
 	{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
-	{SETTINGS_INITIAL_WINDOW_SIZE, DEFAULT_WINDOW_SIZE},
 }
 
 var NilSettings = make([]Setting, 0)
