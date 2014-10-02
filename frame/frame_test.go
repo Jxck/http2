@@ -24,11 +24,11 @@ type TestCase struct {
 }
 
 type TestFrame struct {
-	Length   uint32                 `json:"length"`
-	Payload  map[string]interface{} `json:"frame_payload"`
-	Flags    uint8                  `json:"flags"`
-	StreamId uint32                 `json:"stream_identifier"`
-	Type     uint8                  `json:"type"`
+	Length   uint32          `json:"length"`
+	Payload  json.RawMessage `json:"frame_payload"`
+	Flags    uint8           `json:"flags"`
+	StreamId uint32          `json:"stream_identifier"`
+	Type     uint8           `json:"type"`
 }
 
 // Frame Header
@@ -96,8 +96,15 @@ func TestDataFrameQuickCheck(t *testing.T) {
 	}
 }
 
+type DataPayload struct {
+	Data          string `json:"data"`
+	PaddingLength uint8  `json:"padding_length"`
+	Padding       string `json:"padding"`
+}
+
 func TestDataCase(t *testing.T) {
 	var c TestCase
+	var p DataPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "0000140008000000020648656C6C6F2C20776F726C6421486F77647921",
@@ -116,17 +123,16 @@ func TestDataCase(t *testing.T) {
     "description": "noraml data frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	data := []byte(c.Frame.Payload["data"].(string))
-	padding := []byte(c.Frame.Payload["padding"].(string))
+	data := []byte(p.Data)
+	padding := []byte(p.Padding)
 
 	// compare struct
 	expected := NewDataFrame(flags, streamId, data, padding)
@@ -134,6 +140,7 @@ func TestDataCase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	_ = actual
 	assert.Equal(t, actual, expected)
 
 	// compare wire
@@ -183,8 +190,16 @@ func TestHeadersPriorityFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+type HeadersPayload struct {
+	HeaderBlockFragment string `json:"header_block_fragment"`
+	Padding             string `json:"padding"`
+	PaddingLength       uint8  `json:"padding_length"`
+	Priority            uint8  `json:"priority"`
+}
+
 func TestHeadersCase(t *testing.T) {
 	var c TestCase
+	var p HeadersPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "00000D010000000001746869732069732064756D6D79",
@@ -204,16 +219,15 @@ func TestHeadersCase(t *testing.T) {
     "description": "noraml headers frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	headerBlock := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	headerBlock := []byte(p.HeaderBlockFragment)
 
 	// compare struct
 	expected := NewHeadersFrame(flags, streamId, nil, headerBlock, nil)
@@ -230,8 +244,20 @@ func TestHeadersCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+type HeadersPriorityPayload struct {
+	HeaderBlockFragment string `json:"header_block_fragment"`
+	Padding             string `json:"padding"`
+	PaddingLength       uint8  `json:"padding_length"`
+	Priority            struct {
+		Exclusive        bool   `json:"exclusive"`
+		StreamDependency uint32 `json:"stream_dependency"`
+		Weight           uint8  `json:"weight"`
+	} `json:"priority"`
+}
+
 func TestHeadersPriorityCase(t *testing.T) {
 	var c TestCase
+	var p HeadersPriorityPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "000023012800000003108000001409746869732069732064756D6D79546869732069732070616464696E672E",
@@ -255,21 +281,20 @@ func TestHeadersPriorityCase(t *testing.T) {
     "description": "noraml headers frame including priority"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	hb := []byte(c.Frame.Payload["header_block_fragment"].(string))
-	padding := []byte(c.Frame.Payload["padding"].(string))
+	hb := []byte(p.HeaderBlockFragment)
+	padding := []byte(p.Padding)
 	dependencyTree := &DependencyTree{
-		Exclusive:        true,
-		StreamDependency: 20,
-		Weight:           10,
+		Exclusive:        p.Priority.Exclusive,
+		StreamDependency: p.Priority.StreamDependency,
+		Weight:           p.Priority.Weight,
 	}
 
 	// compare struct
@@ -430,9 +455,17 @@ func TestSettingsCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+type PushPromisePayload struct {
+	HeaderBlockFragment string `json:"header_block_fragment"`
+	Padding             string `json:"padding"`
+	PaddingLength       uint8  `json:"padding_length"`
+	PromisedStreamID    uint32 `json:"promised_stream_id"`
+}
+
 // PUSH_PROMISE Frame
 func TestPushPromiseCase(t *testing.T) {
 	var c TestCase
+	var p PushPromisePayload
 	framecase := []byte(`{
     "error": null,
     "wire": "000018050800000009060000000B746869732069732064756D6D79486F77647921",
@@ -452,18 +485,17 @@ func TestPushPromiseCase(t *testing.T) {
     "description": "noraml push promise frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	promisedStreamId := uint32(c.Frame.Payload["promised_stream_id"].(float64))
-	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
-	padding := []byte(c.Frame.Payload["padding"].(string))
+	promisedStreamId := p.PromisedStreamID
+	headerBlockFragment := []byte(p.HeaderBlockFragment)
+	padding := []byte(p.Padding)
 
 	// compare struct
 	expected := NewPushPromiseFrame(flags, streamId, promisedStreamId, headerBlockFragment, padding)
@@ -480,9 +512,16 @@ func TestPushPromiseCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+type PingPayload struct {
+	OpaqueData    string `json:"opaque_data"`
+	Padding       string `json:"padding"`
+	PaddingLength uint8  `json:"padding_length"`
+}
+
 // PING Frame
 func TestPingCase(t *testing.T) {
 	var c TestCase
+	var p PingPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "0000080600000000006465616462656566",
@@ -501,16 +540,15 @@ func TestPingCase(t *testing.T) {
     "description": "noraml ping frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	opaqueData := []byte(c.Frame.Payload["opaque_data"].(string))
+	opaqueData := []byte(p.OpaqueData)
 
 	// compare struct
 	expected := NewPingFrame(flags, streamId, opaqueData)
@@ -544,8 +582,17 @@ func TestGoAwayFrame(t *testing.T) {
 	assert.Equal(t, actual, expected)
 }
 
+type GoAwayPayload struct {
+	AdditionalDebugData string    `json:"additional_debug_data"`
+	ErrorCode           ErrorCode `json:"error_code"`
+	LastStreamID        uint32    `json:"last_stream_id"`
+	Padding             string    `json:"padding"`
+	PaddingLength       uint8     `json:"padding_length"`
+}
+
 func TestGoAwayCase(t *testing.T) {
 	var c TestCase
+	var p GoAwayPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "0000170700000000000000001E00000009687061636B2069732062726F6B656E",
@@ -566,17 +613,15 @@ func TestGoAwayCase(t *testing.T) {
     "description": "normal goaway frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	streamId := c.Frame.StreamId
-	lastStreamId := uint32(c.Frame.Payload["last_stream_id"].(float64))
-	errorCode := ErrorCode(c.Frame.Payload["error_code"].(float64))
-	additional := []byte(c.Frame.Payload["additional_debug_data"].(string))
+	lastStreamId := p.LastStreamID
+	errorCode := p.ErrorCode
+	additional := []byte(p.AdditionalDebugData)
 
 	// compare struct
 	expected := NewGoAwayFrame(streamId, lastStreamId, errorCode, additional)
@@ -593,9 +638,16 @@ func TestGoAwayCase(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+type WindowUpdatePayload struct {
+	Padding             []byte `json:"padding"`
+	PaddingLength       uint8  `json:"padding_length"`
+	WindowSizeIncrement uint32 `json:"window_size_increment"`
+}
+
 // WINDOW_UPDATE Frame
 func TestWindowUpdate(t *testing.T) {
 	var c TestCase
+	var p WindowUpdatePayload
 	framecase := []byte(`{
     "error": null,
     "wire": "000004080000000032000003E8",
@@ -614,15 +666,13 @@ func TestWindowUpdate(t *testing.T) {
     "description": "noraml window update frame"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	streamId := c.Frame.StreamId
-	incrementSize := uint32(c.Frame.Payload["window_size_increment"].(float64))
+	incrementSize := p.WindowSizeIncrement
 
 	// compare struct
 	expected := NewWindowUpdateFrame(streamId, incrementSize)
@@ -639,9 +689,16 @@ func TestWindowUpdate(t *testing.T) {
 	assert.Equal(t, wire, hexdump)
 }
 
+type ContinuationPayload struct {
+	HeaderBlockFragment string `json:"header_block_fragment"`
+	Padding             string `json:"padding"`
+	PaddingLength       uint8  `json:"padding_length"`
+}
+
 // CONTINUATION Frame
 func TestContinuationCase(t *testing.T) {
 	var c TestCase
+	var p ContinuationPayload
 	framecase := []byte(`{
     "error": null,
     "wire": "00000D090000000032746869732069732064756D6D79",
@@ -660,16 +717,15 @@ func TestContinuationCase(t *testing.T) {
     "description": "normal continuation frame without header block fragment"
   }`)
 
-	err := json.Unmarshal(framecase, &c)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// ignore error
+	json.Unmarshal(framecase, &c)
+	json.Unmarshal(c.Frame.Payload, &p)
 
 	// trace data
 	wire := c.Wire
 	streamId := c.Frame.StreamId
 	flags := Flag(c.Frame.Flags)
-	headerBlockFragment := []byte(c.Frame.Payload["header_block_fragment"].(string))
+	headerBlockFragment := []byte(p.HeaderBlockFragment)
 
 	// compare struct
 	expected := NewContinuationFrame(flags, streamId, headerBlockFragment)
