@@ -35,7 +35,8 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 
 	err := Conn.ReadMagic()
 	if err != nil {
-		log.Fatal(err)
+		Error("%v", err)
+		return
 	}
 
 	go Conn.WriteLoop()
