@@ -51,7 +51,9 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 
 func (conn *Conn) ReadFrame() (frame Frame, err error) {
 	frame, err = ReadFrame(conn.RW)
-	Notice("%v %v", Green("recv"), util.Indent(frame.String()))
+	if frame != nil {
+		Notice("%v %v", Green("recv"), util.Indent(frame.String()))
+	}
 	return frame, err
 }
 
