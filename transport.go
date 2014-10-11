@@ -6,14 +6,9 @@ import (
 	. "github.com/Jxck/color"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
-	"log"
 	"net/http"
 	"strconv"
 )
-
-func init() {
-	log.SetFlags(log.Lshortfile)
-}
 
 // Transport implements http.RoundTriper
 // with RoundTrip(request) response
@@ -31,7 +26,7 @@ func (transport *Transport) Connect() {
 	// loading key pair
 	cert, err := tls.LoadX509KeyPair(transport.CertPath, transport.KeyPath)
 	if err != nil {
-		log.Fatal(err)
+		Fatal("%v", err)
 	}
 
 	// setting TLS config
@@ -42,7 +37,7 @@ func (transport *Transport) Connect() {
 	}
 	conn, err := tls.Dial("tcp", address, &config)
 	if err != nil {
-		log.Fatal(err)
+		Fatal("%v", err)
 	}
 
 	// check connection state
@@ -55,7 +50,7 @@ func (transport *Transport) Connect() {
 	// send Magic Octet
 	err = Conn.WriteMagic()
 	if err != nil {
-		log.Fatal(err)
+		Fatal("%v", err)
 	}
 
 	go Conn.ReadLoop()

@@ -4,14 +4,9 @@ import (
 	"fmt"
 	. "github.com/Jxck/color"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 )
-
-func init() {
-	log.SetFlags(log.Lshortfile)
-}
 
 type FrameType uint8
 

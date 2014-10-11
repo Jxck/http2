@@ -7,12 +7,7 @@ import (
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
 	"io"
-	"log"
 )
-
-func init() {
-	log.SetFlags(log.Lshortfile)
-}
 
 type Conn struct {
 	RW           io.ReadWriter
@@ -63,7 +58,7 @@ func (conn *Conn) ReadLoop() {
 		frame, err := conn.ReadFrame()
 		if err != nil {
 			if err == io.EOF {
-				log.Println(err)
+				Error("%v", err)
 				break
 			}
 		}

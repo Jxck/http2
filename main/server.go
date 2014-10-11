@@ -3,9 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"github.com/Jxck/http2"
 	"github.com/Jxck/logger"
-	"log"
 	"net/http"
 	"os"
 )
@@ -16,21 +16,20 @@ var (
 )
 
 func init() {
-	log.SetFlags(log.Lshortfile)
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
+	f.IntVar(&loglevel, "l", 0, logger.Help())
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
 		f.Parse(f.Args()[1:])
 	}
-	logger.LogLevel(loglevel)
+	logger.Level(loglevel)
 }
 
 func main() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Println(`
+			fmt.Println(`
 # usage
 $ go run main/server.go 3000
 			`)
@@ -58,6 +57,6 @@ $ go run main/server.go 3000
 		TLSNextProto:   http2.TLSNextProto,
 	}
 
-	log.Printf("server starts at localhost%v", addr)
-	log.Println(server.ListenAndServeTLS(cert, key))
+	fmt.Println("server starts at localhost", addr)
+	fmt.Println(server.ListenAndServeTLS(cert, key))
 }

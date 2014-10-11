@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"github.com/Jxck/http2"
 	"github.com/Jxck/logger"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 )
@@ -18,23 +18,22 @@ var (
 )
 
 func init() {
-	log.SetFlags(log.Lshortfile)
 	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f.BoolVar(&nullout, "n", false, "null output")
 	f.StringVar(&post, "d", "", "send post data")
-	f.IntVar(&loglevel, "l", 0, "log level (1 ERR, 2 WARNING, 3 INFO, 4 DEBUG)")
+	f.IntVar(&loglevel, "l", 0, logger.Help())
 	f.Parse(os.Args[1:])
 	for 0 < f.NArg() {
 		f.Parse(f.Args()[1:])
 	}
-	logger.LogLevel(loglevel)
+	logger.Level(loglevel)
 }
 
 func main() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			log.Println(`
+			fmt.Println(`
 # usage
 $ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 `)
@@ -56,14 +55,14 @@ $ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 		// GET
 		res, err = client.Get(url)
 		if err != nil {
-			log.Println(err)
+			logger.Error("%v", err)
 		}
 	} else {
 		// POST
 		buf := bytes.NewBufferString(post)
 		res, err = client.Post(url, "text/plain", buf)
 		if err != nil {
-			log.Println(err)
+			logger.Error("%v", err)
 		}
 	}
 
@@ -71,8 +70,8 @@ $ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 	if !nullout {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Println(err)
+			logger.Error("%v", err)
 		}
-		log.Println(string(body))
+		fmt.Println(string(body))
 	}
 }
