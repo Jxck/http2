@@ -253,6 +253,14 @@ BreakLoop:
 				if frame.Header().Flags&END_STREAM == END_STREAM {
 					stream.CallBack(stream)
 				}
+			case *RstStreamFrame:
+				Debug("close stream by RST_STREAM")
+				Error("RST_STREAM(%v)", frame.ErrorCode)
+				stream.Close()
+			case *PingFrame:
+				Debug("response to PING")
+				ping := NewPingFrame(ACK, stream.Id, frame.OpaqueData)
+				stream.Write(ping)
 			case *GoAwayFrame:
 				Debug("close stream by GOAWAY")
 				stream.Close()
