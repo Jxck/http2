@@ -68,8 +68,11 @@ func (transport *Transport) Connect() {
 }
 
 // http.RoundTriper implementation
-func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	transport.URL, _ = NewURL(req.URL.String()) // err
+func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
+	transport.URL, err = NewURL(req.URL.String()) // err
+	if err != nil {
+		return nil, err
+	}
 
 	// establish tcp connection and handshake
 	transport.Connect()
@@ -90,10 +93,10 @@ func (transport *Transport) RoundTrip(req *http.Request) (*http.Response, error)
 	stream.Write(frame) // err
 
 	// send GOAWAY
-	// stream.Write(NewGoAwayFrame(0, NO_ERROR, 0))
+	stream.Write(NewGoAwayFrame(0, stream.Id, NO_ERROR, nil))
 
 	//return res, nil
-	res := <-response
+	res = <-response
 
 	return res, nil
 }

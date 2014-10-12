@@ -214,7 +214,7 @@ BreakLoop:
 	for {
 		select {
 		case <-stream.breakloop:
-			Debug("stom stream (%d) ReadLoop()", stream.Id)
+			Debug("stop stream (%d) ReadLoop()", stream.Id)
 			break BreakLoop
 		case f := <-stream.ReadChan:
 			Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
@@ -254,7 +254,8 @@ BreakLoop:
 					stream.CallBack(stream)
 				}
 			case *GoAwayFrame:
-				log.Println("GOAWAY")
+				Debug("close stream by GOAWAY")
+				stream.Close()
 			}
 		}
 	}

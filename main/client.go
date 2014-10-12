@@ -55,14 +55,14 @@ $ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 		// GET
 		res, err = client.Get(url)
 		if err != nil {
-			logger.Error("%v", err)
+			logger.Fatal("%v", err)
 		}
 	} else {
 		// POST
 		buf := bytes.NewBufferString(post)
 		res, err = client.Post(url, "text/plain", buf)
 		if err != nil {
-			logger.Error("%v", err)
+			logger.Fatal("%v", err)
 		}
 	}
 
@@ -70,7 +70,7 @@ $ go run main/client.go http://localhost:3000 -l 4 -d "data to send" -n
 	if !nullout {
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			logger.Error("%v", err)
+			logger.Fatal("%v", err)
 		}
 		fmt.Println(string(body))
 	}
