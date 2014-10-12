@@ -13,6 +13,7 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 }
 
+// state of stream
 type State int
 
 const (
@@ -234,7 +235,7 @@ BreakLoop:
 					stream.Write(ack)
 				} else if settingsFrame.Flags == ACK {
 					// receive ACK
-					log.Println("receive SETTINGS ACK")
+					Trace("receive SETTINGS ACK")
 				}
 			case *HeadersFrame:
 				// Decode Headers
