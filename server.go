@@ -114,7 +114,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
 		length := len(data)
-		window := DEFAULT_WINDOW_SIZE
+		window := int(DEFAULT_WINDOW_SIZE)
 		for i := 0; ; i++ {
 			start := i * window
 			end := start + window
