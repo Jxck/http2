@@ -276,8 +276,14 @@ func (stream *Stream) Write(frame Frame) {
 
 func (stream *Stream) WindowUpdateLoop() {
 	total := stream.WindowSize
-	go func() {
-		for size := range stream.WindowUpdate {
+
+BreakLoop:
+	for {
+		select {
+		case <-stream.breakloop:
+			Debug("stom stream (%d) ReadLoop()", stream.Id)
+			break BreakLoop
+		case f := <-stream.WindowUpdate:
 			total = total - size
 			if total < 10240 {
 				update := stream.WindowSize - total
@@ -285,7 +291,7 @@ func (stream *Stream) WindowUpdateLoop() {
 				stream.Write(NewWindowUpdateFrame(update, 0))
 			}
 		}
-	}()
+	}
 }
 
 func (stream *Stream) Close() {
