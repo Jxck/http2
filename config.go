@@ -5,10 +5,11 @@ import (
 )
 
 const (
-	OVER_TLS           string = "h2"
-	OVER_TCP                  = "h2c"
-	VERSION                   = OVER_TLS + "-14"
-	CONNECTION_PREFACE        = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+	OVER_TLS                string = "h2"
+	OVER_TCP                       = "h2c"
+	VERSION                        = OVER_TLS + "-14"
+	CONNECTION_PREFACE             = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
+	WINDOW_UPDATE_THRESHOLD uint32 = 10240
 )
 
 var DefaultSettings = []Setting{

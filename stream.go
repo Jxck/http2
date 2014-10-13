@@ -285,7 +285,8 @@ BreakLoop:
 			break BreakLoop
 		case size := <-stream.WindowUpdate:
 			total = total - size
-			if total < 10240 {
+			if total < WINDOW_UPDATE_THRESHOLD {
+				// この値を下回ったら WindowUpdate を送る
 				update := stream.WindowSize - total
 				stream.Write(NewWindowUpdateFrame(update, stream.Id))
 				stream.Write(NewWindowUpdateFrame(update, 0))
@@ -295,6 +296,7 @@ BreakLoop:
 }
 
 func (stream *Stream) Close() {
+	close(stream.WindowUpdate)
 	close(stream.breakloop)
 }
 
