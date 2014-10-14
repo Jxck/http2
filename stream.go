@@ -283,7 +283,7 @@ BreakLoop:
 		case <-stream.breakloop:
 			Debug("stom stream (%d) ReadLoop()", stream.Id)
 			break BreakLoop
-		case f := <-stream.WindowUpdate:
+		case size := <-stream.WindowUpdate:
 			total = total - size
 			if total < 10240 {
 				update := stream.WindowSize - total
