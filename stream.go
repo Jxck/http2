@@ -135,16 +135,16 @@ func (stream *Stream) ChangeState(frame Frame, context bool) (err error) {
 	case IDLE:
 		// H
 		if types == HeadersFrameType {
-			stream.State = OPEN
+			stream.changeState(OPEN)
 			return
 		}
 
 		// PP
 		if types == PushPromiseFrameType {
 			if context == RECV {
-				stream.State = RESERVED_REMOTE
+				stream.changeState(RESERVED_REMOTE)
 			} else {
-				stream.State = RESERVED_LOCAL
+				stream.changeState(RESERVED_LOCAL)
 			}
 			return
 		}
@@ -152,40 +152,40 @@ func (stream *Stream) ChangeState(frame Frame, context bool) (err error) {
 		// ES
 		if flags == END_STREAM {
 			if context == RECV {
-				stream.State = HALF_CLOSED_REMOTE
+				stream.changeState(HALF_CLOSED_REMOTE)
 			} else {
-				stream.State = HALF_CLOSED_LOCAL
+				stream.changeState(HALF_CLOSED_LOCAL)
 			}
 			return
 		}
 
 		// R
 		if types == RstStreamFrameType {
-			stream.State = CLOSED
+			stream.changeState(CLOSED)
 			return
 		}
 	case RESERVED_LOCAL:
 		// H
 		if types == HeadersFrameType {
-			stream.State = HALF_CLOSED_REMOTE
+			stream.changeState(HALF_CLOSED_REMOTE)
 			return
 		}
 
 		// R
 		if types == RstStreamFrameType {
-			stream.State = CLOSED
+			stream.changeState(CLOSED)
 			return
 		}
 	case RESERVED_REMOTE:
 		// H
 		if types == HeadersFrameType {
-			stream.State = HALF_CLOSED_LOCAL
+			stream.changeState(HALF_CLOSED_LOCAL)
 			return
 		}
 
 		// R
 		if types == RstStreamFrameType {
-			stream.State = CLOSED
+			stream.changeState(CLOSED)
 			return
 		}
 	case HALF_CLOSED_LOCAL:
@@ -194,13 +194,13 @@ func (stream *Stream) ChangeState(frame Frame, context bool) (err error) {
 	case HALF_CLOSED_REMOTE:
 		// ES
 		if flags == END_STREAM {
-			stream.State = CLOSED
+			stream.changeState(CLOSED)
 			return
 		}
 
 		// R
 		if types == RstStreamFrameType {
-			stream.State = CLOSED
+			stream.changeState(CLOSED)
 			return
 		}
 	}
