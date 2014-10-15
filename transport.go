@@ -20,13 +20,13 @@ type Transport struct {
 }
 
 // connect tcp connection with host
-func (transport *Transport) Connect() {
+func (transport *Transport) Connect() (err error) {
 	address := transport.URL.Host + ":" + transport.URL.Port
 
 	// loading key pair
 	cert, err := tls.LoadX509KeyPair(transport.CertPath, transport.KeyPath)
 	if err != nil {
-		Fatal("%v", err)
+		return err
 	}
 
 	// setting TLS config
@@ -37,7 +37,7 @@ func (transport *Transport) Connect() {
 	}
 	conn, err := tls.Dial("tcp", address, &config)
 	if err != nil {
-		Fatal("%v", err)
+		return err
 	}
 
 	// check connection state
@@ -50,7 +50,7 @@ func (transport *Transport) Connect() {
 	// send Magic Octet
 	err = Conn.WriteMagic()
 	if err != nil {
-		Fatal("%v", err)
+		return err
 	}
 
 	go Conn.ReadLoop()
@@ -65,17 +65,23 @@ func (transport *Transport) Connect() {
 	zeroStream.Write(settingsFrame)
 
 	transport.Conn = Conn
+	return
 }
 
 // http.RoundTriper implementation
 func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
 	transport.URL, err = NewURL(req.URL.String()) // err
 	if err != nil {
+		Error("%v", err)
 		return nil, err
 	}
 
 	// establish tcp connection and handshake
-	transport.Connect()
+	err = transport.Connect()
+	if err != nil {
+		Error("%v", err)
+		return nil, err
+	}
 
 	callback, response := TransportCallBack(req)
 	transport.Conn.CallBack = callback
@@ -90,12 +96,11 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 	Trace("encoded header block %v", headerBlock)
 	frame := NewHeadersFrame(flags, stream.Id, nil, headerBlock, nil)
 	frame.Headers = req.Header
-	stream.Write(frame) // err
+	stream.Write(frame) // TODO: err
 
-	// send GOAWAY
-	stream.Write(NewGoAwayFrame(0, stream.Id, NO_ERROR, nil))
+	// TODO: send GOAWAY
+	// stream.Write(NewGoAwayFrame(0, stream.Id, NO_ERROR, nil))
 
-	//return res, nil
 	res = <-response
 
 	return res, nil

@@ -26,15 +26,15 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Info("Handle TLS Connection")
 	// do not call "defer conn.Close()" only retun function
 
-	h2conn := NewConn(conn) // convert net.Conn to http2.Conn
+	Conn := NewConn(conn) // convert net.Conn to http2.Conn
 
 	// http.Handler が req, res を必要とするので
 	// stream がそれを生成して、その stream を渡すことで
 	// req/res が用意できたタイミングで handler を呼ぶコールバックを
-	// 生成し h2conn に持っておく。
-	h2conn.CallBack = HandlerCallBack(handler)
+	// 生成し Conn に持っておく。
+	Conn.CallBack = HandlerCallBack(handler)
 
-	err := h2conn.ReadMagic()
+	err := Conn.ReadMagic()
 	if err != nil {
 		Error("%v", err)
 		return
@@ -42,11 +42,11 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 
 	// 別 goroutine で WriteChann に送った
 	// frame を書き込むループを回す
-	go h2conn.WriteLoop()
+	go Conn.WriteLoop()
 
 	// stream id 0
-	zeroStream := h2conn.NewStream(0)
-	h2conn.Streams[0] = zeroStream
+	zeroStream := Conn.NewStream(0)
+	Conn.Streams[0] = zeroStream
 
 	// send default settings to id 0
 	settingsFrame := NewSettingsFrame(UNSET, 0, DefaultSettings)
@@ -54,8 +54,9 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 
 	// 送られてきた frame を読み出すループを回す
 	// ここで block する。
-	h2conn.ReadLoop()
+	Conn.ReadLoop()
 	Info("return TLSNextProto means close connection")
+	return
 }
 
 // handler を受け取って、将来 stream が渡されたら
