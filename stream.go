@@ -1,6 +1,7 @@
 package http2
 
 import (
+	"fmt"
 	. "github.com/Jxck/color"
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
@@ -119,88 +120,92 @@ const (
 //  PP: PUSH_PROMISE frame (with implied CONTINUATIONs)
 //  ES: END_STREAM flag
 //  R:  RST_STREAM frame
-func (stream *Stream) ChangeState(frame Frame, context bool) {
+func (stream *Stream) ChangeState(frame Frame, context bool) (err error) {
 
 	header := frame.Header()
 	flags := header.Flags
 	types := header.Type
+	state := stream.State
 
-	switch {
-	case types == DataFrameType:
-		if flags&END_STREAM == END_STREAM {
-			switch {
-			case stream.State == OPEN:
-				if context == RECV {
-					stream.changeState(HALF_CLOSED_REMOTE)
-				} else {
-					stream.changeState(HALF_CLOSED_LOCAL)
-				}
-			case stream.State == HALF_CLOSED_REMOTE:
-				if context == SEND {
-					stream.changeState(CLOSED)
-				} else {
-					log.Fatal("recv END_STREAM from HALF_CLOSED_REMOTE")
-				}
-			case stream.State == HALF_CLOSED_LOCAL:
-				if context == RECV {
-					stream.changeState(CLOSED)
-				} else {
-					log.Fatal("send END_STREAM from HALF_CLOSED_LOCAL")
-				}
-			default:
-				log.Printf("END_STREAM at %v", stream.State)
-			}
-		}
-	case types == HeadersFrameType:
-		switch {
-		case stream.State == IDLE:
-			stream.changeState(OPEN)
-
-			if flags&END_STREAM == END_STREAM {
-				switch {
-				case stream.State == OPEN:
-					if context == RECV {
-						stream.changeState(HALF_CLOSED_REMOTE)
-					} else {
-						stream.changeState(HALF_CLOSED_LOCAL)
-					}
-				case stream.State == HALF_CLOSED_REMOTE:
-					if context == SEND {
-						stream.changeState(CLOSED)
-					} else {
-						log.Fatal("recv END_STREAM from HALF_CLOSED_REMOTE")
-					}
-				case stream.State == HALF_CLOSED_LOCAL:
-					if context == RECV {
-						stream.changeState(CLOSED)
-					} else {
-						log.Fatal("send END_STREAM from HALF_CLOSED_LOCAL")
-					}
-				default:
-					log.Printf("END_STREAM at %v", stream.State)
-				}
-			}
-		default:
-			log.Printf("HEADERS at %v", stream.State)
-		}
-	case types == RstStreamFrameType:
-		switch {
-		case stream.State == OPEN:
-			stream.changeState(CLOSED)
-		case stream.State == RESERVED_LOCAL:
-			stream.changeState(CLOSED)
-		case stream.State == RESERVED_REMOTE:
-			stream.changeState(CLOSED)
-		case stream.State == HALF_CLOSED_LOCAL:
-			stream.changeState(CLOSED)
-		case stream.State == HALF_CLOSED_REMOTE:
-			stream.changeState(CLOSED)
-		default:
-			log.Printf("protocol error?  RST at %v", stream.State)
-		}
-	case types == PushPromiseFrameType:
-		// TODO: implement me
+	if types == SettingsFrameType {
+		return
 	}
+
+	switch stream.State {
+	case IDLE:
+		// H
+		if types == HeadersFrameType {
+			stream.State = OPEN
+			return
+		}
+
+		// PP
+		if types == PushPromiseFrameType {
+			if context == RECV {
+				stream.State = RESERVED_REMOTE
+			} else {
+				stream.State = RESERVED_LOCAL
+			}
+			return
+		}
+	case OPEN:
+		// ES
+		if flags == END_STREAM {
+			if context == RECV {
+				stream.State = HALF_CLOSED_REMOTE
+			} else {
+				stream.State = HALF_CLOSED_LOCAL
+			}
+			return
+		}
+
+		// R
+		if types == RstStreamFrameType {
+			stream.State = CLOSED
+			return
+		}
+	case RESERVED_LOCAL:
+		// H
+		if types == HeadersFrameType {
+			stream.State = HALF_CLOSED_REMOTE
+			return
+		}
+
+		// R
+		if types == RstStreamFrameType {
+			stream.State = CLOSED
+			return
+		}
+	case RESERVED_REMOTE:
+		// H
+		if types == HeadersFrameType {
+			stream.State = HALF_CLOSED_LOCAL
+			return
+		}
+
+		// R
+		if types == RstStreamFrameType {
+			stream.State = CLOSED
+			return
+		}
+	case HALF_CLOSED_LOCAL:
+		// same as half closed remote
+		fallthrough
+	case HALF_CLOSED_REMOTE:
+		// ES
+		if flags == END_STREAM {
+			stream.State = CLOSED
+			return
+		}
+
+		// R
+		if types == RstStreamFrameType {
+			stream.State = CLOSED
+			return
+		}
+	}
+
+	return fmt.Errorf("invalid frame type %v at %v state", types, state)
 }
 
 func (stream *Stream) changeState(state State) {
