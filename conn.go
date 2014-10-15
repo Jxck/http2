@@ -72,10 +72,11 @@ func (conn *Conn) ReadLoop() {
 		stream.ChangeState(frame, RECV)
 		stream.ReadChan <- frame
 
-		if frame.Header().Type == GoAwayFrameType {
-			Debug("stop conn.ReadLoop() by GOAWAY")
-			break
-		}
+		// TODO: support GOAWAY
+		// if frame.Header().Type == GoAwayFrameType {
+		// 	Debug("stop conn.ReadLoop() by GOAWAY")
+		// 	break
+		// }
 	}
 }
 

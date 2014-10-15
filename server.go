@@ -58,6 +58,9 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Info("return TLSNextProto means close connection")
 }
 
+// handler を受け取って、将来 stream が渡されたら
+// その Bucket につめられた Headers/Data フレームから
+// req/res を作って handler を実行する関数を生成
 func HandlerCallBack(handler http.Handler) CallBack {
 	return func(stream *Stream) {
 		headerFrame := stream.Bucket.Headers[0]
@@ -95,13 +98,13 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		Notice("%s", util.Indent(util.RequestString(req)))
 
-		// Handle HTTP
+		// Handle HTTP using handler
 		res := NewResponseWriter()
 		handler.ServeHTTP(res, req)
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
-		// Send HEADERS
+		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
 		headerBlock := stream.HpackContext.Encode(*headerList)
 
@@ -110,7 +113,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		stream.Write(headersFrame)
 
-		// Send DATA
+		// Send response body as DATA Frame
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
 		length := len(data)
