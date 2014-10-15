@@ -44,24 +44,20 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 	return stream
 }
 
-func (conn *Conn) ReadFrame() (frame Frame, err error) {
-	frame, err = ReadFrame(conn.RW)
-	if frame != nil {
-		Notice("%v %v", Green("recv"), util.Indent(frame.String()))
-	}
-	return frame, err
-}
-
 func (conn *Conn) ReadLoop() {
 	Debug("start conn.ReadLoop()")
 	for {
-		frame, err := conn.ReadFrame()
+		frame, err := ReadFrame(conn.RW)
 		if err != nil {
 			if err == io.EOF {
 				Error("%v", err)
 				break
 			}
 		}
+		if frame != nil {
+			Notice("%v %v", Green("recv"), util.Indent(frame.String()))
+		}
+
 		streamId := frame.Header().StreamId
 		stream, ok := conn.Streams[streamId]
 		if !ok {
@@ -80,16 +76,12 @@ func (conn *Conn) ReadLoop() {
 	}
 }
 
-func (conn *Conn) WriteFrame(frame Frame) (err error) {
-	Notice("%v %v", Red("send"), util.Indent(frame.String()))
-	return frame.Write(conn.RW)
-}
-
 func (conn *Conn) WriteLoop() (err error) {
 	Debug("start conn.WriteLoop()")
 	for frame := range conn.WriteChan {
-		Debug("WriteLoop() %T", frame)
-		err = conn.WriteFrame(frame)
+		Notice("%v %v", Red("send"), util.Indent(frame.String()))
+
+		err = frame.Write(conn.RW)
 		if err != nil {
 			Error("%v", err)
 			return err
@@ -98,17 +90,13 @@ func (conn *Conn) WriteLoop() (err error) {
 	return
 }
 
-func (conn *Conn) WriteString(str string) (err error) {
-	_, err = conn.RW.Write([]byte(str))
+func (conn *Conn) WriteMagic() (err error) {
+	_, err = conn.RW.Write([]byte(CONNECTION_PREFACE))
 	if err != nil {
 		return err
 	}
-	Info("%v %q", Red("send"), str)
+	Info("%v %q", Red("send"), CONNECTION_PREFACE)
 	return
-}
-
-func (conn *Conn) WriteMagic() error {
-	return conn.WriteString(CONNECTION_PREFACE)
 }
 
 func (conn *Conn) ReadMagic() (err error) {

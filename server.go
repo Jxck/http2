@@ -24,7 +24,7 @@ var TLSNextProtoHandler = func(server *http.Server, conn *tls.Conn, handler http
 
 func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	Info("Handle TLS Connection")
-	// defer conn.Close() TODO: not Close() only retun function
+	// do not call "defer conn.Close()" only retun function
 
 	h2conn := NewConn(conn) // convert net.Conn to http2.Conn
 
