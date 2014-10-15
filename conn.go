@@ -69,6 +69,7 @@ func (conn *Conn) ReadLoop() {
 			stream = conn.NewStream(streamId)
 			conn.Streams[streamId] = stream
 		}
+		stream.ChangeState(frame, RECV)
 		stream.ReadChan <- frame
 
 		if frame.Header().Type == GoAwayFrameType {
