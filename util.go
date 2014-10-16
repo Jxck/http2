@@ -80,8 +80,8 @@ func (u Util) UpgradeRequest(req *http.Request, url *URL) *http.Request {
 
 func (u Util) RequestString(req *http.Request) string {
 	str := fmt.Sprintf("%v %v %v", req.Method, req.URL, req.Proto)
-	for k, v := range req.Header {
-		str += fmt.Sprintf("\n%v: %v", k, v[0])
+	for name, value := range req.Header {
+		str += fmt.Sprintf("\n%s: %s", name, strings.Join(value, ","))
 	}
 	return str
 }

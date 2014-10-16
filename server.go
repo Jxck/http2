@@ -6,7 +6,6 @@ import (
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
-	"log"
 	"net"
 	"net/http"
 	neturl "net/url"
@@ -121,7 +120,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
-		log.Println("%#v", responseHeader)
+		Notice("%s", util.Indent(res))
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
