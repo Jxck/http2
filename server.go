@@ -121,10 +121,12 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
+		log.Println("%#v", responseHeader)
+
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
-		log.Println(headerList)
 		headerBlock := stream.HpackContext.Encode(*headerList)
+		Debug("%v", headerList)
 
 		headersFrame := NewHeadersFrame(END_HEADERS, stream.ID, nil, headerBlock, nil)
 		headersFrame.Headers = responseHeader

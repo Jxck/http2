@@ -86,21 +86,6 @@ func (u Util) RequestString(req *http.Request) string {
 	return str
 }
 
-func (u Util) ResponseString(res *http.Response) string {
-	str := fmt.Sprintf("%v %v", res.Proto, res.Status)
-	for k, v := range res.Header {
-		str += fmt.Sprintf("\n%v: %v", k, v[0])
-	}
-	return str
-}
-
-func (u Util) HeaderString(header http.Header) (str string) {
-	for k, v := range header {
-		str += fmt.Sprintf("%v: %v\n", k, v[0])
-	}
-	return str
-}
-
 func (u Util) Indent(v interface{}) string {
 	return "\t" + strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
 }

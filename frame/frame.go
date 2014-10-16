@@ -490,7 +490,19 @@ func (frame *HeadersFrame) String() string {
 
 	// TODO: ; First response header
 
+	// print pseudo headers first
+	pseudo := []string{":status", ":method", ":scheme", ":authority", ":path"}
+	for _, name := range pseudo {
+		value := frame.Headers.Get(name)
+		if value != "" {
+			str += fmt.Sprintf("\n%s: %s", Blue(name), value)
+		}
+	}
+
 	for name, value := range frame.Headers {
+		if strings.HasPrefix(name, ":") {
+			continue
+		}
 		str += fmt.Sprintf("\n%s: %s", Blue(name), strings.Join(value, ","))
 	}
 
