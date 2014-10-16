@@ -63,19 +63,6 @@ func (u Util) AddPrefix(header http.Header) http.Header {
 	return header
 }
 
-func (u Util) RemovePrefix(header http.Header) http.Header {
-	for key, values := range header {
-		name, ok := MustHeader[key]
-		if ok {
-			header.Del(key)
-			for _, value := range values {
-				header.Add(name, value)
-			}
-		}
-	}
-	return header
-}
-
 func (u Util) UpgradeRequest(req *http.Request, url *URL) *http.Request {
 	if req.ContentLength != 0 {
 		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
