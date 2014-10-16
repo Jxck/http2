@@ -74,7 +74,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 		Error("%v", err)
 		return nil, err
 	}
-	req = util.UpdateRequest(req, url)
+	req = util.UpgradeRequest(req, url)
 
 	// establish tcp connection and handshake
 	err = transport.Connect(url)

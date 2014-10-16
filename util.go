@@ -76,7 +76,7 @@ func (u Util) RemovePrefix(header http.Header) http.Header {
 	return header
 }
 
-func (u Util) UpdateRequest(req *http.Request, url *URL) *http.Request {
+func (u Util) UpgradeRequest(req *http.Request, url *URL) *http.Request {
 	if req.ContentLength != 0 {
 		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
 	}
@@ -107,6 +107,13 @@ func (u Util) ResponseString(res *http.Response) string {
 	return str
 }
 
+func (u Util) HeaderString(header http.Header) (str string) {
+	for k, v := range header {
+		str += fmt.Sprintf("%v: %v\n", k, v[0])
+	}
+	return str
+}
+
 func (u Util) Indent(v interface{}) string {
-	return strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
+	return "\t" + strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
 }
