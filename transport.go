@@ -13,15 +13,14 @@ import (
 // Transport implements http.RoundTriper
 // with RoundTrip(request) response
 type Transport struct {
-	URL      *URL
 	Conn     *Conn
 	CertPath string
 	KeyPath  string
 }
 
 // connect tcp connection with host
-func (transport *Transport) Connect() (err error) {
-	address := transport.URL.Host + ":" + transport.URL.Port
+func (transport *Transport) Connect(url *URL) (err error) {
+	address := url.Host + ":" + url.Port
 
 	// loading key pair
 	cert, err := tls.LoadX509KeyPair(transport.CertPath, transport.KeyPath)
@@ -70,14 +69,15 @@ func (transport *Transport) Connect() (err error) {
 
 // http.RoundTriper implementation
 func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
-	transport.URL, err = NewURL(req.URL.String()) // err
+	url, err := NewURL(req.URL.String()) // err
 	if err != nil {
 		Error("%v", err)
 		return nil, err
 	}
+	req = util.UpdateRequest(req, url)
 
 	// establish tcp connection and handshake
-	err = transport.Connect()
+	err = transport.Connect(url)
 	if err != nil {
 		Error("%v", err)
 		return nil, err
@@ -88,7 +88,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	// create stream
 	stream := transport.Conn.NewStream(<-NextClientStreamId)
-	req = util.UpdateRequest(req, transport.URL)
 
 	// send request header via HEADERS Frame
 	var flags Flag = END_STREAM + END_HEADERS
