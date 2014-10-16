@@ -118,8 +118,10 @@ func (stream *Stream) WindowUpdate(length uint32) {
 	if total < WINDOW_UPDATE_THRESHOLD {
 		// この値を下回ったら WindowUpdate を送る
 		update := stream.WindowSize - total
-		stream.Write(NewWindowUpdateFrame(update, stream.ID))
-		stream.Write(NewWindowUpdateFrame(update, 0))
+		stream.Write(NewWindowUpdateFrame(stream.ID, update))
+		stream.Write(NewWindowUpdateFrame(0, update))
+	} else {
+		stream.WindowSize = total
 	}
 }
 

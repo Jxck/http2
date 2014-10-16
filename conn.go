@@ -86,6 +86,7 @@ func (conn *Conn) WriteLoop() (err error) {
 	for frame := range conn.WriteChan {
 		Notice("%v %v", Red("send"), util.Indent(frame.String()))
 
+		// TODO: ここで WindowSize を見る
 		err = frame.Write(conn.RW)
 		if err != nil {
 			Error("%v", err)
