@@ -6,6 +6,7 @@ import (
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
+	"log"
 	"net"
 	"net/http"
 	neturl "net/url"
@@ -71,12 +72,23 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		headerFrame := stream.Bucket.Headers[0]
 		header := headerFrame.Headers
 
+		authority := header.Get(":authority")
+		method := header.Get(":method")
+		path := header.Get(":path")
+		scheme := header.Get(":scheme")
+
+		header.Del(":authority")
+		header.Del(":method")
+		header.Del(":path")
+		header.Del(":scheme")
+
 		url := &neturl.URL{
-			Scheme: header.Get("scheme"),
-			Host:   header.Get("authority"),
-			Path:   header.Get("path"),
+			Scheme: scheme,
+			Host:   authority,
+			Path:   path,
 		}
 
+		// request body がある場合
 		body := new(Body)
 		if len(stream.Bucket.Data) != 0 {
 			for _, data := range stream.Bucket.Data {
@@ -88,17 +100,17 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		}
 
 		req := &http.Request{
-			Method:        header.Get("method"),
-			URL:           url,
-			Proto:         "HTTP/1.1",
-			ProtoMajor:    1,
-			ProtoMinor:    1,
-			Header:        header,
-			Body:          body,
-			ContentLength: 0,
-			// TransferEncoding []string
-			Close: false,
-			Host:  header.Get("Authority"),
+			Method:           method,
+			URL:              url,
+			Proto:            "HTTP/1.1",
+			ProtoMajor:       1,
+			ProtoMinor:       1,
+			Header:           header,
+			Body:             body,
+			ContentLength:    int64(body.Buffer.Len()),
+			TransferEncoding: []string{}, // TODO:
+			Close:            false,
+			Host:             authority,
 		}
 
 		Notice("%s", util.Indent(util.RequestString(req)))
@@ -111,6 +123,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
+		log.Println(headerList)
 		headerBlock := stream.HpackContext.Encode(*headerList)
 
 		headersFrame := NewHeadersFrame(END_HEADERS, stream.ID, nil, headerBlock, nil)

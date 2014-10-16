@@ -73,7 +73,7 @@ func (stream *Stream) Read(f Frame) {
 		}
 	case *HeadersFrame:
 		// Decode Headers
-		header := util.RemovePrefix(stream.DecodeHeader(frame.HeaderBlock))
+		header := stream.DecodeHeader(frame.HeaderBlock)
 		frame.Headers = header
 
 		stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
