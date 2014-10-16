@@ -95,9 +95,6 @@ func (stream *Stream) Read(f Frame) {
 		Debug("response to PING")
 		ping := NewPingFrame(ACK, stream.ID, frame.OpaqueData)
 		stream.Write(ping)
-	case *GoAwayFrame:
-		Debug("close stream by GOAWAY")
-		stream.Close()
 	}
 }
 
