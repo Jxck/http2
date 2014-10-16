@@ -64,17 +64,11 @@ func (u Util) AddPrefix(header http.Header) http.Header {
 }
 
 func (u Util) UpgradeRequest(req *http.Request, url *URL) *http.Request {
-	if req.ContentLength != 0 {
-		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
-	}
-
 	// TODO: manage header duplicat
 	req.Header.Add(":authority", url.Host)
 	req.Header.Add(":method", req.Method)
 	req.Header.Add(":path", url.Path)
 	req.Header.Add(":scheme", url.Scheme)
-	req.Header.Add("accept", "*/*")
-	req.Header.Add("x-http2-version", VERSION)
 	return req
 }
 
@@ -86,6 +80,14 @@ func (u Util) RequestString(req *http.Request) string {
 	return str
 }
 
+func (u Util) ResponseString(res *http.Response) string {
+	str := fmt.Sprintf("%v %v", res.Proto, res.Status)
+	for name, value := range res.Header {
+		str += fmt.Sprintf("\n%s: %s", name, strings.Join(value, ","))
+	}
+	return str
+}
+
 func (u Util) Indent(v interface{}) string {
-	return "\t" + strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
+	return strings.Replace(fmt.Sprintf("%v", v), "\n", "\n\t\t\t\t", -1)
 }

@@ -3,6 +3,7 @@ package http2
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	. "github.com/Jxck/color"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
@@ -69,6 +70,15 @@ func (transport *Transport) Connect(url *URL) (err error) {
 
 // http.RoundTriper implementation
 func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, err error) {
+	// add headers
+	req.Header.Add("accept", "*/*")
+	req.Header.Add("x-http2-version", VERSION)
+	if req.ContentLength != 0 {
+		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
+	}
+
+	Notice("%s", White(util.Indent(util.RequestString(req))))
+
 	url, err := NewURL(req.URL.String()) // err
 	if err != nil {
 		Error("%v", err)
@@ -99,6 +109,8 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	res = <-response
 
+	Notice("%s", White(util.Indent(util.ResponseString(res))))
+
 	// TODO: send GOAWAY
 	// stream.Write(NewGoAwayFrame(0, stream.ID, NO_ERROR, nil))
 
@@ -119,9 +131,10 @@ func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 
 		headers := headerFrame.Headers
 
-		status, _ := strconv.Atoi(headers.Get("status")) // err
+		status, _ := strconv.Atoi(headers.Get(":status")) // err
+		headers.Del(":status")
 		res := &http.Response{
-			Status:        http.StatusText(status),
+			Status:        fmt.Sprintf("%d %s", status, http.StatusText(status)),
 			StatusCode:    status,
 			Proto:         "HTTP/1.1",
 			ProtoMajor:    1,

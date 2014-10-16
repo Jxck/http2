@@ -112,7 +112,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			Host:             authority,
 		}
 
-		Notice("%s", util.Indent(util.RequestString(req)))
+		Notice("%s", White(util.Indent(util.RequestString(req))))
 
 		// Handle HTTP using handler
 		res := NewResponseWriter()
@@ -120,7 +120,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
-		Notice("%s", util.Indent(res))
+		Notice("%s", White(util.Indent(res)))
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
