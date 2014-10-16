@@ -117,3 +117,12 @@ func (conn *Conn) ReadMagic() (err error) {
 	Info("%v %q", Red("recv"), string(magic))
 	return
 }
+
+func (conn *Conn) Close() {
+	Info("close all conn.Streams")
+	for _, stream := range conn.Streams {
+		stream.Close()
+	}
+	Info("close conn.WriteChan")
+	close(conn.WriteChan)
+}

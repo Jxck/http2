@@ -55,6 +55,10 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	// 送られてきた frame を読み出すループを回す
 	// ここで block する。
 	Conn.ReadLoop()
+
+	// Streams と WriteChan を close
+	Conn.Close()
+
 	Info("return TLSNextProto means close connection")
 	return
 }

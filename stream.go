@@ -296,8 +296,8 @@ func (stream *Stream) WindowUpdate(length uint32) {
 }
 
 func (stream *Stream) Close() {
+	// write chan は close しない
 	close(stream.ReadChan)
-	close(stream.WriteChan)
 }
 
 // Encode Header using HPACK
