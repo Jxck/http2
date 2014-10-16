@@ -12,7 +12,7 @@ import (
 type Conn struct {
 	RW           io.ReadWriter
 	HpackContext *hpack.Context
-	LastStreamId uint32
+	LastStreamID uint32
 	WindowSize   uint32
 	Streams      map[uint32]*Stream
 	WriteChan    chan Frame
@@ -31,7 +31,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 }
 
 func (conn *Conn) NewStream(streamid uint32) *Stream {
-	conn.LastStreamId = streamid // TODO: fixme
+	conn.LastStreamID = streamid // TODO: fixme
 	stream := NewStream(
 		streamid,
 		conn.WriteChan,
@@ -39,8 +39,8 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 		conn.HpackContext,
 		conn.CallBack,
 	)
-	conn.Streams[stream.Id] = stream
-	Debug("adding new stream (id=%d) total (%d)", stream.Id, len(conn.Streams))
+	conn.Streams[stream.ID] = stream
+	Debug("adding new stream (id=%d) total (%d)", stream.ID, len(conn.Streams))
 	return stream
 }
 
@@ -58,12 +58,12 @@ func (conn *Conn) ReadLoop() {
 			Notice("%v %v", Green("recv"), util.Indent(frame.String()))
 		}
 
-		streamId := frame.Header().StreamId
-		stream, ok := conn.Streams[streamId]
+		streamID := frame.Header().StreamID
+		stream, ok := conn.Streams[streamID]
 		if !ok {
-			// create stream with streamId
-			stream = conn.NewStream(streamId)
-			conn.Streams[streamId] = stream
+			// create stream with streamID
+			stream = conn.NewStream(streamID)
+			conn.Streams[streamID] = stream
 		}
 
 		err = stream.ChangeState(frame, RECV)

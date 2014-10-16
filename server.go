@@ -113,7 +113,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		headerList := hpack.ToHeaderList(responseHeader)
 		headerBlock := stream.HpackContext.Encode(*headerList)
 
-		headersFrame := NewHeadersFrame(END_HEADERS, stream.Id, nil, headerBlock, nil)
+		headersFrame := NewHeadersFrame(END_HEADERS, stream.ID, nil, headerBlock, nil)
 		headersFrame.Headers = responseHeader
 
 		stream.Write(headersFrame)
@@ -127,16 +127,16 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			start := i * window
 			end := start + window
 			if end > length {
-				dataFrame := NewDataFrame(UNSET, stream.Id, data[start:], nil)
+				dataFrame := NewDataFrame(UNSET, stream.ID, data[start:], nil)
 				stream.Write(dataFrame)
 				break
 			}
-			dataFrame := NewDataFrame(UNSET, stream.Id, data[start:end], nil)
+			dataFrame := NewDataFrame(UNSET, stream.ID, data[start:end], nil)
 			stream.Write(dataFrame)
 		}
 
 		// End Stream in empty DATA Frame
-		endDataFrame := NewDataFrame(END_STREAM, stream.Id, nil, nil)
+		endDataFrame := NewDataFrame(END_STREAM, stream.ID, nil, nil)
 		stream.Write(endDataFrame)
 	}
 }

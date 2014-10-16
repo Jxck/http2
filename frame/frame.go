@@ -129,7 +129,7 @@ type FrameHeader struct {
 	Length   uint32 // 24bit
 	Type     FrameType
 	Flags    Flag
-	StreamId uint32 // R+31bit
+	StreamID uint32 // R+31bit
 }
 
 func NewFrameHeader(length uint32, types FrameType, flags Flag, streamid uint32) *FrameHeader {
@@ -137,7 +137,7 @@ func NewFrameHeader(length uint32, types FrameType, flags Flag, streamid uint32)
 		Length:   length,
 		Type:     types,
 		Flags:    flags,
-		StreamId: streamid,
+		StreamID: streamid,
 	}
 	return fh
 }
@@ -159,10 +159,10 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	// read 8 bit for Flags
 	MustRead(r, &fh.Flags)
 
-	// read 32 bit for StreamId
+	// read 32 bit for StreamID
 	var last uint32
 	MustRead(r, &last)
-	fh.StreamId = last & 0x7FFFFFFF
+	fh.StreamID = last & 0x7FFFFFFF
 
 	return err
 }
@@ -180,7 +180,7 @@ func (fh *FrameHeader) Write(w io.Writer) (err error) {
 	MustWrite(w, &fh.Flags)
 
 	// write stream id
-	MustWrite(w, &fh.StreamId)
+	MustWrite(w, &fh.StreamID)
 
 	return err
 }
@@ -188,7 +188,7 @@ func (fh *FrameHeader) Write(w io.Writer) (err error) {
 func (fh *FrameHeader) String() string {
 	str := fmt.Sprintf(
 		" frame <length=%v, flags=%#x, stream_id=%v>",
-		fh.Length, fh.Flags, fh.StreamId,
+		fh.Length, fh.Flags, fh.StreamID,
 	)
 	return str
 }
@@ -211,7 +211,7 @@ type DataFrame struct {
 	Padding   []byte
 }
 
-func NewDataFrame(flags Flag, streamId uint32, data []byte, padding []byte) *DataFrame {
+func NewDataFrame(flags Flag, streamID uint32, data []byte, padding []byte) *DataFrame {
 	var padded bool = flags&PADDED == PADDED
 
 	length := len(data)
@@ -222,7 +222,7 @@ func NewDataFrame(flags Flag, streamId uint32, data []byte, padding []byte) *Dat
 		padding = nil
 	}
 
-	fh := NewFrameHeader(uint32(length), DataFrameType, flags, streamId)
+	fh := NewFrameHeader(uint32(length), DataFrameType, flags, streamID)
 
 	dataFrame := &DataFrame{
 		FrameHeader: fh,
@@ -348,7 +348,7 @@ type DependencyTree struct {
 	Weight           uint8
 }
 
-func NewHeadersFrame(flags Flag, streamId uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
+func NewHeadersFrame(flags Flag, streamID uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
 	var padded bool = flags&PADDED == PADDED
 	var priority bool = flags&PRIORITY == PRIORITY
 
@@ -361,7 +361,7 @@ func NewHeadersFrame(flags Flag, streamId uint32, dependencyTree *DependencyTree
 		length = length + 5
 	}
 
-	fh := NewFrameHeader(uint32(length), HeadersFrameType, flags, streamId)
+	fh := NewFrameHeader(uint32(length), HeadersFrameType, flags, streamID)
 
 	headersFrame := &HeadersFrame{
 		FrameHeader:    fh,
@@ -513,10 +513,10 @@ type PriorityFrame struct {
 	Weight           uint8
 }
 
-func NewPriorityFrame(streamId uint32, exclusive bool, streamDependency uint32, weight uint8) *PriorityFrame {
+func NewPriorityFrame(streamID uint32, exclusive bool, streamDependency uint32, weight uint8) *PriorityFrame {
 	var length uint32 = 5
 
-	fh := NewFrameHeader(length, PriorityFrameType, UNSET, streamId)
+	fh := NewFrameHeader(length, PriorityFrameType, UNSET, streamID)
 	frame := &PriorityFrame{
 		FrameHeader:      fh,
 		Exclusive:        exclusive,
@@ -583,10 +583,10 @@ type RstStreamFrame struct {
 	ErrorCode ErrorCode
 }
 
-func NewRstStreamFrame(streamId uint32, errorCode ErrorCode) *RstStreamFrame {
+func NewRstStreamFrame(streamID uint32, errorCode ErrorCode) *RstStreamFrame {
 	var length uint32 = 4
 
-	fh := NewFrameHeader(length, RstStreamFrameType, UNSET, streamId)
+	fh := NewFrameHeader(length, RstStreamFrameType, UNSET, streamID)
 	frame := &RstStreamFrame{
 		FrameHeader: fh,
 		ErrorCode:   errorCode,
@@ -635,10 +635,10 @@ func (frame *RstStreamFrame) String() string {
 // +---------------------------------------------------------------+
 const DEFAULT_WINDOW_SIZE uint32 = 65535
 
-type SettingsId uint16
+type SettingsID uint16
 
 const (
-	SETTINGS_HEADER_TABLE_SIZE      SettingsId = 1 // 4096
+	SETTINGS_HEADER_TABLE_SIZE      SettingsID = 1 // 4096
 	SETTINGS_ENABLE_PUSH                       = 2 // 1
 	SETTINGS_MAX_CONCURRENT_STREAMS            = 3 // (infinite)
 	SETTINGS_INITIAL_WINDOW_SIZE               = 4 // 65535
@@ -646,8 +646,8 @@ const (
 	SETTINGS_MAX_HEADER_LIST_SIZE              = 6 // (infinite)
 )
 
-func (s SettingsId) String() string {
-	m := map[SettingsId]string{
+func (s SettingsID) String() string {
+	m := map[SettingsID]string{
 		1: "SETTINGS_HEADER_TABLE_SIZE",
 		2: "SETTINGS_ENABLE_PUSH",
 		3: "SETTINGS_MAX_CONCURRENT_STREAMS",
@@ -659,7 +659,7 @@ func (s SettingsId) String() string {
 }
 
 type Setting struct {
-	SettingsId SettingsId
+	SettingsID SettingsID
 	Value      uint32
 }
 
@@ -668,9 +668,9 @@ type SettingsFrame struct {
 	Settings []Setting
 }
 
-func NewSettingsFrame(flags Flag, streamId uint32, settings []Setting) *SettingsFrame {
+func NewSettingsFrame(flags Flag, streamID uint32, settings []Setting) *SettingsFrame {
 	var length uint32 = uint32(6 * len(settings))
-	fh := NewFrameHeader(length, SettingsFrameType, flags, streamId)
+	fh := NewFrameHeader(length, SettingsFrameType, flags, streamID)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
 		Settings:    settings,
@@ -686,7 +686,7 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 	for niv := frame.Length / 6; niv > 0; niv-- {
 		s := Setting{}
 
-		MustRead(r, &s.SettingsId)
+		MustRead(r, &s.SettingsID)
 		MustRead(r, &s.Value)
 		frame.Settings = append(frame.Settings, s)
 	}
@@ -700,7 +700,7 @@ func (frame *SettingsFrame) Write(w io.Writer) (err error) {
 
 	frame.FrameHeader.Write(w)
 	for _, setting := range frame.Settings {
-		MustWrite(w, &setting.SettingsId)
+		MustWrite(w, &setting.SettingsID)
 		MustWrite(w, &setting.Value)
 	}
 	return err
@@ -718,7 +718,7 @@ func (frame *SettingsFrame) String() string {
 	}
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
 	for _, s := range frame.Settings {
-		str += fmt.Sprintf("\n[%v:%v]", s.SettingsId.String(), s.Value)
+		str += fmt.Sprintf("\n[%v:%v]", s.SettingsID.String(), s.Value)
 	}
 	return str
 }
@@ -739,12 +739,12 @@ func (frame *SettingsFrame) String() string {
 type PushPromiseFrame struct {
 	*FrameHeader
 	PadLength           uint8
-	PromisedStreamId    uint32
+	PromisedStreamID    uint32
 	HeaderBlockFragment []byte
 	Padding             []byte
 }
 
-func NewPushPromiseFrame(flags Flag, streamId, promisedStreamId uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
+func NewPushPromiseFrame(flags Flag, streamID, promisedStreamID uint32, headerBlockFragment, padding []byte) *PushPromiseFrame {
 	var padded bool = flags&PADDED == PADDED
 	length := 4 + len(headerBlockFragment)
 
@@ -752,11 +752,11 @@ func NewPushPromiseFrame(flags Flag, streamId, promisedStreamId uint32, headerBl
 		length = length + len(padding) + 1
 	}
 
-	fh := NewFrameHeader(uint32(length), PushPromiseFrameType, flags, streamId)
+	fh := NewFrameHeader(uint32(length), PushPromiseFrameType, flags, streamID)
 	frame := &PushPromiseFrame{
 		FrameHeader:         fh,
 		PadLength:           uint8(len(padding)),
-		PromisedStreamId:    promisedStreamId,
+		PromisedStreamID:    promisedStreamID,
 		HeaderBlockFragment: headerBlockFragment,
 		Padding:             padding,
 	}
@@ -778,7 +778,7 @@ func (frame *PushPromiseFrame) Read(r io.Reader) (err error) {
 	}
 
 	// read promised stream id
-	MustRead(r, &frame.PromisedStreamId)
+	MustRead(r, &frame.PromisedStreamID)
 	frameLen = frameLen - 4 // remove promised stream id length
 
 	// read frame length bit for data
@@ -815,7 +815,7 @@ func (frame *PushPromiseFrame) Write(w io.Writer) (err error) {
 	}
 
 	// write Promised Stream ID
-	MustWrite(w, &frame.PromisedStreamId)
+	MustWrite(w, &frame.PromisedStreamID)
 
 	// write Header Block Fragmetn
 	MustWrite(w, &frame.HeaderBlockFragment)
@@ -835,7 +835,7 @@ func (frame *PushPromiseFrame) String() string {
 	str := Cyan("PUSH_PROMISE")
 	str += frame.FrameHeader.String()
 
-	str += fmt.Sprintf("\npromised streamid=%x", frame.PromisedStreamId)
+	str += fmt.Sprintf("\npromised streamid=%x", frame.PromisedStreamID)
 	// Print first 8 byte of HeaderBlockFragment or all
 	window := len(frame.HeaderBlockFragment)
 	if window == 0 {
@@ -863,9 +863,9 @@ type PingFrame struct {
 	OpaqueData []byte
 }
 
-func NewPingFrame(flags Flag, streamId uint32, opaqueData []byte) *PingFrame {
+func NewPingFrame(flags Flag, streamID uint32, opaqueData []byte) *PingFrame {
 	var length uint32 = 8
-	fh := NewFrameHeader(length, PingFrameType, flags, streamId)
+	fh := NewFrameHeader(length, PingFrameType, flags, streamID)
 	frame := &PingFrame{
 		FrameHeader: fh,
 		OpaqueData:  opaqueData,
@@ -926,13 +926,13 @@ type GoAwayFrame struct {
 	AdditionalDebugData []byte
 }
 
-func NewGoAwayFrame(streamId uint32, lastStreamId uint32, errorCode ErrorCode, additionalDebugData []byte) *GoAwayFrame {
+func NewGoAwayFrame(streamID uint32, lastStreamID uint32, errorCode ErrorCode, additionalDebugData []byte) *GoAwayFrame {
 	var length = 8 + len(additionalDebugData)
-	fh := NewFrameHeader(uint32(length), GoAwayFrameType, UNSET, streamId)
+	fh := NewFrameHeader(uint32(length), GoAwayFrameType, UNSET, streamID)
 
 	frame := &GoAwayFrame{
 		FrameHeader:         fh,
-		LastStreamID:        lastStreamId,
+		LastStreamID:        lastStreamID,
 		ErrorCode:           errorCode,
 		AdditionalDebugData: additionalDebugData,
 	}
@@ -992,10 +992,10 @@ type WindowUpdateFrame struct {
 	WindowSizeIncrement uint32
 }
 
-func NewWindowUpdateFrame(streamId, incrementSize uint32) *WindowUpdateFrame {
+func NewWindowUpdateFrame(streamID, incrementSize uint32) *WindowUpdateFrame {
 	var length uint32 = 4
 
-	fh := NewFrameHeader(length, WindowUpdateFrameType, UNSET, streamId)
+	fh := NewFrameHeader(length, WindowUpdateFrameType, UNSET, streamID)
 	frame := &WindowUpdateFrame{
 		FrameHeader:         fh,
 		WindowSizeIncrement: incrementSize,
@@ -1050,10 +1050,10 @@ type ContinuationFrame struct {
 	// TODO: support headers encode/decode
 }
 
-func NewContinuationFrame(flags Flag, streamId uint32, headerBlockFragment []byte) *ContinuationFrame {
+func NewContinuationFrame(flags Flag, streamID uint32, headerBlockFragment []byte) *ContinuationFrame {
 	length := len(headerBlockFragment)
 
-	fh := NewFrameHeader(uint32(length), ContinuationFrameType, flags, streamId)
+	fh := NewFrameHeader(uint32(length), ContinuationFrameType, flags, streamID)
 	frame := &ContinuationFrame{
 		FrameHeader:         fh,
 		HeaderBlockFragment: headerBlockFragment,

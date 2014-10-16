@@ -87,20 +87,20 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 	transport.Conn.CallBack = callback
 
 	// create stream
-	stream := transport.Conn.NewStream(<-NextClientStreamId)
+	stream := transport.Conn.NewStream(<-NextClientStreamID)
 
 	// send request header via HEADERS Frame
 	var flags Flag = END_STREAM + END_HEADERS
 	headerBlock := stream.EncodeHeader(req.Header)
 	Trace("encoded header block %v", headerBlock)
-	frame := NewHeadersFrame(flags, stream.Id, nil, headerBlock, nil)
+	frame := NewHeadersFrame(flags, stream.ID, nil, headerBlock, nil)
 	frame.Headers = req.Header
 	stream.Write(frame) // TODO: err
 
 	res = <-response
 
 	// TODO: send GOAWAY
-	// stream.Write(NewGoAwayFrame(0, stream.Id, NO_ERROR, nil))
+	// stream.Write(NewGoAwayFrame(0, stream.ID, NO_ERROR, nil))
 
 	return res, nil
 }

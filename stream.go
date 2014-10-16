@@ -1,8 +1,6 @@
 package http2
 
 import (
-	"fmt"
-	. "github.com/Jxck/color"
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
@@ -15,7 +13,7 @@ func init() {
 }
 
 type Stream struct {
-	Id           uint32
+	ID           uint32
 	State        State
 	WindowSize   uint32
 	ReadChan     chan Frame
@@ -41,7 +39,7 @@ type CallBack func(stream *Stream)
 
 func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, callback CallBack) *Stream {
 	stream := &Stream{
-		Id:           id,
+		ID:           id,
 		State:        IDLE,
 		WindowSize:   windowSize,
 		ReadChan:     make(chan Frame),
@@ -55,7 +53,7 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 }
 
 func (stream *Stream) Read(f Frame) {
-	Debug("stream (%d) recv (%v)", stream.Id, f.Header().Type)
+	Debug("stream (%d) recv (%v)", stream.ID, f.Header().Type)
 	stream.WindowUpdate(f.Header().Length)
 
 	switch frame := f.(type) {
@@ -67,7 +65,7 @@ func (stream *Stream) Read(f Frame) {
 			// TODO: Apply Settings
 
 			// send ACK
-			ack := NewSettingsFrame(ACK, stream.Id, NilSettings)
+			ack := NewSettingsFrame(ACK, stream.ID, NilSettings)
 			stream.Write(ack)
 		} else if settingsFrame.Flags == ACK {
 			// receive ACK
@@ -95,7 +93,7 @@ func (stream *Stream) Read(f Frame) {
 		stream.Close()
 	case *PingFrame:
 		Debug("response to PING")
-		ping := NewPingFrame(ACK, stream.Id, frame.OpaqueData)
+		ping := NewPingFrame(ACK, stream.ID, frame.OpaqueData)
 		stream.Write(ping)
 	case *GoAwayFrame:
 		Debug("close stream by GOAWAY")
@@ -104,11 +102,11 @@ func (stream *Stream) Read(f Frame) {
 }
 
 func (stream *Stream) ReadLoop() {
-	Debug("start stream (%d) ReadLoop()", stream.Id)
+	Debug("start stream (%d) ReadLoop()", stream.ID)
 	for f := range stream.ReadChan {
 		stream.Read(f)
 	}
-	Debug("stop stream (%d) ReadLoop()", stream.Id)
+	Debug("stop stream (%d) ReadLoop()", stream.ID)
 }
 
 func (stream *Stream) Write(frame Frame) {
@@ -123,7 +121,7 @@ func (stream *Stream) WindowUpdate(length uint32) {
 	if total < WINDOW_UPDATE_THRESHOLD {
 		// この値を下回ったら WindowUpdate を送る
 		update := stream.WindowSize - total
-		stream.Write(NewWindowUpdateFrame(update, stream.Id))
+		stream.Write(NewWindowUpdateFrame(update, stream.ID))
 		stream.Write(NewWindowUpdateFrame(update, 0))
 	}
 }

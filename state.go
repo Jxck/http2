@@ -1,6 +1,10 @@
 package http2
 
 import (
+	"fmt"
+	. "github.com/Jxck/color"
+	. "github.com/Jxck/http2/frame"
+	. "github.com/Jxck/logger"
 	"log"
 )
 
@@ -171,6 +175,6 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 }
 
 func (stream *Stream) changeState(state State) {
-	Info("change stream (%d) state (%s -> %s)", stream.Id, stream.State, Pink(state.String()))
+	Info("change stream (%d) state (%s -> %s)", stream.ID, stream.State, Pink(state.String()))
 	stream.State = state
 }
