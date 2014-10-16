@@ -50,19 +50,6 @@ func (u Util) NextID(id uint32) chan uint32 {
 	return idChan
 }
 
-func (u Util) AddPrefix(header http.Header) http.Header {
-	for key, values := range header {
-		name, ok := MustHeader[key]
-		if ok {
-			header.Del(key)
-			for _, value := range values {
-				header.Add(name, value)
-			}
-		}
-	}
-	return header
-}
-
 func (u Util) UpgradeRequest(req *http.Request, url *URL) *http.Request {
 	// TODO: manage header duplicat
 	req.Header.Add(":authority", url.Host)
