@@ -22,8 +22,8 @@ type Conn struct {
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
 		RW:           rw,
-		HpackContext: hpack.NewContext(hpack.DEFAULT_HEADER_TABLE_SIZE),
-		WindowSize:   DEFAULT_WINDOW_SIZE,
+		HpackContext: hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
+		WindowSize:   DEFAULT_INITIAL_WINDOW_SIZE,
 		Streams:      make(map[uint32]*Stream),
 		WriteChan:    make(chan Frame),
 	}
@@ -35,7 +35,7 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 	stream := NewStream(
 		streamid,
 		conn.WriteChan,
-		DEFAULT_WINDOW_SIZE,
+		DEFAULT_INITIAL_WINDOW_SIZE,
 		conn.HpackContext,
 		conn.CallBack,
 	)
