@@ -89,12 +89,18 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 	flags := header.Flags
 	state := stream.State
 
+	if types == SettingsFrameType ||
+		types == GoAwayFrameType {
+		// not a type for consider
+		return nil
+	}
+
 	if types != PushPromiseFrameType &&
 		types != HeadersFrameType &&
 		types != RstStreamFrameType &&
 		flags != END_STREAM {
 		// not a type/flag for consider
-		return
+		return nil
 	}
 
 	switch stream.State {
