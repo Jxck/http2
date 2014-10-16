@@ -80,10 +80,19 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 	return stream
 }
 
+type Context int
+
 const (
-	RECV = true
-	SEND = false
+	RECV Context = iota
+	SEND
 )
+
+func (c Context) String() string {
+	return []string{
+		"RECV",
+		"SEND",
+	}[int(c)]
+}
 
 //  Stream States
 //                        +--------+
@@ -115,15 +124,18 @@ const (
 //  PP: PUSH_PROMISE frame (with implied CONTINUATIONs)
 //  ES: END_STREAM flag
 //  R:  RST_STREAM frame
-func (stream *Stream) ChangeState(frame Frame, context bool) (err error) {
+func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 
 	header := frame.Header()
-	flags := header.Flags
 	types := header.Type
+	flags := header.Flags
 	state := stream.State
 
-	log.Println(state, frame, context)
-	if types == SettingsFrameType {
+	if types != PushPromiseFrameType &&
+		types != HeadersFrameType &&
+		types != RstStreamFrameType &&
+		flags != END_STREAM {
+		// not a type/flag for consider
 		return
 	}
 

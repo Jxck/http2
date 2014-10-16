@@ -65,7 +65,12 @@ func (conn *Conn) ReadLoop() {
 			stream = conn.NewStream(streamId)
 			conn.Streams[streamId] = stream
 		}
-		stream.ChangeState(frame, RECV)
+
+		err = stream.ChangeState(frame, RECV)
+		if err != nil {
+			Error("%v", err)
+		}
+
 		stream.ReadChan <- frame
 
 		// TODO: support GOAWAY

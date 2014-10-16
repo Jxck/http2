@@ -97,10 +97,10 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 	frame.Headers = req.Header
 	stream.Write(frame) // TODO: err
 
+	res = <-response
+
 	// TODO: send GOAWAY
 	// stream.Write(NewGoAwayFrame(0, stream.Id, NO_ERROR, nil))
-
-	res = <-response
 
 	return res, nil
 }
