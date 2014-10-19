@@ -77,7 +77,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 		req.Header.Add("content-length", fmt.Sprintf("%d", req.ContentLength))
 	}
 
-	Notice("%s", White(util.Indent(util.RequestString(req))))
+	Notice("\n%s", White(util.RequestString(req)))
 
 	url, err := NewURL(req.URL.String()) // err
 	if err != nil {
@@ -109,7 +109,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	res = <-response
 
-	Notice("%s", White(util.Indent(util.ResponseString(res))))
+	Notice("\n%s", White(util.ResponseString(res)))
 
 	// TODO: send GOAWAY
 	// stream.Write(NewGoAwayFrame(0, stream.ID, NO_ERROR, nil))
