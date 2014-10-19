@@ -53,18 +53,15 @@ func (transport *Transport) Connect(url *URL) (err error) {
 		return err
 	}
 
-	go Conn.ReadLoop()
 	go Conn.WriteLoop()
-
-	// stream id 0
-	zeroStream := Conn.NewStream(0)
-	Conn.Streams[0] = zeroStream
 
 	// send default settings to id 0
 	settingsFrame := NewSettingsFrame(UNSET, 0, DefaultSettings)
-	zeroStream.Write(settingsFrame)
-
+	Conn.WriteChan <- settingsFrame
 	transport.Conn = Conn
+
+	go Conn.ReadLoop()
+
 	return
 }
 

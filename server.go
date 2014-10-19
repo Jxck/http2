@@ -50,13 +50,9 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 	// frame を書き込むループを回す
 	go Conn.WriteLoop()
 
-	// stream id 0
-	zeroStream := Conn.NewStream(0)
-	Conn.Streams[0] = zeroStream
-
 	// send default settings to id 0
 	settingsFrame := NewSettingsFrame(UNSET, 0, DefaultSettings)
-	zeroStream.Write(settingsFrame)
+	Conn.WriteChan <- settingsFrame
 
 	// 送られてきた frame を読み出すループを回す
 	// ここで block する。
