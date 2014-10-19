@@ -2,6 +2,7 @@ package http2
 
 import (
 	"crypto/tls"
+	"fmt"
 	. "github.com/Jxck/color"
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
@@ -81,10 +82,10 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		header.Del(":path")
 		header.Del(":scheme")
 
-		url := &neturl.URL{
-			Scheme: scheme,
-			Host:   authority,
-			Path:   path,
+		rawurl := fmt.Sprintf("%s://%s/%s", scheme, authority, path)
+		url, err := neturl.ParseRequestURI(rawurl)
+		if err != nil {
+			Fatal("%v", err)
 		}
 
 		// request body がある場合
