@@ -98,6 +98,7 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	// create stream
 	stream := transport.Conn.NewStream(<-NextClientStreamID)
+	transport.Conn.Streams[stream.ID] = stream
 
 	// send request header via HEADERS Frame
 	var flags Flag = END_STREAM + END_HEADERS

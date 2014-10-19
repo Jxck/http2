@@ -31,7 +31,6 @@ func NewConn(rw io.ReadWriter) *Conn {
 }
 
 func (conn *Conn) NewStream(streamid uint32) *Stream {
-	conn.LastStreamID = streamid // TODO: fixme
 	stream := NewStream(
 		streamid,
 		conn.WriteChan,
@@ -39,7 +38,6 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 		conn.HpackContext,
 		conn.CallBack,
 	)
-	conn.Streams[stream.ID] = stream
 	Debug("adding new stream (id=%d) total (%d)", stream.ID, len(conn.Streams))
 	return stream
 }
@@ -64,6 +62,11 @@ func (conn *Conn) ReadLoop() {
 			// create stream with streamID
 			stream = conn.NewStream(streamID)
 			conn.Streams[streamID] = stream
+
+			// update last stream id
+			if streamID > conn.LastStreamID {
+				conn.LastStreamID = streamID
+			}
 		}
 
 		err = stream.ChangeState(frame, RECV)
