@@ -98,7 +98,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 	if types != PushPromiseFrameType &&
 		types != HeadersFrameType &&
 		types != RstStreamFrameType &&
-		flags != END_STREAM {
+		flags&END_STREAM != END_STREAM {
 		// not a type/flag for consider
 		return nil
 	}
@@ -108,6 +108,15 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		// H
 		if types == HeadersFrameType {
 			stream.changeState(OPEN)
+
+			// ES
+			if flags&END_STREAM == END_STREAM {
+				if context == RECV {
+					stream.changeState(HALF_CLOSED_REMOTE)
+				} else {
+					stream.changeState(HALF_CLOSED_LOCAL)
+				}
+			}
 			return
 		}
 
@@ -122,7 +131,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		}
 	case OPEN:
 		// ES
-		if flags == END_STREAM {
+		if flags&END_STREAM == END_STREAM {
 			if context == RECV {
 				stream.changeState(HALF_CLOSED_REMOTE)
 			} else {
@@ -136,6 +145,9 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 			stream.changeState(CLOSED)
 			return
 		}
+
+		// every type of frame accepted
+		return
 	case RESERVED_LOCAL:
 		// H
 		if types == HeadersFrameType {
@@ -165,7 +177,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		fallthrough
 	case HALF_CLOSED_REMOTE:
 		// ES
-		if flags == END_STREAM {
+		if flags&END_STREAM == END_STREAM {
 			stream.changeState(CLOSED)
 			return
 		}
