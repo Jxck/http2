@@ -82,7 +82,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		header.Del(":path")
 		header.Del(":scheme")
 
-		rawurl := fmt.Sprintf("%s://%s/%s", scheme, authority, path)
+		rawurl := fmt.Sprintf("%s://%s%s", scheme, authority, path)
 		url, err := neturl.ParseRequestURI(rawurl)
 		if err != nil {
 			Fatal("%v", err)
@@ -113,7 +113,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			Host:             authority,
 		}
 
-		Notice("%s", White(util.Indent(util.RequestString(req))))
+		Notice("\n%s", White(util.RequestString(req)))
 
 		// Handle HTTP using handler
 		res := NewResponseWriter()
@@ -121,7 +121,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
-		Notice("%s", White(util.Indent(res)))
+		Notice("\n%s", White(res.String()))
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
