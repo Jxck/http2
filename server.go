@@ -7,11 +7,16 @@ import (
 	"github.com/Jxck/hpack"
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
+	"log"
 	"net"
 	"net/http"
 	neturl "net/url"
 	"strconv"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 var TLSNextProto = map[string]func(*http.Server, *tls.Conn, http.Handler){
 	VERSION: TLSNextProtoHandler,

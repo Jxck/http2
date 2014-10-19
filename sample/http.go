@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-var loglevel int = 6
+var loglevel int = 3
 
 func init() {
 	logger.Level(loglevel)
