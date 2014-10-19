@@ -1,16 +1,13 @@
 package main
 
 import (
-	"crypto/tls"
-	"encoding/json"
+	_ "crypto/tls"
 	"fmt"
-	"github.com/Jxck/http2"
+	_ "github.com/Jxck/http2"
 	"github.com/Jxck/logger"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -26,84 +23,87 @@ type Person struct {
 	Name string `json:"name"`
 }
 
+var Persons []Person = []Person{
+	Person{0, "a"},
+	Person{1, "b"},
+	Person{2, "c"},
+	Person{3, "d"},
+	Person{4, "e"},
+}
+
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "hello world")
 }
 
 // テンプレートのコンパイル
-var t = template.Must(template.ParseFiles("index.html"))
+var indexTmpl = template.Must(template.ParseFiles("index.html"))
+var personTmpl = template.Must(template.ParseFiles("person.html"))
 
 func PersonHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close() // 処理の最後にBodyを閉じる
 
 	if r.Method == "POST" {
 		// リクエストボディをJSONに変換
-		var person Person
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&person)
-		if err != nil { // エラー処理
-			log.Fatal(err)
-		}
+		r.ParseForm()
 
-		// ファイル名を{id}.txtとする
-		filename := fmt.Sprintf("%d.txt", person.ID)
-		file, err := os.Create(filename) // ファイルを生成
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
+		id := len(Persons)
+		name := r.Form["name"][0]
 
-		// ファイルにNameを書き込む
-		_, err = file.WriteString(person.Name)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// レスポンスとしてステータスコード201を送信
-		w.WriteHeader(http.StatusCreated)
-	} else if r.Method == "GET" {
-		// パラメータを取得
-		id, err := strconv.Atoi(r.URL.Query().Get("id"))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		filename := fmt.Sprintf("%d.txt", id)
-		b, err := ioutil.ReadFile(filename)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// personを生成
 		person := Person{
 			ID:   id,
-			Name: string(b),
+			Name: name,
 		}
 
-		// レスポンスにエンコーディングしたHTMLを書き込む
-		t.Execute(w, person)
+		Persons = append(Persons, person)
+
+		// レスポンスとしてステータスコード201を送信
+		http.Redirect(w, r, "/persons", 302)
+		return
+	} else if r.Method == "GET" {
+		// パラメータを取得
+		id := r.URL.Query().Get("id")
+
+		if id == "" {
+			// レスポンスにエンコーディングしたHTMLを書き込む
+			indexTmpl.Execute(w, Persons)
+		} else {
+			i, err := strconv.Atoi(id)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			if i+1 > len(Persons) {
+				http.Redirect(w, r, "/persons", 302)
+				return
+			}
+
+			// レスポンスにエンコーディングしたHTMLを書き込む
+			person := Persons[i]
+			personTmpl.Execute(w, person)
+		}
 	}
 }
 
 func main() {
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/persons", PersonHandler)
+	http.ListenAndServe(":3000", nil)
 
-	// setup TLS config
-	cert := "../keys/cert.pem"
-	key := "../keys/key.pem"
-	config := &tls.Config{
-		InsecureSkipVerify: true,
-		NextProtos:         []string{http2.VERSION},
-	}
+	// // setup TLS config
+	// cert := "../keys/cert.pem"
+	// key := "../keys/key.pem"
+	// config := &tls.Config{
+	// 	InsecureSkipVerify: true,
+	// 	NextProtos:         []string{http2.VERSION},
+	// }
 
-	// setup Server
-	server := &http.Server{
-		Addr:           ":3000",
-		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
-		TLSConfig:      config,
-		TLSNextProto:   http2.TLSNextProto,
-	}
+	// // setup Server
+	// server := &http.Server{
+	// 	Addr:           ":3000",
+	// 	MaxHeaderBytes: http.DefaultMaxHeaderBytes,
+	// 	TLSConfig:      config,
+	// 	TLSNextProto:   http2.TLSNextProto,
+	// }
 
-	fmt.Println(server.ListenAndServeTLS(cert, key))
+	// fmt.Println(server.ListenAndServeTLS(cert, key))
 }

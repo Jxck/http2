@@ -1,3 +1,12 @@
 <!DOCTYPE html>
 <title>person</title>
-<h1>{{ .ID }} : {{ .Name }}</h1>
+<form method="post" action="persons">
+  <input type="text" name="name" />
+  <input type="submit" value="ok" />
+</form>
+
+<ul>
+  {{range .}}
+  <li>{{.ID}} <a href="persons?id={{.ID}}">{{.Name}}</a></li>
+  {{end}}
+</ul>
