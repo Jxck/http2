@@ -74,13 +74,13 @@ func (conn *Conn) ReadLoop() {
 			Error("%v", err)
 		}
 
-		stream.ReadChan <- frame
+		// handle GOAWAY with close connection
+		if frame.Header().Type == GoAwayFrameType {
+			Debug("stop conn.ReadLoop() by GOAWAY")
+			break
+		}
 
-		// TODO: support GOAWAY
-		// if frame.Header().Type == GoAwayFrameType {
-		// 	Debug("stop conn.ReadLoop() by GOAWAY")
-		// 	break
-		// }
+		stream.ReadChan <- frame
 	}
 }
 
