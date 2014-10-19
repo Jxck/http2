@@ -1,9 +1,9 @@
 package main
 
 import (
-	_ "crypto/tls"
+	"crypto/tls"
 	"fmt"
-	_ "github.com/Jxck/http2"
+	"github.com/Jxck/http2"
 	"github.com/Jxck/logger"
 	"html/template"
 	"log"
@@ -87,23 +87,23 @@ func PersonHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/persons", PersonHandler)
-	http.ListenAndServe(":3000", nil)
+	// http.ListenAndServe(":3000", nil)
 
-	// // setup TLS config
-	// cert := "../keys/cert.pem"
-	// key := "../keys/key.pem"
-	// config := &tls.Config{
-	// 	InsecureSkipVerify: true,
-	// 	NextProtos:         []string{http2.VERSION},
-	// }
+	// setup TLS config
+	cert := "../keys/cert.pem"
+	key := "../keys/key.pem"
+	config := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{http2.VERSION},
+	}
 
-	// // setup Server
-	// server := &http.Server{
-	// 	Addr:           ":3000",
-	// 	MaxHeaderBytes: http.DefaultMaxHeaderBytes,
-	// 	TLSConfig:      config,
-	// 	TLSNextProto:   http2.TLSNextProto,
-	// }
+	// setup Server
+	server := &http.Server{
+		Addr:           ":3000",
+		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
+		TLSConfig:      config,
+		TLSNextProto:   http2.TLSNextProto,
+	}
 
-	// fmt.Println(server.ListenAndServeTLS(cert, key))
+	fmt.Println(server.ListenAndServeTLS(cert, key))
 }
