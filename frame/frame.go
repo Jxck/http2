@@ -646,12 +646,12 @@ func (frame *RstStreamFrame) String() string {
 // |                        Value (32)                             |
 // +---------------------------------------------------------------+
 const (
-	DEFAULT_HEADER_TABLE_SIZE   uint32 = 4096
-	DEFAULT_ENABLE_PUSH                = 1
-	DEFAULT_INITIAL_WINDOW_SIZE        = 65535
-	DEFAULT_MAX_FRAME_SIZE             = 16384
-	// DEFAULT_MAX_CONCURRENT_STREAMS  = infinite
-	// DEFAULT_MAX_HEADER_LIST_SIZE    = infinite
+	DEFAULT_HEADER_TABLE_SIZE      uint32 = 4096
+	DEFAULT_ENABLE_PUSH                   = 1
+	DEFAULT_MAX_CONCURRENT_STREAMS        = 4294967295 // actual infinite but 2^32-1 in this imple
+	DEFAULT_INITIAL_WINDOW_SIZE           = 65535
+	DEFAULT_MAX_FRAME_SIZE                = 16384
+	DEFAULT_MAX_HEADER_LIST_SIZE          = 4294967295 // actual infinite but 2^32-1 in this imple
 )
 
 type SettingsID uint16
