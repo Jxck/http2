@@ -85,6 +85,11 @@ func (conn *Conn) ReadLoop() {
 			Error("%v", err)
 		}
 
+		// DATA frame なら winodw update
+		if frame.Header().Type == DataFrameType {
+			conn.WindowUpdate(frame.Header().Length)
+		}
+
 		// stream が close ならリストから消す
 		if stream.State == CLOSED {
 			Info("remove stream(%d) from conn.Streams[]", streamID)
@@ -116,6 +121,22 @@ func (conn *Conn) WriteLoop() (err error) {
 		}
 	}
 	return
+}
+
+func (conn *Conn) WindowUpdate(length uint32) {
+	length = length - 8 // remove frame header size (6.9.1)
+	Debug("connection window update %d byte", length)
+
+	total := conn.WindowSize
+
+	total = total - length
+	if total < WINDOW_UPDATE_THRESHOLD {
+		// この値を下回ったら WindowUpdate を送る
+		update := conn.WindowSize - total
+		conn.WriteChan <- NewWindowUpdateFrame(0, update)
+	} else {
+		conn.WindowSize = total
+	}
 }
 
 func (conn *Conn) WriteMagic() (err error) {

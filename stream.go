@@ -112,6 +112,9 @@ func (stream *Stream) Write(frame Frame) {
 }
 
 func (stream *Stream) WindowUpdate(length uint32) {
+	length = length - 8 // remove frame header size (6.9.1)
+	Debug("stream(%d) window update %d byte", stream.ID, length)
+
 	total := stream.WindowSize
 
 	total = total - length
@@ -119,7 +122,6 @@ func (stream *Stream) WindowUpdate(length uint32) {
 		// この値を下回ったら WindowUpdate を送る
 		update := stream.WindowSize - total
 		stream.Write(NewWindowUpdateFrame(stream.ID, update))
-		stream.Write(NewWindowUpdateFrame(0, update))
 	} else {
 		stream.WindowSize = total
 	}
