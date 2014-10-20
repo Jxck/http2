@@ -82,7 +82,7 @@ func (conn *Conn) ReadLoop() {
 		// stream の state を変える
 		err = stream.ChangeState(frame, RECV)
 		if err != nil {
-			Error("%v", err)
+			Error(Red(err))
 		}
 
 		// DATA frame なら winodw update
