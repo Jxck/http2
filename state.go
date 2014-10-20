@@ -182,6 +182,11 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 			return
 		}
 
+		// H: Headers but not END_STREAM dosen't care
+		if types == HeadersFrameType {
+			return
+		}
+
 		// R
 		if types == RstStreamFrameType {
 			stream.changeState(CLOSED)
