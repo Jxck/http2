@@ -107,6 +107,8 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	res = <-response
 
+	stream.Close()
+
 	Notice("\n%s", White(util.ResponseString(res)))
 
 	// TODO: send GOAWAY

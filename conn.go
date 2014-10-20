@@ -84,6 +84,7 @@ func (conn *Conn) ReadLoop() {
 
 		// stream が close ならリストから消す
 		if stream.State == CLOSED {
+			Info("remove stream(%d) from conn.Streams[]", streamID)
 			conn.Streams[streamID] = nil
 		}
 

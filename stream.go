@@ -126,6 +126,7 @@ func (stream *Stream) WindowUpdate(length uint32) {
 }
 
 func (stream *Stream) Close() {
+	Debug("stream(%d) Close()", stream.ID)
 	// write chan は close しない
 	close(stream.ReadChan)
 }
