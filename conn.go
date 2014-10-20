@@ -7,7 +7,12 @@ import (
 	. "github.com/Jxck/http2/frame"
 	. "github.com/Jxck/logger"
 	"io"
+	"log"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 type Conn struct {
 	RW           io.ReadWriter
@@ -45,6 +50,7 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 func (conn *Conn) ReadLoop() {
 	Debug("start conn.ReadLoop()")
 	for {
+		// コネクションからフレームを読み込む
 		frame, err := ReadFrame(conn.RW)
 		if err != nil {
 			if err == io.EOF {
@@ -56,6 +62,7 @@ func (conn *Conn) ReadLoop() {
 			Notice("%v %v", Green("recv"), util.Indent(frame.String()))
 		}
 
+		// 新しいストリーム ID なら対応するストリームを生成
 		streamID := frame.Header().StreamID
 		stream, ok := conn.Streams[streamID]
 		if !ok {
@@ -69,17 +76,25 @@ func (conn *Conn) ReadLoop() {
 			}
 		}
 
+		// stream の state を変える
 		err = stream.ChangeState(frame, RECV)
 		if err != nil {
 			Error("%v", err)
 		}
 
+		// stream が close ならリストから消す
+		if stream.State == CLOSED {
+			conn.Streams[streamID] = nil
+		}
+
 		// handle GOAWAY with close connection
 		if frame.Header().Type == GoAwayFrameType {
 			Debug("stop conn.ReadLoop() by GOAWAY")
+			conn.Close()
 			break
 		}
 
+		// ストリームにフレームを渡す
 		stream.ReadChan <- frame
 	}
 }
@@ -124,8 +139,11 @@ func (conn *Conn) ReadMagic() (err error) {
 
 func (conn *Conn) Close() {
 	Info("close all conn.Streams")
-	for _, stream := range conn.Streams {
-		stream.Close()
+	for i, stream := range conn.Streams {
+		if stream != nil {
+			Debug("close stream(%d)", i)
+			stream.Close()
+		}
 	}
 	Info("close conn.WriteChan")
 	close(conn.WriteChan)
