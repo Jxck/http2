@@ -57,6 +57,7 @@ func (conn *Conn) ReadLoop() {
 				Error("%v", err)
 				break
 			}
+			Fatal("%v", err)
 		}
 		if frame != nil {
 			Notice("%v %v", Green("recv"), util.Indent(frame.String()))

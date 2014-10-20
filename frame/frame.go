@@ -677,17 +677,12 @@ func (s SettingsID) String() string {
 	return fmt.Sprintf("%s(%d)", m[s], s)
 }
 
-type Setting struct {
-	SettingsID SettingsID
-	Value      uint32
-}
-
 type SettingsFrame struct {
 	*FrameHeader
-	Settings []Setting
+	Settings map[SettingsID]uint32
 }
 
-func NewSettingsFrame(flags Flag, streamID uint32, settings []Setting) *SettingsFrame {
+func NewSettingsFrame(flags Flag, streamID uint32, settings map[SettingsID]uint32) *SettingsFrame {
 	var length uint32 = uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamID)
 	frame := &SettingsFrame{
@@ -702,12 +697,15 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 		err = Recovery(recover())
 	}()
 
-	for niv := frame.Length / 6; niv > 0; niv-- {
-		s := Setting{}
+	frame.Settings = make(map[SettingsID]uint32)
 
-		MustRead(r, &s.SettingsID)
-		MustRead(r, &s.Value)
-		frame.Settings = append(frame.Settings, s)
+	for niv := frame.Length / 6; niv > 0; niv-- {
+		var settingsID SettingsID
+		var value uint32
+
+		MustRead(r, &settingsID)
+		MustRead(r, &value)
+		frame.Settings[settingsID] = value
 	}
 	return err
 }
@@ -718,9 +716,9 @@ func (frame *SettingsFrame) Write(w io.Writer) (err error) {
 	}()
 
 	frame.FrameHeader.Write(w)
-	for _, setting := range frame.Settings {
-		MustWrite(w, &setting.SettingsID)
-		MustWrite(w, &setting.Value)
+	for settingsID, value := range frame.Settings {
+		MustWrite(w, &settingsID)
+		MustWrite(w, &value)
 	}
 	return err
 }
@@ -736,8 +734,8 @@ func (frame *SettingsFrame) String() string {
 		str += "\n; ACK"
 	}
 	str += fmt.Sprintf("\n(niv=%v)", len(frame.Settings))
-	for _, s := range frame.Settings {
-		str += fmt.Sprintf("\n[%v:%v]", s.SettingsID.String(), s.Value)
+	for settingsID, value := range frame.Settings {
+		str += fmt.Sprintf("\n[%v:%v]", settingsID.String(), value)
 	}
 	return str
 }

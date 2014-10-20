@@ -12,8 +12,8 @@ const (
 	WINDOW_UPDATE_THRESHOLD uint32 = 16375
 )
 
-var DefaultSettings = []Setting{
-	{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
+var DefaultSettings = map[SettingsID]uint32{
+	SETTINGS_MAX_CONCURRENT_STREAMS: 100,
 }
 
-var NilSettings = make([]Setting, 0)
+var NilSettings = make(map[SettingsID]uint32, 0)
