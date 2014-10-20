@@ -62,7 +62,6 @@ func (e ErrorCode) String() string {
 	errors := []string{
 		"NO_ERROR",
 		"PROTOCOL_ERROR",
-		"PROTOCOL_ERROR",
 		"INTERNAL_ERROR",
 		"FLOW_CONTROL_ERROR",
 		"SETTINGS_TIMEOUT",
@@ -632,7 +631,7 @@ func (frame *RstStreamFrame) Header() *FrameHeader {
 func (frame *RstStreamFrame) String() string {
 	str := Cyan("RST_STREAM")
 	str += frame.FrameHeader.String()
-	str += fmt.Sprintf("\n(Error Code=%d)", frame.ErrorCode)
+	str += fmt.Sprintf("\n(Error Code=%s(%d))", Red(frame.ErrorCode.String()), frame.ErrorCode)
 	return str
 }
 
@@ -992,8 +991,8 @@ func (frame *GoAwayFrame) Header() *FrameHeader {
 func (frame *GoAwayFrame) String() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.String()
-	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s, opaque_data(%q))",
-		frame.LastStreamID, Red(frame.ErrorCode.String()), frame.AdditionalDebugData)
+	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s(%d), opaque_data(%q))",
+		frame.LastStreamID, Red(frame.ErrorCode.String()), frame.ErrorCode, frame.AdditionalDebugData)
 	return str
 }
 
