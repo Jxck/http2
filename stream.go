@@ -54,7 +54,6 @@ func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext 
 
 func (stream *Stream) Read(f Frame) {
 	Debug("stream (%d) recv (%v)", stream.ID, f.Header().Type)
-	stream.WindowUpdate(f.Header().Length)
 
 	switch frame := f.(type) {
 	case *SettingsFrame:
@@ -82,6 +81,7 @@ func (stream *Stream) Read(f Frame) {
 			stream.CallBack(stream)
 		}
 	case *DataFrame:
+		stream.WindowUpdate(frame.Header().Length)
 		stream.Bucket.Data = append(stream.Bucket.Data, frame)
 
 		if frame.Header().Flags&END_STREAM == END_STREAM {
@@ -112,7 +112,6 @@ func (stream *Stream) Write(frame Frame) {
 }
 
 func (stream *Stream) WindowUpdate(length uint32) {
-	length = length - 8 // remove frame header size (6.9.1)
 	Debug("stream(%d) window update %d byte", stream.ID, length)
 
 	total := stream.WindowSize

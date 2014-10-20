@@ -124,7 +124,6 @@ func (conn *Conn) WriteLoop() (err error) {
 }
 
 func (conn *Conn) WindowUpdate(length uint32) {
-	length = length - 8 // remove frame header size (6.9.1)
 	Debug("connection window update %d byte", length)
 
 	total := conn.WindowSize
