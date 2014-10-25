@@ -135,7 +135,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
 		length := len(data)
-		window := int(DEFAULT_MAX_FRAME_SIZE)
+		window := int(stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE])
 		for i := 0; ; i++ { // フレームサイズごとに分けて送る
 			start := i * window
 			end := start + window

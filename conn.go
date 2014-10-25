@@ -42,6 +42,8 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 	stream := NewStream(
 		streamid,
 		conn.WriteChan,
+		conn.Settings,
+		conn.PeerSettings,
 		conn.HpackContext,
 		conn.CallBack,
 	)
