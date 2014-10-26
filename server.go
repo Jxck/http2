@@ -134,18 +134,23 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// Send response body as DATA Frame
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
-		window := int(stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE])
-		for { // フレームサイズごとに分けて送る
-			if window > len(data) {
-				window = len(data)
-			}
-			dataFrame := NewDataFrame(UNSET, stream.ID, data[:window], nil)
-			stream.Write(dataFrame)
-			copy(data, data[window:])
-			data = data[:len(data)-window]
+		frameSize := int(stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE])
+
+		// MaxFrameSize ごとに分けて送る
+		for {
 			if len(data) == 0 {
 				break
 			}
+
+			// MaxFrameSize より小さいなら全部送る
+			if frameSize > len(data) {
+				frameSize = len(data)
+			}
+
+			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
+			stream.Write(dataFrame)
+			copy(data, data[frameSize:])
+			data = data[:len(data)-frameSize]
 		}
 
 		// End Stream in empty DATA Frame
