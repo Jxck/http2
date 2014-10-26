@@ -645,12 +645,12 @@ func (frame *RstStreamFrame) String() string {
 // |                        Value (32)                             |
 // +---------------------------------------------------------------+
 const (
-	DEFAULT_HEADER_TABLE_SIZE      uint32 = 4096
-	DEFAULT_ENABLE_PUSH                   = 1
-	DEFAULT_MAX_CONCURRENT_STREAMS        = 4294967295 // actual infinite but 2^32-1 in this imple
-	DEFAULT_INITIAL_WINDOW_SIZE           = 65535
-	DEFAULT_MAX_FRAME_SIZE                = 16384
-	DEFAULT_MAX_HEADER_LIST_SIZE          = 4294967295 // actual infinite but 2^32-1 in this imple
+	DEFAULT_HEADER_TABLE_SIZE      int32 = 4096
+	DEFAULT_ENABLE_PUSH                  = 1
+	DEFAULT_MAX_CONCURRENT_STREAMS       = 2<<30 - 1 // actual infinite but 2^31-1 in this imple
+	DEFAULT_INITIAL_WINDOW_SIZE          = 65535
+	DEFAULT_MAX_FRAME_SIZE               = 16384
+	DEFAULT_MAX_HEADER_LIST_SIZE         = 2<<30 - 1 // actual infinite but 2^31-1 in this imple
 )
 
 type SettingsID uint16
@@ -678,11 +678,11 @@ func (s SettingsID) String() string {
 
 type SettingsFrame struct {
 	*FrameHeader
-	Settings map[SettingsID]uint32
+	Settings map[SettingsID]int32
 }
 
-func NewSettingsFrame(flags Flag, streamID uint32, settings map[SettingsID]uint32) *SettingsFrame {
-	var length uint32 = uint32(6 * len(settings))
+func NewSettingsFrame(flags Flag, streamID uint32, settings map[SettingsID]int32) *SettingsFrame {
+	length := uint32(6 * len(settings))
 	fh := NewFrameHeader(length, SettingsFrameType, flags, streamID)
 	frame := &SettingsFrame{
 		FrameHeader: fh,
@@ -696,11 +696,11 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 		err = Recovery(recover())
 	}()
 
-	frame.Settings = make(map[SettingsID]uint32)
+	frame.Settings = make(map[SettingsID]int32)
 
 	for niv := frame.Length / 6; niv > 0; niv-- {
 		var settingsID SettingsID
-		var value uint32
+		var value int32
 
 		MustRead(r, &settingsID)
 		MustRead(r, &value)

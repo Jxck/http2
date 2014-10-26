@@ -19,8 +19,8 @@ type Conn struct {
 	HpackContext *hpack.Context
 	LastStreamID uint32
 	Window       *Window
-	Settings     map[SettingsID]uint32
-	PeerSettings map[SettingsID]uint32
+	Settings     map[SettingsID]int32
+	PeerSettings map[SettingsID]int32
 	Streams      map[uint32]*Stream
 	WriteChan    chan Frame
 	CallBack     func(stream *Stream)
@@ -29,7 +29,7 @@ type Conn struct {
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
 		RW:           rw,
-		HpackContext: hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
+		HpackContext: hpack.NewContext(uint32(DEFAULT_HEADER_TABLE_SIZE)),
 		Settings:     DefaultSettings,
 		PeerSettings: DefaultSettings,
 		Window:       NewWindow(),

@@ -18,8 +18,8 @@ type Stream struct {
 	Window       *Window
 	ReadChan     chan Frame
 	WriteChan    chan Frame
-	Settings     map[SettingsID]uint32
-	PeerSettings map[SettingsID]uint32
+	Settings     map[SettingsID]int32
+	PeerSettings map[SettingsID]int32
 	HpackContext *hpack.Context
 	CallBack     CallBack
 	Bucket       *Bucket
@@ -39,7 +39,7 @@ func NewBucket() *Bucket {
 
 type CallBack func(stream *Stream)
 
-func NewStream(id uint32, writeChan chan Frame, settings, peerSettings map[SettingsID]uint32, hpackContext *hpack.Context, callback CallBack) *Stream {
+func NewStream(id uint32, writeChan chan Frame, settings, peerSettings map[SettingsID]int32, hpackContext *hpack.Context, callback CallBack) *Stream {
 	stream := &Stream{
 		ID:           id,
 		State:        IDLE,
