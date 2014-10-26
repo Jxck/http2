@@ -13,14 +13,15 @@ func init() {
 }
 
 type Stream struct {
-	ID           uint32
-	State        State
-	WindowSize   uint32
-	ReadChan     chan Frame
-	WriteChan    chan Frame
-	HpackContext *hpack.Context
-	CallBack     CallBack
-	Bucket       *Bucket
+	ID             uint32
+	State          State
+	WindowSize     uint32
+	PeerWindowSize uint32
+	ReadChan       chan Frame
+	WriteChan      chan Frame
+	HpackContext   *hpack.Context
+	CallBack       CallBack
+	Bucket         *Bucket
 }
 
 type Bucket struct {
@@ -56,20 +57,6 @@ func (stream *Stream) Read(f Frame) {
 	Debug("stream (%d) recv (%v)", stream.ID, f.Header().Type)
 
 	switch frame := f.(type) {
-	case *SettingsFrame:
-
-		// if SETTINGS Frame
-		settingsFrame := frame
-		if settingsFrame.Flags == UNSET {
-			// TODO: Apply Settings
-
-			// send ACK
-			ack := NewSettingsFrame(ACK, stream.ID, NilSettings)
-			stream.Write(ack)
-		} else if settingsFrame.Flags == ACK {
-			// receive ACK
-			Trace("receive SETTINGS ACK")
-		}
 	case *HeadersFrame:
 		// Decode Headers
 		header := stream.DecodeHeader(frame.HeaderBlock)

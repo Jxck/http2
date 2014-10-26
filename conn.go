@@ -15,24 +15,27 @@ func init() {
 }
 
 type Conn struct {
-	RW           io.ReadWriter
-	HpackContext *hpack.Context
-	LastStreamID uint32
-	WindowSize   uint32
-	Settings     map[SettingsID]uint32
-	Streams      map[uint32]*Stream
-	WriteChan    chan Frame
-	CallBack     func(stream *Stream)
+	RW             io.ReadWriter
+	HpackContext   *hpack.Context
+	LastStreamID   uint32
+	WindowSize     uint32
+	PeerWindowSize uint32
+	Settings       map[SettingsID]uint32
+	PeerSettings   map[SettingsID]uint32
+	Streams        map[uint32]*Stream
+	WriteChan      chan Frame
+	CallBack       func(stream *Stream)
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
-		RW:           rw,
-		HpackContext: hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
-		Settings:     DefaultSettings,
-		WindowSize:   DefaultSettings[SETTINGS_INITIAL_WINDOW_SIZE],
-		Streams:      make(map[uint32]*Stream),
-		WriteChan:    make(chan Frame),
+		RW:             rw,
+		HpackContext:   hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
+		Settings:       DefaultSettings,
+		WindowSize:     DefaultSettings[SETTINGS_INITIAL_WINDOW_SIZE],
+		PeerWindowSize: DEFAULT_INITIAL_WINDOW_SIZE,
+		Streams:        make(map[uint32]*Stream),
+		WriteChan:      make(chan Frame),
 	}
 	return conn
 }
@@ -49,6 +52,26 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 	return stream
 }
 
+func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
+	Debug("conn.HandleSettings(%v)", settingsFrame)
+
+	settings := settingsFrame.Settings
+
+	// if SETTINGS Frame
+	if settingsFrame.Flags == UNSET {
+		conn.Settings = settings
+		conn.PeerWindowSize = settings[SETTINGS_INITIAL_WINDOW_SIZE]
+		//TODO: update stream flow
+
+		// send ACK
+		ack := NewSettingsFrame(ACK, 0, NilSettings)
+		conn.WriteChan <- ack
+	} else if settingsFrame.Flags == ACK {
+		// receive ACK
+		Trace("receive SETTINGS ACK")
+	}
+}
+
 func (conn *Conn) ReadLoop() {
 	Debug("start conn.ReadLoop()")
 	for {
@@ -63,6 +86,16 @@ func (conn *Conn) ReadLoop() {
 		}
 		if frame != nil {
 			Notice("%v %v", Green("recv"), util.Indent(frame.String()))
+		}
+
+		// SETTINGS frame なら apply setting
+		if frame.Header().Type == SettingsFrameType {
+			settingsFrame, ok := frame.(*SettingsFrame)
+			if !ok {
+				Error("invalid settings frame %v", frame)
+				return
+			}
+			conn.HandleSettings(settingsFrame)
 		}
 
 		// 新しいストリーム ID なら対応するストリームを生成
