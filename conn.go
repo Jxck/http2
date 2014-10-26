@@ -31,6 +31,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		RW:           rw,
 		HpackContext: hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
 		Settings:     DefaultSettings,
+		PeerSettings: DefaultSettings,
 		Window:       NewWindow(),
 		Streams:      make(map[uint32]*Stream),
 		WriteChan:    make(chan Frame),
