@@ -13,15 +13,14 @@ func init() {
 }
 
 type Stream struct {
-	ID             uint32
-	State          State
-	WindowSize     int32
-	PeerWindowSize int32
-	ReadChan       chan Frame
-	WriteChan      chan Frame
-	HpackContext   *hpack.Context
-	CallBack       CallBack
-	Bucket         *Bucket
+	ID           uint32
+	State        State
+	Window       *Window
+	ReadChan     chan Frame
+	WriteChan    chan Frame
+	HpackContext *hpack.Context
+	CallBack     CallBack
+	Bucket       *Bucket
 }
 
 type Bucket struct {
@@ -38,11 +37,11 @@ func NewBucket() *Bucket {
 
 type CallBack func(stream *Stream)
 
-func NewStream(id uint32, writeChan chan Frame, windowSize uint32, hpackContext *hpack.Context, callback CallBack) *Stream {
+func NewStream(id uint32, writeChan chan Frame, hpackContext *hpack.Context, callback CallBack) *Stream {
 	stream := &Stream{
 		ID:           id,
 		State:        IDLE,
-		WindowSize:   windowSize,
+		Window:       NewWindow(),
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		HpackContext: hpackContext,
@@ -68,7 +67,8 @@ func (stream *Stream) Read(f Frame) {
 			stream.CallBack(stream)
 		}
 	case *DataFrame:
-		stream.WindowUpdate(frame.Header().Length)
+		length := int32(frame.Header().Length)
+		stream.WindowUpdate(length)
 		stream.Bucket.Data = append(stream.Bucket.Data, frame)
 
 		if frame.Header().Flags&END_STREAM == END_STREAM {
@@ -98,18 +98,16 @@ func (stream *Stream) Write(frame Frame) {
 	stream.WriteChan <- frame
 }
 
-func (stream *Stream) WindowUpdate(length uint32) {
+func (stream *Stream) WindowUpdate(length int32) {
 	Debug("stream(%d) window update %d byte", stream.ID, length)
 
-	total := stream.WindowSize
+	stream.Window.CurrentSize = stream.Window.CurrentSize - length
 
-	total = total - length
-	if total < WINDOW_UPDATE_THRESHOLD {
-		// この値を下回ったら WindowUpdate を送る
-		update := stream.WindowSize - total
-		stream.Write(NewWindowUpdateFrame(stream.ID, update))
-	} else {
-		stream.WindowSize = total
+	// この値を下回ったら WindowUpdate を送る
+	if stream.Window.CurrentSize < stream.Window.Threshold {
+		update := stream.Window.InitialSize - stream.Window.CurrentSize
+		stream.Write(NewWindowUpdateFrame(stream.ID, uint32(update)))
+		stream.Window.CurrentSize = stream.Window.CurrentSize + update
 	}
 }
 

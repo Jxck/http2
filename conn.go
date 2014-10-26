@@ -15,27 +15,25 @@ func init() {
 }
 
 type Conn struct {
-	RW             io.ReadWriter
-	HpackContext   *hpack.Context
-	LastStreamID   uint32
-	WindowSize     int32
-	PeerWindowSize int32
-	Settings       map[SettingsID]uint32
-	PeerSettings   map[SettingsID]uint32
-	Streams        map[uint32]*Stream
-	WriteChan      chan Frame
-	CallBack       func(stream *Stream)
+	RW           io.ReadWriter
+	HpackContext *hpack.Context
+	LastStreamID uint32
+	Window       *Window
+	Settings     map[SettingsID]uint32
+	PeerSettings map[SettingsID]uint32
+	Streams      map[uint32]*Stream
+	WriteChan    chan Frame
+	CallBack     func(stream *Stream)
 }
 
 func NewConn(rw io.ReadWriter) *Conn {
 	conn := &Conn{
-		RW:             rw,
-		HpackContext:   hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
-		Settings:       DefaultSettings,
-		WindowSize:     DefaultSettings[SETTINGS_INITIAL_WINDOW_SIZE],
-		PeerWindowSize: DEFAULT_INITIAL_WINDOW_SIZE,
-		Streams:        make(map[uint32]*Stream),
-		WriteChan:      make(chan Frame),
+		RW:           rw,
+		HpackContext: hpack.NewContext(DEFAULT_HEADER_TABLE_SIZE),
+		Settings:     DefaultSettings,
+		Window:       NewWindow(),
+		Streams:      make(map[uint32]*Stream),
+		WriteChan:    make(chan Frame),
 	}
 	return conn
 }
@@ -44,7 +42,6 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 	stream := NewStream(
 		streamid,
 		conn.WriteChan,
-		DefaultSettings[SETTINGS_INITIAL_WINDOW_SIZE],
 		conn.HpackContext,
 		conn.CallBack,
 	)
@@ -71,12 +68,15 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 	conn.Settings = settings
 
 	// SETTINGS_INITIAL_WINDOW_SIZE
-	initialWindwoSize, ok = settings[initi]
+	initialWindwoSize, ok := settings[SETTINGS_INITIAL_WINDOW_SIZE]
 	if ok {
 		if initialWindwoSize > 65535 { // validate
 			Error("FLOW_CONTROL_ERROR (%s)", "SETTINGS_INITIAL_WINDOW_SIZE too large")
 			return
 		}
+		//for _, stream := range conn.Streams {
+
+		//}
 	}
 
 	// send ACK
@@ -132,7 +132,8 @@ func (conn *Conn) ReadLoop() {
 
 		// DATA frame なら winodw update
 		if frame.Header().Type == DataFrameType {
-			conn.WindowUpdate(frame.Header().Length)
+			length := int32(frame.Header().Length)
+			conn.WindowUpdate(length)
 		}
 
 		// stream が close ならリストから消す
@@ -168,19 +169,16 @@ func (conn *Conn) WriteLoop() (err error) {
 	return
 }
 
-func (conn *Conn) WindowUpdate(length uint32) {
+func (conn *Conn) WindowUpdate(length int32) {
 	Debug("connection window update %d byte", length)
 
-	total := conn.WindowSize
-	total = total - length
+	conn.Window.CurrentSize = conn.Window.CurrentSize - length
 
-	threshold := conn.Settings[SETTINGS_INITIAL_WINDOW_SIZE]/2 + 1
-	if total < threshold {
-		// この値を下回ったら WindowUpdate を送る
-		update := conn.WindowSize - total
-		conn.WriteChan <- NewWindowUpdateFrame(0, update)
-	} else {
-		conn.WindowSize = total
+	// この値を下回ったら WindowUpdate を送る
+	if conn.Window.CurrentSize < conn.Window.Threshold {
+		update := conn.Window.InitialSize - conn.Window.CurrentSize
+		conn.WriteChan <- NewWindowUpdateFrame(0, uint32(update))
+		conn.Window.CurrentSize = conn.Window.CurrentSize + update
 	}
 }
 

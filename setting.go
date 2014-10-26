@@ -20,6 +20,4 @@ var DefaultSettings = map[SettingsID]uint32{
 	SETTINGS_MAX_HEADER_LIST_SIZE:   DEFAULT_MAX_HEADER_LIST_SIZE,
 }
 
-var WINDOW_UPDATE_THRESHOLD uint32 = DefaultSettings[SETTINGS_INITIAL_WINDOW_SIZE]/2 + 1
-
 var NilSettings = make(map[SettingsID]uint32, 0)
