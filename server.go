@@ -111,7 +111,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			Host:             authority,
 		}
 
-		Notice("\n%s", White(util.RequestString(req)))
+		Debug("\n%s", White(util.RequestString(req)))
 
 		// Handle HTTP using handler
 		res := NewResponseWriter()
@@ -119,7 +119,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		responseHeader := res.Header()
 		responseHeader.Add(":status", strconv.Itoa(res.status))
 
-		Notice("\n%s", White(res.String()))
+		Debug("\n%s", White(res.String()))
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
@@ -138,14 +138,22 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		// MaxFrameSize ごとに分けて送る
 		for {
+			log.Printf("current window of stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
 			if len(data) == 0 {
 				break
 			}
+
+			// window size が足りなかったら送らない
+			if stream.Window.PeercurrentSize == 0 {
+				continue
+			}	
 
 			// MaxFrameSize より小さいなら全部送る
 			if frameSize > len(data) {
 				frameSize = len(data)
 			}
+
+			if frameSize > 
 
 			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
 			stream.Write(dataFrame)

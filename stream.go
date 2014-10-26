@@ -43,7 +43,7 @@ func NewStream(id uint32, writeChan chan Frame, settings, peerSettings map[Setti
 	stream := &Stream{
 		ID:           id,
 		State:        IDLE,
-		Window:       NewWindow(),
+		Window:       NewWindow(settings, peerSettings),
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		Settings:     settings,
@@ -86,6 +86,9 @@ func (stream *Stream) Read(f Frame) {
 		Debug("response to PING")
 		ping := NewPingFrame(ACK, stream.ID, frame.OpaqueData)
 		stream.Write(ping)
+	case *WindowUpdateFrame:
+		Info("Window Update %d byte stream(%v)", frame.WindowSizeIncrement, stream.ID)
+		stream.Window.PeerCurrentSize += int32(frame.WindowSizeIncrement)
 	}
 }
 

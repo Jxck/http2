@@ -18,7 +18,7 @@ type Window struct {
 	PeerThreshold   int32
 }
 
-func NewWindow() *Window {
+func NewWindowDefault() *Window {
 	return &Window{
 		InitialSize:     DEFAULT_INITIAL_WINDOW_SIZE,
 		CurrentSize:     DEFAULT_INITIAL_WINDOW_SIZE,
@@ -26,5 +26,18 @@ func NewWindow() *Window {
 		PeerInitialSize: DEFAULT_INITIAL_WINDOW_SIZE,
 		PeerCurrentSize: DEFAULT_INITIAL_WINDOW_SIZE,
 		PeerThreshold:   DEFAULT_INITIAL_WINDOW_SIZE/2 + 1,
+	}
+}
+
+func NewWindow(settings, peerSettings map[SettingsID]int32) *Window {
+	initialWindow := settings[SETTINGS_INITIAL_WINDOW_SIZE]
+	peerInitilaWindow := peerSettings[SETTINGS_INITIAL_WINDOW_SIZE]
+	return &Window{
+		InitialSize:     initialWindow,
+		CurrentSize:     initialWindow,
+		Threshold:       initialWindow/2 + 1,
+		PeerInitialSize: peerInitilaWindow,
+		PeerCurrentSize: peerInitilaWindow,
+		PeerThreshold:   peerInitilaWindow/2 + 1,
 	}
 }

@@ -32,7 +32,7 @@ func NewConn(rw io.ReadWriter) *Conn {
 		HpackContext: hpack.NewContext(uint32(DEFAULT_HEADER_TABLE_SIZE)),
 		Settings:     DefaultSettings,
 		PeerSettings: DefaultSettings,
-		Window:       NewWindow(),
+		Window:       NewWindowDefault(),
 		Streams:      make(map[uint32]*Stream),
 		WriteChan:    make(chan Frame),
 	}
@@ -71,15 +71,25 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 	conn.Settings = settings
 
 	// SETTINGS_INITIAL_WINDOW_SIZE
-	initialWindwoSize, ok := settings[SETTINGS_INITIAL_WINDOW_SIZE]
+	initialWindowSize, ok := settings[SETTINGS_INITIAL_WINDOW_SIZE]
 	if ok {
-		if initialWindwoSize > 65535 { // validate
+		if initialWindowSize > 65535 { // validate
 			Error("FLOW_CONTROL_ERROR (%s)", "SETTINGS_INITIAL_WINDOW_SIZE too large")
 			return
 		}
-		//for _, stream := range conn.Streams {
 
-		//}
+		conn.Window.PeerCurrentSize -= conn.Window.InitialSize
+		conn.Window.PeerCurrentSize += initialWindowSize
+		conn.Window.InitialSize = initialWindowSize
+		conn.PeerSettings[SETTINGS_INITIAL_WINDOW_SIZE] = initialWindowSize
+
+		for _, stream := range conn.Streams {
+			log.Println("apply settings to stream", stream)
+			stream.Window.PeerCurrentSize -= stream.Window.InitialSize
+			stream.Window.PeerCurrentSize += initialWindowSize
+			stream.Window.InitialSize = initialWindowSize
+			stream.PeerSettings[SETTINGS_INITIAL_WINDOW_SIZE] = initialWindowSize
+		}
 	}
 
 	// send ACK
@@ -113,8 +123,37 @@ func (conn *Conn) ReadLoop() {
 			conn.HandleSettings(settingsFrame)
 		}
 
-		// 新しいストリーム ID なら対応するストリームを生成
+		// Connection Level Window Update
+		if frame.Header().Type == WindowUpdateFrameType {
+			windowUpdateFrame, ok := frame.(*WindowUpdateFrame)
+			if !ok {
+				Error("invalid window update frame %v", frame)
+				return
+			}
+			conn.Window.PeerCurrentSize += int32(windowUpdateFrame.WindowSizeIncrement)
+		}
+
+		// handle GOAWAY with close connection
+		if frame.Header().Type == GoAwayFrameType {
+			Debug("stop conn.ReadLoop() by GOAWAY")
+			conn.Close()
+			break
+		}
+
+		// DATA frame なら winodw update
+		if frame.Header().Type == DataFrameType {
+			length := int32(frame.Header().Length)
+			conn.WindowUpdate(length)
+		}
+
+		// 以下 stream leve のコントロール
+		// StreamID == 0 は無視
 		streamID := frame.Header().StreamID
+		if streamID == 0 {
+			continue
+		}
+
+		// 新しいストリーム ID なら対応するストリームを生成
 		stream, ok := conn.Streams[streamID]
 		if !ok {
 			// create stream with streamID
@@ -133,23 +172,10 @@ func (conn *Conn) ReadLoop() {
 			Error(Red(err))
 		}
 
-		// DATA frame なら winodw update
-		if frame.Header().Type == DataFrameType {
-			length := int32(frame.Header().Length)
-			conn.WindowUpdate(length)
-		}
-
 		// stream が close ならリストから消す
 		if stream.State == CLOSED {
 			Info("remove stream(%d) from conn.Streams[]", streamID)
 			conn.Streams[streamID] = nil
-		}
-
-		// handle GOAWAY with close connection
-		if frame.Header().Type == GoAwayFrameType {
-			Debug("stop conn.ReadLoop() by GOAWAY")
-			conn.Close()
-			break
 		}
 
 		// ストリームにフレームを渡す
