@@ -18,8 +18,8 @@ type Conn struct {
 	RW             io.ReadWriter
 	HpackContext   *hpack.Context
 	LastStreamID   uint32
-	WindowSize     uint32
-	PeerWindowSize uint32
+	WindowSize     int32
+	PeerWindowSize int32
 	Settings       map[SettingsID]uint32
 	PeerSettings   map[SettingsID]uint32
 	Streams        map[uint32]*Stream
@@ -55,21 +55,33 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 	Debug("conn.HandleSettings(%v)", settingsFrame)
 
-	settings := settingsFrame.Settings
-
-	// if SETTINGS Frame
-	if settingsFrame.Flags == UNSET {
-		conn.Settings = settings
-		conn.PeerWindowSize = settings[SETTINGS_INITIAL_WINDOW_SIZE]
-		//TODO: update stream flow
-
-		// send ACK
-		ack := NewSettingsFrame(ACK, 0, NilSettings)
-		conn.WriteChan <- ack
-	} else if settingsFrame.Flags == ACK {
+	if settingsFrame.Flags == ACK {
 		// receive ACK
 		Trace("receive SETTINGS ACK")
+		return
 	}
+
+	if settingsFrame.Flags != UNSET {
+		Error("unknown flag of SETTINGS Frame %v", settingsFrame.Flags)
+		return
+	}
+
+	// save SETTINGS Frame
+	settings := settingsFrame.Settings
+	conn.Settings = settings
+
+	// SETTINGS_INITIAL_WINDOW_SIZE
+	initialWindwoSize, ok = settings[initi]
+	if ok {
+		if initialWindwoSize > 65535 { // validate
+			Error("FLOW_CONTROL_ERROR (%s)", "SETTINGS_INITIAL_WINDOW_SIZE too large")
+			return
+		}
+	}
+
+	// send ACK
+	ack := NewSettingsFrame(ACK, 0, NilSettings)
+	conn.WriteChan <- ack
 }
 
 func (conn *Conn) ReadLoop() {
@@ -160,9 +172,10 @@ func (conn *Conn) WindowUpdate(length uint32) {
 	Debug("connection window update %d byte", length)
 
 	total := conn.WindowSize
-
 	total = total - length
-	if total < WINDOW_UPDATE_THRESHOLD {
+
+	threshold := conn.Settings[SETTINGS_INITIAL_WINDOW_SIZE]/2 + 1
+	if total < threshold {
 		// この値を下回ったら WindowUpdate を送る
 		update := conn.WindowSize - total
 		conn.WriteChan <- NewWindowUpdateFrame(0, update)

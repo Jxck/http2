@@ -15,8 +15,8 @@ func init() {
 type Stream struct {
 	ID             uint32
 	State          State
-	WindowSize     uint32
-	PeerWindowSize uint32
+	WindowSize     int32
+	PeerWindowSize int32
 	ReadChan       chan Frame
 	WriteChan      chan Frame
 	HpackContext   *hpack.Context
