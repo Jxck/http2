@@ -1,7 +1,7 @@
 # http2-go
 
 http2 implementation in Golang
-(under heavy developping)
+(under heavy development)
 
 
 ## version
