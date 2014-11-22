@@ -124,7 +124,7 @@ func (conn *Conn) ReadLoop() {
 		}
 
 		// Connection Level Window Update
-		if frame.Header().Type == WindowUpdateFrameType {
+		if frame.Header().StreamID == 0 && frame.Header().Type == WindowUpdateFrameType {
 			windowUpdateFrame, ok := frame.(*WindowUpdateFrame)
 			if !ok {
 				Error("invalid window update frame %v", frame)
