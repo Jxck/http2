@@ -68,7 +68,7 @@ func (stream *Stream) Read(f Frame) {
 		stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
 
 		if frame.Header().Flags&END_STREAM == END_STREAM {
-			stream.CallBack(stream)
+			go stream.CallBack(stream)
 		}
 	case *DataFrame:
 		length := int32(frame.Header().Length)
