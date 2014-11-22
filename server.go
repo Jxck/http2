@@ -134,31 +134,45 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// Send response body as DATA Frame
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
-		frameSize := int(stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE])
+		frameSize := stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE]
 
-		// MaxFrameSize ごとに分けて送る
+		// MaxFrameSize を基準に考え、そこから送れるサイズまで減らして行く
 		for {
-			log.Printf("current window of stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
-			if len(data) == 0 {
+			log.Printf("current window of peer stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
+			dataSize := int32(len(data))
+
+			// 送り終わってれば終わり
+			if dataSize == 0 {
 				break
 			}
 
-			// window size が足りなかったら送らない
-			if stream.Window.PeercurrentSize == 0 {
+			// window size が足りなかったらそもそも送らない
+			if stream.Window.PeerCurrentSize <= 0 {
+				log.Printf("peer stream(%v) blocked with full window\n", stream.ID)
 				continue
-			}	
-
-			// MaxFrameSize より小さいなら全部送る
-			if frameSize > len(data) {
-				frameSize = len(data)
 			}
 
-			if frameSize > 
+			// MaxFrameSize より小さいなら全部送る
+			if frameSize > dataSize {
+				frameSize = dataSize
+			}
 
+			// window size はあるけど、入りきらない場合は使い切る
+			if frameSize > stream.Window.PeerCurrentSize {
+				frameSize = stream.Window.PeerCurrentSize
+			}
+
+			// ここまでに算出した frameSize 分の DATA Frame を作って送る
 			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
 			stream.Write(dataFrame)
+
+			// 送った分を削る
 			copy(data, data[frameSize:])
-			data = data[:len(data)-frameSize]
+			data = data[:dataSize-frameSize]
+
+			// Peer の Window Size を減らす
+			stream.Window.PeerCurrentSize -= frameSize
+
 		}
 
 		// End Stream in empty DATA Frame
