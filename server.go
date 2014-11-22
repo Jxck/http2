@@ -138,7 +138,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		// MaxFrameSize を基準に考え、そこから送れるサイズまで減らして行く
 		for {
-			log.Printf("current window of peer stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
+			Debug("current window of peer stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
 			dataSize := int32(len(data))
 
 			// 送り終わってれば終わり
@@ -148,7 +148,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 			// window size が足りなかったらそもそも送らない
 			if stream.Window.PeerCurrentSize <= 0 {
-				log.Printf("peer stream(%v) blocked with full window\n", stream.ID)
+				Debug("peer stream(%v) blocked with full window\n", stream.ID)
 				continue
 			}
 
