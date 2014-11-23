@@ -73,7 +73,8 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 	// SETTINGS_INITIAL_WINDOW_SIZE
 	initialWindowSize, ok := settings[SETTINGS_INITIAL_WINDOW_SIZE]
 	if ok {
-		if initialWindowSize > 65535 { // validate
+
+		if initialWindowSize > 2147483647 { // validate < 2^31-1
 			Error("FLOW_CONTROL_ERROR (%s)", "SETTINGS_INITIAL_WINDOW_SIZE too large")
 			return
 		}

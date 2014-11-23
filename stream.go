@@ -84,8 +84,8 @@ func (stream *Stream) Read(f Frame) {
 		stream.Close()
 	case *PingFrame:
 		Debug("response to PING")
-		ping := NewPingFrame(ACK, stream.ID, frame.OpaqueData)
-		stream.Write(ping)
+		pong := NewPingFrame(ACK, stream.ID, frame.OpaqueData)
+		stream.Write(pong)
 	case *WindowUpdateFrame:
 		Info("Window Update %d byte stream(%v)", frame.WindowSizeIncrement, stream.ID)
 		stream.Window.PeerCurrentSize += int32(frame.WindowSizeIncrement)
