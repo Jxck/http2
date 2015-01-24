@@ -378,9 +378,9 @@ func TestRstStreamCase(t *testing.T) {
 
 // SETTINGS Frame
 func TestSettingsFrame(t *testing.T) {
-	settings := []Setting{
-		{SETTINGS_MAX_CONCURRENT_STREAMS, 100},
-		{SETTINGS_INITIAL_WINDOW_SIZE, DEFAULT_WINDOW_SIZE},
+	settings := map[SettingsID]int32{
+		SETTINGS_MAX_CONCURRENT_STREAMS: 100,
+		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_INITIAL_WINDOW_SIZE,
 	}
 	expected := NewSettingsFrame(2, 0, settings)
 
@@ -435,9 +435,10 @@ func TestSettingsCase(t *testing.T) {
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	settings := []Setting{
-		{1, 8192},
-		{3, 5000},
+
+	settings := map[SettingsID]int32{
+		1: 8192,
+		3: 5000,
 	}
 
 	// compare struct
