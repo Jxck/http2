@@ -102,7 +102,8 @@ func (conn *Conn) ReadLoop() {
 	Debug("start conn.ReadLoop()")
 	for {
 		// コネクションからフレームを読み込む
-		frame, err := ReadFrame(conn.RW)
+		frame, err := ReadFrame(conn.RW, conn.Settings)
+		Error("%v", err)
 		if err != nil {
 			if err == io.EOF {
 				Error("%v", err)

@@ -3,10 +3,16 @@ package frame
 import (
 	"fmt"
 	. "github.com/Jxck/color"
+	. "github.com/Jxck/logger"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 type FrameType uint8
 
@@ -125,10 +131,12 @@ var FrameMap = map[FrameType](func(*FrameHeader) Frame){
 // +---------------------------------------------------------------+
 
 type FrameHeader struct {
-	Length   uint32 // 24bit
-	Type     FrameType
-	Flags    Flag
-	StreamID uint32 // R+31bit
+	Length            uint32 // 24bit
+	Type              FrameType
+	Flags             Flag
+	StreamID          uint32 // R+31bit
+	MaxFrameSize      int32
+	MaxHeaderListSize int32
 }
 
 func NewFrameHeader(length uint32, types FrameType, flags Flag, streamid uint32) *FrameHeader {
@@ -152,8 +160,22 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 
 	// last 8 bit for type
 	fh.Type = FrameType(first & 0xFF)
+	Trace("type = %d", fh.Type)
+
+	if fh.Type < 0 || 0x9 < fh.Type {
+		Error("ingore this frame")
+		// TODO: ignore this frame
+		return
+	}
+
 	// first 24 bit for length
 	fh.Length = first >> 8
+	Trace("length = %d", fh.Length)
+
+	if int32(fh.Length) > fh.MaxFrameSize {
+		Error("frame size is larger than MAX_FRAME_SIZE: %v", fh.Length)
+		return fmt.Errorf("frame size is larger than MAX_FRAME_SIZE: %v", fh.Length)
+	}
 
 	// read 8 bit for Flags
 	MustRead(r, &fh.Flags)
@@ -894,6 +916,11 @@ func (frame *PingFrame) Read(r io.Reader) (err error) {
 		err = Recovery(recover())
 	}()
 
+	if frame.Length != 8 {
+		Trace("invalid length: %v", frame.Length)
+		return fmt.Errorf("invalid length: %v", frame.Length)
+	}
+
 	frame.OpaqueData = make([]byte, 8)
 	MustRead(r, &frame.OpaqueData)
 	return err
@@ -1109,10 +1136,13 @@ func (frame *ContinuationFrame) String() string {
 }
 
 // Read
-func ReadFrame(r io.Reader) (frame Frame, err error) {
+func ReadFrame(r io.Reader, settings map[SettingsID]int32) (frame Frame, err error) {
 	fh := new(FrameHeader)
+	fh.MaxFrameSize = settings[SETTINGS_MAX_FRAME_SIZE]
+	fh.MaxHeaderListSize = settings[SETTINGS_MAX_HEADER_LIST_SIZE]
 	err = fh.Read(r)
 	if err != nil {
+		Error("%v", err)
 		return nil, err
 	}
 
