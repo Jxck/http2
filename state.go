@@ -157,7 +157,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		return
 	case RESERVED_LOCAL:
 		// H
-		if types == HeadersFrameType {
+		if types == HeadersFrameType && context == SEND {
 			stream.changeState(HALF_CLOSED_REMOTE)
 			return
 		}
@@ -169,7 +169,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		}
 	case RESERVED_REMOTE:
 		// H
-		if types == HeadersFrameType {
+		if types == HeadersFrameType && context == RECV {
 			stream.changeState(HALF_CLOSED_LOCAL)
 			return
 		}
@@ -180,17 +180,21 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 			return
 		}
 	case HALF_CLOSED_LOCAL:
-		// same as half closed remote
-		fallthrough
-	case HALF_CLOSED_REMOTE:
 		// ES
-		if flags&END_STREAM == END_STREAM {
+		if flags&END_STREAM == END_STREAM && context == RECV {
 			stream.changeState(CLOSED)
 			return
 		}
 
-		// H: Headers but not END_STREAM dosen't care
-		if types == HeadersFrameType {
+		// R
+		if types == RstStreamFrameType {
+			stream.changeState(CLOSED)
+			return
+		}
+	case HALF_CLOSED_REMOTE:
+		// ES
+		if flags&END_STREAM == END_STREAM && context == SEND {
+			stream.changeState(CLOSED)
 			return
 		}
 
