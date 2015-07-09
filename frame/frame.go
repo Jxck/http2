@@ -49,19 +49,20 @@ func (frameType FrameType) String() string {
 type ErrorCode uint32
 
 const (
-	NO_ERROR            ErrorCode = 0
-	PROTOCOL_ERROR                = 1
-	INTERNAL_ERROR                = 2
-	FLOW_CONTROL_ERROR            = 3
-	SETTINGS_TIMEOUT              = 4
-	STREAM_CLOSED                 = 5
-	FRAME_SIZE_ERROR              = 6
-	REFUSED_STREAM                = 7
-	CANCEL                        = 8
-	COMPRESSION_ERROR             = 9
-	CONNECT_ERROR                 = 10
-	ENHANCE_YOUR_CALM             = 11
-	INADEQUATE_SECURITY           = 12
+	NO_ERROR            ErrorCode = 0x0
+	PROTOCOL_ERROR                = 0x1
+	INTERNAL_ERROR                = 0x2
+	FLOW_CONTROL_ERROR            = 0x3
+	SETTINGS_TIMEOUT              = 0x4
+	STREAM_CLOSED                 = 0x5
+	FRAME_SIZE_ERROR              = 0x6
+	REFUSED_STREAM                = 0x7
+	CANCEL                        = 0x8
+	COMPRESSION_ERROR             = 0x9
+	CONNECT_ERROR                 = 0xa
+	ENHANCE_YOUR_CALM             = 0xb
+	INADEQUATE_SECURITY           = 0xc
+	HTTP_1_1_REQUIRED             = 0xd
 )
 
 func (e ErrorCode) String() string {
@@ -79,6 +80,7 @@ func (e ErrorCode) String() string {
 		"CONNECT_ERROR",
 		"ENHANCE_YOUR_CALM",
 		"INADEQUATE_SECURITY",
+		"HTTP_1_1_REQUIRED",
 	}
 	return errors[int(e)]
 }
@@ -118,18 +120,15 @@ var FrameMap = map[FrameType](func(*FrameHeader) Frame){
 
 // Frame Header
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +-----------------------------------------------+
 // |                 Length (24)                   |
 // +---------------+---------------+---------------+
 // |   Type (8)    |   Flags (8)   |
-// +-+-+-----------+---------------+-------------------------------+
+// +-+-------------+---------------+-------------------------------+
 // |R|                 Stream Identifier (31)                      |
 // +=+=============================================================+
 // |                   Frame Payload (0...)                      ...
 // +---------------------------------------------------------------+
-
 type FrameHeader struct {
 	Length            uint32 // 24bit
 	Type              FrameType
@@ -216,9 +215,7 @@ func (fh *FrameHeader) String() string {
 
 // DATA
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------+
 // |Pad Length? (8)|
 // +---------------+-----------------------------------------------+
 // |                            Data (*)                         ...
@@ -340,9 +337,7 @@ func (frame *DataFrame) String() string {
 
 // HEADERS
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------+
 // |Pad Length? (8)|
 // +-+-------------+-----------------------------------------------+
 // |E|                 Stream Dependency? (31)                     |
@@ -353,7 +348,6 @@ func (frame *DataFrame) String() string {
 // +---------------------------------------------------------------+
 // |                           Padding (*)                       ...
 // +---------------------------------------------------------------+
-
 type HeadersFrame struct {
 	*FrameHeader
 	PadLength      uint8
@@ -532,9 +526,7 @@ func (frame *HeadersFrame) String() string {
 
 // PRIORITY
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +-+-------------------------------------------------------------+
 // |E|                  Stream Dependency (31)                     |
 // +-+-------------+-----------------------------------------------+
 // |   Weight (8)  |
@@ -606,9 +598,7 @@ func (frame *PriorityFrame) String() string {
 
 // RST_STREAM
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------------------------------------------------------+
 // |                        Error Code (32)                        |
 // +---------------------------------------------------------------+
 type RstStreamFrame struct {
@@ -659,9 +649,7 @@ func (frame *RstStreamFrame) String() string {
 
 // SETTINGS Frame
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +-------------------------------+
 // |       Identifier (16)         |
 // +-------------------------------+-------------------------------+
 // |                        Value (32)                             |
@@ -678,22 +666,22 @@ const (
 type SettingsID uint16
 
 const (
-	SETTINGS_HEADER_TABLE_SIZE      SettingsID = 1 // 4096
-	SETTINGS_ENABLE_PUSH                       = 2 // 1
-	SETTINGS_MAX_CONCURRENT_STREAMS            = 3 // (infinite)
-	SETTINGS_INITIAL_WINDOW_SIZE               = 4 // 65535
-	SETTINGS_MAX_FRAME_SIZE                    = 5 // 65536
-	SETTINGS_MAX_HEADER_LIST_SIZE              = 6 // (infinite)
+	SETTINGS_HEADER_TABLE_SIZE      SettingsID = 0x1 // 4096
+	SETTINGS_ENABLE_PUSH                       = 0x2 // 1
+	SETTINGS_MAX_CONCURRENT_STREAMS            = 0x3 // (infinite)
+	SETTINGS_INITIAL_WINDOW_SIZE               = 0x4 // 65535
+	SETTINGS_MAX_FRAME_SIZE                    = 0x5 // 65536
+	SETTINGS_MAX_HEADER_LIST_SIZE              = 0x6 // (infinite)
 )
 
 func (s SettingsID) String() string {
 	m := map[SettingsID]string{
-		1: "SETTINGS_HEADER_TABLE_SIZE",
-		2: "SETTINGS_ENABLE_PUSH",
-		3: "SETTINGS_MAX_CONCURRENT_STREAMS",
-		4: "SETTINGS_INITIAL_WINDOW_SIZE",
-		5: "SETTINGS_MAX_FRAME_SIZE",
-		6: "SETTINGS_MAX_HEADER_LIST_SIZE",
+		0x1: "SETTINGS_HEADER_TABLE_SIZE",
+		0x2: "SETTINGS_ENABLE_PUSH",
+		0x3: "SETTINGS_MAX_CONCURRENT_STREAMS",
+		0x4: "SETTINGS_INITIAL_WINDOW_SIZE",
+		0x5: "SETTINGS_MAX_FRAME_SIZE",
+		0x6: "SETTINGS_MAX_HEADER_LIST_SIZE",
 	}
 	return fmt.Sprintf("%s(%d)", m[s], s)
 }
@@ -763,9 +751,7 @@ func (frame *SettingsFrame) String() string {
 
 // PUSH_PROMISE
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------+
 // |Pad Length? (8)|
 // +-+-------------+-----------------------------------------------+
 // |R|                  Promised Stream ID (31)                    |
@@ -889,9 +875,7 @@ func (frame *PushPromiseFrame) String() string {
 
 // PING
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------------------------------------------------------+
 // |                                                               |
 // |                      Opaque Data (64)                         |
 // |                                                               |
@@ -953,9 +937,7 @@ func (frame *PingFrame) String() string {
 
 // GOAWAY
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +-+-------------------------------------------------------------+
 // |R|                  Last-Stream-ID (31)                        |
 // +-+-------------------------------------------------------------+
 // |                      Error Code (32)                          |
@@ -1025,9 +1007,7 @@ func (frame *GoAwayFrame) String() string {
 
 // WINDOW_UPDATE
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +-+-------------------------------------------------------------+
 // |R|              Window Size Increment (31)                     |
 // +-+-------------------------------------------------------------+
 type WindowUpdateFrame struct {
@@ -1082,9 +1062,7 @@ func (frame *WindowUpdateFrame) String() string {
 
 // CONTINUATION
 //
-//  0                   1                   2                   3
-//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// +---------------------------------------------------------------+
 // |                   Header Block Fragment (*)                 ...
 // +---------------------------------------------------------------+
 type ContinuationFrame struct {
