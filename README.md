@@ -1,14 +1,13 @@
 # http2-go
 
-http2 implementation in Golang
+HTTP2 implementation in Golang
 (under heavy development)
 
 
 ## version
 
-http2 (draft-14)
-http://tools.ietf.org/html/draft-ietf-httpbis-http2-14
-
+RFC7540
+https://tools.ietf.org/html/rfc7540
 
 ## require
 
