@@ -511,7 +511,7 @@ func (frame *HeadersFrame) String() string {
 	for _, name := range pseudo {
 		value := frame.Headers.Get(name)
 		if value != "" {
-			str += fmt.Sprintf("\n%s: %s", Blue(name), value)
+			str += fmt.Sprintf("\n%s: %s", Navy(name), value)
 		}
 	}
 
@@ -519,7 +519,7 @@ func (frame *HeadersFrame) String() string {
 		if strings.HasPrefix(name, ":") {
 			continue
 		}
-		str += fmt.Sprintf("\n%s: %s", Blue(name), strings.Join(value, ","))
+		str += fmt.Sprintf("\n%s: %s", Navy(name), strings.Join(value, ","))
 	}
 
 	return str

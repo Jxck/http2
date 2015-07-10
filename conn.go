@@ -53,8 +53,6 @@ func (conn *Conn) NewStream(streamid uint32) *Stream {
 }
 
 func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
-	Debug("conn.HandleSettings(%v)", settingsFrame)
-
 	if settingsFrame.Flags == ACK {
 		// receive ACK
 		Trace("receive SETTINGS ACK")
@@ -249,7 +247,7 @@ func (conn *Conn) ReadMagic() (err error) {
 		Error("Invalid Magic String")
 		return fmt.Errorf("Invalid Magic String")
 	}
-	Info("%v %q", Red("recv"), string(magic))
+	Info("%v %q", Green("recv"), string(magic))
 	return
 }
 
