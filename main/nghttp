@@ -1,1 +1,1 @@
-nghttp https://localhost:3000/main/message -v --no-dep --color
+nghttp https://localhost:3000/main/message -v --color
