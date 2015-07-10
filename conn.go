@@ -81,7 +81,11 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 		defaultSettings[k] = v
 	}
 
-	Trace("merged settigns: %v", defaultSettings)
+	Trace("merged settigns ============")
+	for k, v := range defaultSettings {
+		Trace("%v:%v", k, v)
+	}
+	Trace("merged settigns ============")
 
 	// save settings to conn
 	conn.Settings = defaultSettings
@@ -244,7 +248,7 @@ func (conn *Conn) ReadMagic() (err error) {
 		return err
 	}
 	if string(magic) != CONNECTION_PREFACE {
-		Error("Invalid Magic String")
+		Info("Invalid Magic String: %q", string(magic))
 		return fmt.Errorf("Invalid Magic String")
 	}
 	Info("%v %q", Green("recv"), string(magic))
