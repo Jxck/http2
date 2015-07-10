@@ -154,7 +154,6 @@ func (conn *Conn) ReadLoop() {
 		// handle GOAWAY with close connection
 		if frame.Header().Type == GoAwayFrameType {
 			Debug("stop conn.ReadLoop() by GOAWAY")
-			conn.Close()
 			break
 		}
 
