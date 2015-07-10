@@ -7,7 +7,7 @@ import (
 const (
 	OVER_TLS           string = "h2"
 	OVER_TCP                  = "h2c"
-	VERSION                   = OVER_TLS + "-14"
+	VERSION                   = OVER_TLS
 	CONNECTION_PREFACE        = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 )
 
