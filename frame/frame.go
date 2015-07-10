@@ -172,8 +172,9 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	Trace("length = %d", fh.Length)
 
 	if int32(fh.Length) > fh.MaxFrameSize {
-		Error("frame size is larger than MAX_FRAME_SIZE: %v", fh.Length)
-		return fmt.Errorf("frame size is larger than MAX_FRAME_SIZE: %v", fh.Length)
+		msg := fmt.Sprintf("frame size (%v) is larger than MAX_FRAME_SIZE: %v", fh.Length, fh.MaxFrameSize)
+		Error(msg)
+		return fmt.Errorf(msg)
 	}
 
 	// read 8 bit for Flags

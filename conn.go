@@ -66,9 +66,27 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 		return
 	}
 
-	// save SETTINGS Frame
+	// received SETTINGS Frame
 	settings := settingsFrame.Settings
-	conn.Settings = settings
+
+	defaultSettings := map[SettingsID]int32{
+		SETTINGS_HEADER_TABLE_SIZE:      DEFAULT_HEADER_TABLE_SIZE,
+		SETTINGS_ENABLE_PUSH:            DEFAULT_ENABLE_PUSH,
+		SETTINGS_MAX_CONCURRENT_STREAMS: DEFAULT_MAX_CONCURRENT_STREAMS,
+		SETTINGS_INITIAL_WINDOW_SIZE:    DEFAULT_INITIAL_WINDOW_SIZE,
+		SETTINGS_MAX_FRAME_SIZE:         DEFAULT_MAX_FRAME_SIZE,
+		SETTINGS_MAX_HEADER_LIST_SIZE:   DEFAULT_MAX_HEADER_LIST_SIZE,
+	}
+
+	// merge with default
+	for k, v := range settings {
+		defaultSettings[k] = v
+	}
+
+	Trace("merged settigns: %v", defaultSettings)
+
+	// save settings to conn
+	conn.Settings = defaultSettings
 
 	// SETTINGS_INITIAL_WINDOW_SIZE
 	initialWindowSize, ok := settings[SETTINGS_INITIAL_WINDOW_SIZE]
@@ -103,7 +121,6 @@ func (conn *Conn) ReadLoop() {
 	for {
 		// コネクションからフレームを読み込む
 		frame, err := ReadFrame(conn.RW, conn.Settings)
-		Error("%v", err)
 		if err != nil {
 			if err == io.EOF {
 				Error("%v", err)
