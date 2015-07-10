@@ -123,6 +123,7 @@ func (conn *Conn) ReadLoop() {
 	for {
 		// コネクションからフレームを読み込む
 		frame, err := ReadFrame(conn.RW, conn.Settings)
+		Debug("3=================================%v", err)
 		if err != nil {
 			if err == io.EOF {
 				Error("%v", err)
