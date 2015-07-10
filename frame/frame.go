@@ -175,7 +175,6 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 		msg := fmt.Sprintf("frame size (%v) is larger than MAX_FRAME_SIZE: %v", fh.Length, fh.MaxFrameSize)
 		Error(msg)
 		err = fmt.Errorf(msg)
-		Debug("1=======%v", err)
 		return err
 	}
 
@@ -1182,9 +1181,7 @@ func ReadFrame(r io.Reader, settings map[SettingsID]int32) (frame Frame, err err
 	fh.MaxFrameSize = settings[SETTINGS_MAX_FRAME_SIZE]
 	fh.MaxHeaderListSize = settings[SETTINGS_MAX_HEADER_LIST_SIZE]
 
-	Debug("-=======%v", err)
 	err = fh.Read(r)
-	Debug("2=================================%v", err)
 	if err != nil {
 		Error("%v", err)
 		return nil, err
