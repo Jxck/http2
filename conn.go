@@ -125,6 +125,10 @@ func (conn *Conn) ReadLoop() {
 		frame, err := ReadFrame(conn.RW, conn.Settings)
 		if err != nil {
 			Error("%v", err)
+			errorCode, ok := err.(ErrorCode)
+			if ok {
+				conn.GoAway(0, errorCode)
+			}
 			break
 		}
 		if frame != nil {
@@ -215,6 +219,13 @@ func (conn *Conn) WriteLoop() (err error) {
 		}
 	}
 	return
+}
+
+func (conn *Conn) GoAway(streamId uint32, errorCode ErrorCode) {
+	Debug("connection close with GO_AWAY(%v)", errorCode)
+	// TODO: support additional debug data
+	goaway := NewGoAwayFrame(streamId, conn.LastStreamID, errorCode, nil)
+	conn.WriteChan <- goaway
 }
 
 func (conn *Conn) WindowUpdate(length int32) {

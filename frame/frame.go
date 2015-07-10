@@ -51,22 +51,22 @@ type ErrorCode uint32
 
 const (
 	NO_ERROR            ErrorCode = 0x0
-	PROTOCOL_ERROR                = 0x1
-	INTERNAL_ERROR                = 0x2
-	FLOW_CONTROL_ERROR            = 0x3
-	SETTINGS_TIMEOUT              = 0x4
-	STREAM_CLOSED                 = 0x5
-	FRAME_SIZE_ERROR              = 0x6
-	REFUSED_STREAM                = 0x7
-	CANCEL                        = 0x8
-	COMPRESSION_ERROR             = 0x9
-	CONNECT_ERROR                 = 0xa
-	ENHANCE_YOUR_CALM             = 0xb
-	INADEQUATE_SECURITY           = 0xc
-	HTTP_1_1_REQUIRED             = 0xd
+	PROTOCOL_ERROR      ErrorCode = 0x1
+	INTERNAL_ERROR      ErrorCode = 0x2
+	FLOW_CONTROL_ERROR  ErrorCode = 0x3
+	SETTINGS_TIMEOUT    ErrorCode = 0x4
+	STREAM_CLOSED       ErrorCode = 0x5
+	FRAME_SIZE_ERROR    ErrorCode = 0x6
+	REFUSED_STREAM      ErrorCode = 0x7
+	CANCEL              ErrorCode = 0x8
+	COMPRESSION_ERROR   ErrorCode = 0x9
+	CONNECT_ERROR       ErrorCode = 0xa
+	ENHANCE_YOUR_CALM   ErrorCode = 0xb
+	INADEQUATE_SECURITY ErrorCode = 0xc
+	HTTP_1_1_REQUIRED   ErrorCode = 0xd
 )
 
-func (e ErrorCode) String() string {
+func (e ErrorCode) Error() string {
 	errors := []string{
 		"NO_ERROR",
 		"PROTOCOL_ERROR",
@@ -159,7 +159,7 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 
 	// last 8 bit for type
 	fh.Type = FrameType(first & 0xFF)
-	Trace("type = %d", fh.Type)
+	Trace("type = %s", fh.Type)
 
 	if fh.Type < 0 || 0x9 < fh.Type {
 		Error("ingore this frame")
@@ -172,10 +172,8 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	Trace("length = %d", fh.Length)
 
 	if int32(fh.Length) > fh.MaxFrameSize {
-		msg := fmt.Sprintf("frame size (%v) is larger than MAX_FRAME_SIZE: %v", fh.Length, fh.MaxFrameSize)
-		Error(msg)
-		err = fmt.Errorf(msg)
-		return err
+		Error(fmt.Sprintf("frame size (%v) is larger than MAX_FRAME_SIZE: %v", fh.Length, fh.MaxFrameSize))
+		return FRAME_SIZE_ERROR
 	}
 
 	// read 8 bit for Flags
@@ -684,7 +682,7 @@ func (frame *RstStreamFrame) Header() *FrameHeader {
 func (frame *RstStreamFrame) String() string {
 	str := Cyan("RST_STREAM")
 	str += frame.FrameHeader.String()
-	str += fmt.Sprintf("\n(Error Code=%s(%d))", Red(frame.ErrorCode.String()), frame.ErrorCode)
+	str += fmt.Sprintf("\n(Error Code=%s(%d))", Red(frame.ErrorCode.Error()), frame.ErrorCode)
 	return str
 }
 
@@ -1067,7 +1065,7 @@ func (frame *GoAwayFrame) String() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.String()
 	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s(%d), opaque_data(%q))",
-		frame.LastStreamID, Red(frame.ErrorCode.String()), frame.ErrorCode, frame.AdditionalDebugData)
+		frame.LastStreamID, Red(frame.ErrorCode.Error()), frame.ErrorCode, frame.AdditionalDebugData)
 	return str
 }
 
