@@ -1,1 +1,1 @@
-nghttp https://localhost:3000/main/rfc7540.txt -v --no-dep
+nghttp https://localhost:3000/main/message -v --no-dep --color
