@@ -44,7 +44,7 @@ func NewStream(id uint32, writeChan chan Frame, settings, peerSettings map[Setti
 	stream := &Stream{
 		ID:           id,
 		State:        IDLE,
-		Window:       NewWindow(settings, peerSettings),
+		Window:       NewWindow(settings[SETTINGS_INITIAL_WINDOW_SIZE], peerSettings[SETTINGS_INITIAL_WINDOW_SIZE]),
 		ReadChan:     make(chan Frame),
 		WriteChan:    writeChan,
 		Settings:     settings,

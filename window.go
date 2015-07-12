@@ -29,9 +29,7 @@ func NewWindowDefault() *Window {
 	}
 }
 
-func NewWindow(settings, peerSettings map[SettingsID]int32) *Window {
-	initialWindow := settings[SETTINGS_INITIAL_WINDOW_SIZE]
-	peerInitilaWindow := peerSettings[SETTINGS_INITIAL_WINDOW_SIZE]
+func NewWindow(initialWindow, peerInitilaWindow int32) *Window {
 	return &Window{
 		InitialSize:     initialWindow,
 		CurrentSize:     initialWindow,
