@@ -195,6 +195,7 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
+	Trace("flags = %d", fh.Flags)
 
 	// read 32 bit for StreamID
 	var last uint32
@@ -203,6 +204,7 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 		return err
 	}
 	fh.StreamID = last & 0x7FFFFFFF
+	Trace("streamId = %d", fh.StreamID)
 
 	return err
 }
