@@ -125,9 +125,10 @@ func (conn *Conn) ReadLoop() {
 		frame, err := ReadFrame(conn.RW, conn.Settings)
 		if err != nil {
 			Error("%v", err)
-			errorCode, ok := err.(ErrorCode)
+			h2Error, ok := err.(*H2Error)
+			Debug("%v", ok)
 			if ok {
-				conn.GoAway(0, errorCode)
+				conn.GoAway(0, h2Error)
 			}
 			break
 		}
@@ -190,7 +191,12 @@ func (conn *Conn) ReadLoop() {
 		// stream の state を変える
 		err = stream.ChangeState(frame, RECV)
 		if err != nil {
-			Error(Red(err))
+			Error("%v", err)
+			h2Error, ok := err.(*H2Error)
+			if ok {
+				conn.GoAway(0, h2Error)
+			}
+			break
 		}
 
 		// stream が close ならリストから消す
@@ -221,10 +227,11 @@ func (conn *Conn) WriteLoop() (err error) {
 	return
 }
 
-func (conn *Conn) GoAway(streamId uint32, errorCode ErrorCode) {
-	Debug("connection close with GO_AWAY(%v)", errorCode)
-	// TODO: support additional debug data
-	goaway := NewGoAwayFrame(streamId, conn.LastStreamID, errorCode, nil)
+func (conn *Conn) GoAway(streamId uint32, h2Error *H2Error) {
+	Debug("connection close with GO_AWAY(%v)", h2Error)
+	errorCode := h2Error.ErrorCode
+	additionalDebugData := []byte(h2Error.AdditiolanDebugData)
+	goaway := NewGoAwayFrame(streamId, conn.LastStreamID, errorCode, additionalDebugData)
 	conn.WriteChan <- goaway
 }
 

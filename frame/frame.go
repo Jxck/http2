@@ -66,7 +66,7 @@ const (
 	HTTP_1_1_REQUIRED   ErrorCode = 0xd
 )
 
-func (e ErrorCode) Error() string {
+func (e ErrorCode) String() string {
 	errors := []string{
 		"NO_ERROR",
 		"PROTOCOL_ERROR",
@@ -84,6 +84,19 @@ func (e ErrorCode) Error() string {
 		"HTTP_1_1_REQUIRED",
 	}
 	return errors[int(e)]
+}
+
+type H2Error struct {
+	ErrorCode           ErrorCode
+	AdditiolanDebugData string
+}
+
+func (e H2Error) Error() string {
+	return e.ErrorCode.String()
+}
+
+func (e H2Error) String() string {
+	return fmt.Sprintf("%v(%v)", e.ErrorCode, e.AdditiolanDebugData)
 }
 
 // Flags
@@ -172,8 +185,9 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	Trace("length = %d", fh.Length)
 
 	if int32(fh.Length) > fh.MaxFrameSize {
-		Error(fmt.Sprintf("frame size (%v) is larger than MAX_FRAME_SIZE: %v", fh.Length, fh.MaxFrameSize))
-		return FRAME_SIZE_ERROR
+		msg := fmt.Sprintf("frame size(%v) is larger than MAX_FRAME_SIZE(%v)", fh.Length, fh.MaxFrameSize)
+		Error(Red(msg))
+		return &H2Error{FRAME_SIZE_ERROR, msg}
 	}
 
 	// read 8 bit for Flags
@@ -682,7 +696,7 @@ func (frame *RstStreamFrame) Header() *FrameHeader {
 func (frame *RstStreamFrame) String() string {
 	str := Cyan("RST_STREAM")
 	str += frame.FrameHeader.String()
-	str += fmt.Sprintf("\n(Error Code=%s(%d))", Red(frame.ErrorCode.Error()), frame.ErrorCode)
+	str += fmt.Sprintf("\n(Error Code=%s(%d))", Red(frame.ErrorCode.String()), frame.ErrorCode)
 	return str
 }
 
@@ -1065,7 +1079,7 @@ func (frame *GoAwayFrame) String() string {
 	str := Cyan("GOAWAY")
 	str += frame.FrameHeader.String()
 	str += fmt.Sprintf("\n(last_stream_id=%d, error_code=%s(%d), opaque_data(%q))",
-		frame.LastStreamID, Red(frame.ErrorCode.Error()), frame.ErrorCode, frame.AdditionalDebugData)
+		frame.LastStreamID, Red(frame.ErrorCode.String()), frame.ErrorCode, frame.AdditionalDebugData)
 	return str
 }
 

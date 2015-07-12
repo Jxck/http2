@@ -205,7 +205,9 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 		}
 	}
 
-	return fmt.Errorf("invalid frame type %v at %v state", types, state)
+	msg := fmt.Sprintf("invalid frame type %v at %v state", types, state)
+	Error(Red(msg))
+	return &H2Error{PROTOCOL_ERROR, msg}
 }
 
 func (stream *Stream) changeState(state State) {
