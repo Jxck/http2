@@ -103,6 +103,7 @@ func (stream *Stream) ReadLoop() {
 }
 
 func (stream *Stream) Write(frame Frame) {
+	Trace("stream.Write (%v)", frame)
 	if stream.Closed {
 		return
 	}

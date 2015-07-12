@@ -96,7 +96,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 	flags := header.Flags
 	state := stream.State
 
-	Trace("change state(%v) with frame type(%v)", state, types)
+	Trace("change state(%v) with %v frame type(%v)", state, context, types)
 
 	if types == SettingsFrameType ||
 		types == GoAwayFrameType {
@@ -192,16 +192,38 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 			return
 		}
 	case HALF_CLOSED_REMOTE:
-		// ES
-		if flags&END_STREAM == END_STREAM && context == SEND {
-			stream.changeState(CLOSED)
+
+		if context == SEND {
+			// ES
+			if flags&END_STREAM == END_STREAM {
+				stream.changeState(CLOSED)
+				return
+			}
+
+			// R
+			if types == RstStreamFrameType {
+				stream.changeState(CLOSED)
+				return
+			}
+
+			// send any type of frame are valid
 			return
 		}
 
-		// R
-		if types == RstStreamFrameType {
-			stream.changeState(CLOSED)
-			return
+		if context == RECV {
+			if types == WindowUpdateFrameType ||
+				types == PriorityFrameType {
+
+				msg := fmt.Sprintf("invalid frame type %v at %v state", types, state)
+				Error(Red(msg))
+				return &H2Error{STREAM_CLOSED, msg}
+			}
+
+			// R
+			if types == RstStreamFrameType {
+				stream.changeState(CLOSED)
+				return
+			}
 		}
 	}
 
