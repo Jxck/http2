@@ -90,7 +90,7 @@ func (stream *Stream) Read(f Frame) {
 		stream.Write(pong)
 	case *WindowUpdateFrame:
 		Info("Window Update %d byte stream(%v)", frame.WindowSizeIncrement, stream.ID)
-		stream.Window.PeerCurrentSize += int32(frame.WindowSizeIncrement)
+		stream.Window.UpdatePeer(int32(frame.WindowSizeIncrement))
 	}
 }
 
@@ -114,13 +114,13 @@ func (stream *Stream) Write(frame Frame) {
 func (stream *Stream) WindowUpdate(length int32) {
 	Debug("stream(%d) window update %d byte", stream.ID, length)
 
-	stream.Window.CurrentSize = stream.Window.CurrentSize - length
+	// update する必要があればそれが返ってくる
+	update := stream.Window.Consume(length)
 
-	// この値を下回ったら WindowUpdate を送る
-	if stream.Window.CurrentSize < stream.Window.Threshold {
-		update := stream.Window.InitialSize - stream.Window.CurrentSize
+	// update があれば WindowUpdate を送る
+	if update > 0 {
 		stream.Write(NewWindowUpdateFrame(stream.ID, uint32(update)))
-		stream.Window.CurrentSize = stream.Window.CurrentSize + update
+		stream.Window.Update(update)
 	}
 }
 

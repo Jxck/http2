@@ -224,6 +224,18 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 				return
 			}
 		}
+	case CLOSED:
+
+		if context == SEND {
+		}
+
+		if context == RECV {
+			if types == WindowUpdateFrameType {
+
+				// valid frame
+				return
+			}
+		}
 	}
 
 	msg := fmt.Sprintf("invalid frame type %v at %v state", types, state)

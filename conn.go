@@ -8,6 +8,7 @@ import (
 	. "github.com/Jxck/logger"
 	"io"
 	"log"
+	"time"
 )
 
 func init() {
@@ -99,16 +100,12 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 			return
 		}
 
-		conn.Window.PeerCurrentSize -= conn.Window.InitialSize
-		conn.Window.PeerCurrentSize += initialWindowSize
-		conn.Window.InitialSize = initialWindowSize
+		conn.Window.UpdateInitialSize(initialWindowSize)
 		conn.PeerSettings[SETTINGS_INITIAL_WINDOW_SIZE] = initialWindowSize
 
 		for _, stream := range conn.Streams {
 			log.Println("apply settings to stream", stream)
-			stream.Window.PeerCurrentSize -= stream.Window.InitialSize
-			stream.Window.PeerCurrentSize += initialWindowSize
-			stream.Window.InitialSize = initialWindowSize
+			stream.Window.UpdateInitialSize(initialWindowSize)
 			stream.PeerSettings[SETTINGS_INITIAL_WINDOW_SIZE] = initialWindowSize
 		}
 	}
@@ -171,7 +168,7 @@ func (conn *Conn) ReadLoop() {
 					return
 				}
 				Debug("connection window size increment(%v)", int32(windowUpdateFrame.WindowSizeIncrement))
-				conn.Window.PeerCurrentSize += int32(windowUpdateFrame.WindowSizeIncrement)
+				conn.Window.UpdatePeer(int32(windowUpdateFrame.WindowSizeIncrement))
 			}
 
 			// handle GOAWAY with close connection
@@ -224,8 +221,14 @@ func (conn *Conn) ReadLoop() {
 
 			// stream が close ならリストから消す
 			if stream.State == CLOSED {
-				Info("remove stream(%d) from conn.Streams[]", streamID)
-				conn.Streams[streamID] = nil
+
+				// ただし、1 秒は window update が来てもいいように待つ
+				// TODO: atomic にする
+				go func(streamID uint32) {
+					<-time.After(1 * time.Second)
+					Info("remove stream(%d) from conn.Streams[]", streamID)
+					conn.Streams[streamID] = nil
+				}(streamID)
 			}
 
 			// ストリームにフレームを渡す
@@ -241,7 +244,7 @@ func (conn *Conn) WriteLoop() (err error) {
 	for frame := range conn.WriteChan {
 		Notice("%v %v", Red("send"), util.Indent(frame.String()))
 
-		// TODO: ここで WindowSize を見る
+		// TODO: ここで connection レベルの WindowSize を見る
 		err = frame.Write(conn.RW)
 		if err != nil {
 			Error("%v", err)
@@ -262,13 +265,13 @@ func (conn *Conn) GoAway(streamId uint32, h2Error *H2Error) {
 func (conn *Conn) WindowUpdate(length int32) {
 	Debug("connection window update %d byte", length)
 
-	conn.Window.CurrentSize = conn.Window.CurrentSize - length
+	// update する必要があればそれが返ってくる
+	update := conn.Window.Consume(length)
 
-	// この値を下回ったら WindowUpdate を送る
-	if conn.Window.CurrentSize < conn.Window.Threshold {
-		update := conn.Window.InitialSize - conn.Window.CurrentSize
+	// update があれば WindowUpdate を送る
+	if update > 0 {
 		conn.WriteChan <- NewWindowUpdateFrame(0, uint32(update))
-		conn.Window.CurrentSize = conn.Window.CurrentSize + update
+		conn.Window.Update(update)
 	}
 }
 

@@ -141,47 +141,48 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		// Send response body as DATA Frame
 		// each DataFrame has data in window size
 		data := res.body.Bytes()
-		frameSize := stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE]
+		maxFrameSize := stream.PeerSettings[SETTINGS_MAX_FRAME_SIZE]
+		rest := int32(len(data))
+		frameSize := rest
 
 		// MaxFrameSize を基準に考え、そこから送れるサイズまで減らして行く
 		for {
-			Debug("current window of peer stream(%v) = %v\n", stream.ID, stream.Window.PeerCurrentSize)
+			Debug("rest data size(%v), current peer(%v) window(%v)", rest, stream.ID, stream.Window)
 
 			// 送り終わってれば終わり
-			if len(data) == 0 {
+			if rest == 0 {
 				break
 			}
 
-			// window size が足りなかったらそもそも送らない
-			if stream.Window.PeerCurrentSize <= 0 {
+			frameSize = stream.Window.Consumable(frameSize)
+			Debug(Yellow(frameSize))
+
+			// MaxFrameSize より大きいなら切り詰める
+			if rest > maxFrameSize {
+				frameSize = maxFrameSize
+			}
+
+			Debug(Yellow(frameSize))
+
+			if frameSize < 0 {
 				Debug("peer stream(%v) blocked with full window\n", stream.ID)
 				continue
 			}
+			Debug(Yellow(frameSize))
 
-			// MaxFrameSize より小さいなら全部送る
-			if frameSize > int32(len(data)) {
-				frameSize = int32(len(data))
-			}
-
-			// window size はあるけど、入りきらない場合は使い切る
-			if frameSize > stream.Window.PeerCurrentSize {
-				frameSize = stream.Window.PeerCurrentSize
-			}
-
-			// ここまでに算出した frameSize 分のデータをコピーする
-			sendData := make([]byte, frameSize)
-			copy(sendData, data[:frameSize])
-
-			// DATA Frame を作って送る
-			dataFrame := NewDataFrame(UNSET, stream.ID, sendData, nil)
+			// ここまでに算出した frameSize 分のデータを DATA Frame を作って送る
+			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
 			stream.Write(dataFrame)
 
+			Debug("%v %v %v", Pink(rest), len(data), frameSize)
 			// 送った分を削る
+			rest -= frameSize
 			copy(data, data[frameSize:])
-			data = data[:int32(len(data))-frameSize]
+			data = data[:rest]
+			frameSize = rest
 
 			// Peer の Window Size を減らす
-			stream.Window.PeerCurrentSize -= frameSize
+			stream.Window.ConsumePeer(frameSize)
 		}
 
 		// End Stream in empty DATA Frame
