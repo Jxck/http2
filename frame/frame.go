@@ -649,7 +649,7 @@ func (frame *PriorityFrame) Header() *FrameHeader {
 func (frame *PriorityFrame) String() string {
 	str := Cyan("RRIORITY")
 	str += frame.FrameHeader.String()
-	str += fmt.Sprintf("\n(Stream Dependency=%d, Weight)", frame.StreamDependency, frame.Weight)
+	str += fmt.Sprintf("\n(Stream Dependency=%d, Weight=%d)", frame.StreamDependency, frame.Weight)
 	return str
 }
 
