@@ -170,6 +170,7 @@ func (conn *Conn) ReadLoop() {
 					Error("invalid window update frame %v", frame)
 					return
 				}
+				Debug("connection window size increment(%v)", int32(windowUpdateFrame.WindowSizeIncrement))
 				conn.Window.PeerCurrentSize += int32(windowUpdateFrame.WindowSizeIncrement)
 			}
 
