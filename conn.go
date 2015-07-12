@@ -136,77 +136,100 @@ func (conn *Conn) ReadLoop() {
 			Notice("%v %v", Green("recv"), util.Indent(frame.String()))
 		}
 
-		// SETTINGS frame なら apply setting
-		if frame.Header().Type == SettingsFrameType {
-			settingsFrame, ok := frame.(*SettingsFrame)
-			if !ok {
-				Error("invalid settings frame %v", frame)
-				return
-			}
-			conn.HandleSettings(settingsFrame)
-		}
-
-		// Connection Level Window Update
-		if frame.Header().StreamID == 0 && frame.Header().Type == WindowUpdateFrameType {
-			windowUpdateFrame, ok := frame.(*WindowUpdateFrame)
-			if !ok {
-				Error("invalid window update frame %v", frame)
-				return
-			}
-			conn.Window.PeerCurrentSize += int32(windowUpdateFrame.WindowSizeIncrement)
-		}
-
-		// handle GOAWAY with close connection
-		if frame.Header().Type == GoAwayFrameType {
-			Debug("stop conn.ReadLoop() by GOAWAY")
-			break
-		}
-
-		// DATA frame なら winodw update
-		if frame.Header().Type == DataFrameType {
-			length := int32(frame.Header().Length)
-			conn.WindowUpdate(length)
-		}
-
-		// 以下 stream leve のコントロール
-		// StreamID == 0 は無視
 		streamID := frame.Header().StreamID
+		types := frame.Header().Type
+
+		// CONNECTION LEVEL
 		if streamID == 0 {
-			continue
-		}
+			if types == DataFrameType ||
+				types == HeadersFrameType ||
+				types == PriorityFrameType ||
+				types == RstStreamFrameType ||
+				types == PushPromiseFrameType ||
+				types == ContinuationFrameType {
 
-		// 新しいストリーム ID なら対応するストリームを生成
-		stream, ok := conn.Streams[streamID]
-		if !ok {
-			// create stream with streamID
-			stream = conn.NewStream(streamID)
-			conn.Streams[streamID] = stream
+				msg := fmt.Sprintf("%s FRAME for Stream ID 0", types)
+				Error("%v", msg)
+				conn.GoAway(0, &H2Error{PROTOCOL_ERROR, msg})
+			}
 
-			// update last stream id
-			if streamID > conn.LastStreamID {
-				conn.LastStreamID = streamID
+			// SETTINGS frame を受け取った場合
+			if types == SettingsFrameType {
+				settingsFrame, ok := frame.(*SettingsFrame)
+				if !ok {
+					Error("invalid settings frame %v", frame)
+					return
+				}
+				conn.HandleSettings(settingsFrame)
+			}
+
+			// Connection Level Window Update
+			if types == WindowUpdateFrameType {
+				windowUpdateFrame, ok := frame.(*WindowUpdateFrame)
+				if !ok {
+					Error("invalid window update frame %v", frame)
+					return
+				}
+				conn.Window.PeerCurrentSize += int32(windowUpdateFrame.WindowSizeIncrement)
+			}
+
+			// handle GOAWAY with close connection
+			if types == GoAwayFrameType {
+				Debug("stop conn.ReadLoop() by GOAWAY")
+				break
 			}
 		}
 
-		// stream の state を変える
-		err = stream.ChangeState(frame, RECV)
-		if err != nil {
-			Error("%v", err)
-			h2Error, ok := err.(*H2Error)
-			if ok {
-				conn.GoAway(0, h2Error)
+		// STREAM LEVEL
+		if streamID > 0 {
+			if types == SettingsFrameType ||
+				types == PingFrameType ||
+				types == GoAwayFrameType {
+
+				msg := fmt.Sprintf("%s FRAME for Stream ID not 0", types)
+				Error("%v", msg)
+				conn.GoAway(0, &H2Error{PROTOCOL_ERROR, msg})
 			}
-			break
-		}
 
-		// stream が close ならリストから消す
-		if stream.State == CLOSED {
-			Info("remove stream(%d) from conn.Streams[]", streamID)
-			conn.Streams[streamID] = nil
-		}
+			// DATA frame なら winodw update
+			if types == DataFrameType {
+				length := int32(frame.Header().Length)
+				conn.WindowUpdate(length)
+			}
 
-		// ストリームにフレームを渡す
-		stream.ReadChan <- frame
+			// 新しいストリーム ID なら対応するストリームを生成
+			stream, ok := conn.Streams[streamID]
+			if !ok {
+				// create stream with streamID
+				stream = conn.NewStream(streamID)
+				conn.Streams[streamID] = stream
+
+				// update last stream id
+				if streamID > conn.LastStreamID {
+					conn.LastStreamID = streamID
+				}
+			}
+
+			// stream の state を変える
+			err = stream.ChangeState(frame, RECV)
+			if err != nil {
+				Error("%v", err)
+				h2Error, ok := err.(*H2Error)
+				if ok {
+					conn.GoAway(0, h2Error)
+				}
+				break
+			}
+
+			// stream が close ならリストから消す
+			if stream.State == CLOSED {
+				Info("remove stream(%d) from conn.Streams[]", streamID)
+				conn.Streams[streamID] = nil
+			}
+
+			// ストリームにフレームを渡す
+			stream.ReadChan <- frame
+		}
 	}
 
 	Debug("stop the readloop")
