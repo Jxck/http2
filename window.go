@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/Jxck/color"
 	. "github.com/Jxck/http2/frame"
+	. "github.com/Jxck/logger"
 	"log"
 )
 
@@ -67,6 +68,7 @@ func (window *Window) Consume(length int32) (update int32) {
 }
 
 func (window *Window) ConsumePeer(length int32) {
+	Trace("consume peer window current(%v), use(%v), rest(%v)", window.peerCurrentSize, length, window.peerCurrentSize-length)
 	window.peerCurrentSize -= length
 }
 

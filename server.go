@@ -154,32 +154,28 @@ func HandlerCallBack(handler http.Handler) CallBack {
 				break
 			}
 
-			frameSize = stream.Window.Consumable(frameSize)
-			Debug(Yellow(frameSize))
-
-			// MaxFrameSize より大きいなら切り詰める
-			if rest > maxFrameSize {
-				frameSize = maxFrameSize
-			}
-
-			Debug(Yellow(frameSize))
+			frameSize = stream.Window.Consumable(rest)
 
 			if frameSize < 0 {
 				Debug("peer stream(%v) blocked with full window\n", stream.ID)
 				continue
 			}
-			Debug(Yellow(frameSize))
+
+			// MaxFrameSize より大きいなら切り詰める
+			if frameSize > maxFrameSize {
+				frameSize = maxFrameSize
+			}
+
+			Debug("send %v/%v data", frameSize, rest)
 
 			// ここまでに算出した frameSize 分のデータを DATA Frame を作って送る
 			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
 			stream.Write(dataFrame)
 
-			Debug("%v %v %v", Pink(rest), len(data), frameSize)
 			// 送った分を削る
 			rest -= frameSize
 			copy(data, data[frameSize:])
 			data = data[:rest]
-			frameSize = rest
 
 			// Peer の Window Size を減らす
 			stream.Window.ConsumePeer(frameSize)
