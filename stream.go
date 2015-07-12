@@ -23,6 +23,7 @@ type Stream struct {
 	HpackContext *hpack.Context
 	CallBack     CallBack
 	Bucket       *Bucket
+	Closed       bool
 }
 
 type Bucket struct {
@@ -51,6 +52,7 @@ func NewStream(id uint32, writeChan chan Frame, settings, peerSettings map[Setti
 		HpackContext: hpackContext,
 		CallBack:     callback,
 		Bucket:       NewBucket(),
+		Closed:       false,
 	}
 	go stream.ReadLoop()
 	return stream
@@ -101,6 +103,9 @@ func (stream *Stream) ReadLoop() {
 }
 
 func (stream *Stream) Write(frame Frame) {
+	if stream.Closed {
+		return
+	}
 	stream.ChangeState(frame, SEND)
 	stream.WriteChan <- frame
 }
@@ -120,7 +125,11 @@ func (stream *Stream) WindowUpdate(length int32) {
 
 func (stream *Stream) Close() {
 	Debug("stream(%d) Close()", stream.ID)
-	// write chan は close しない
+	// stream.WriteChan は conn.WriteChan であり
+	// conn の方で close するので
+	// ここでは close しない
+	stream.Closed = true
+	Info("close stream(%v).ReadChan", stream.ID)
 	close(stream.ReadChan)
 }
 
