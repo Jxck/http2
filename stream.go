@@ -64,7 +64,7 @@ func (stream *Stream) Read(f Frame) {
 	switch frame := f.(type) {
 	case *HeadersFrame:
 		// Decode Headers
-		header := stream.DecodeHeader(frame.HeaderBlock)
+		header := stream.DecodeHeader(frame.HeaderBlockFragment)
 		frame.Headers = header
 
 		stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
@@ -142,7 +142,7 @@ func (stream *Stream) EncodeHeader(header http.Header) []byte {
 }
 
 // Decode Header using HPACK
-func (stream *Stream) DecodeHeader(headerBlock []byte) http.Header {
-	stream.HpackContext.Decode(headerBlock)
+func (stream *Stream) DecodeHeader(headerBlockFragment []byte) http.Header {
+	stream.HpackContext.Decode(headerBlockFragment)
 	return stream.HpackContext.ES.ToHeader()
 }

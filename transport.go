@@ -99,9 +99,9 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 
 	// send request header via HEADERS Frame
 	var flags Flag = END_STREAM + END_HEADERS
-	headerBlock := stream.EncodeHeader(req.Header)
-	Trace("encoded header block %v", headerBlock)
-	frame := NewHeadersFrame(flags, stream.ID, nil, headerBlock, nil)
+	headerBlockFragment := stream.EncodeHeader(req.Header)
+	Trace("encoded header block %v", headerBlockFragment)
+	frame := NewHeadersFrame(flags, stream.ID, nil, headerBlockFragment, nil)
 	frame.Headers = req.Header
 	stream.Write(frame) // TODO: err
 

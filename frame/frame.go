@@ -384,11 +384,11 @@ func (frame *DataFrame) String() string {
 // +---------------------------------------------------------------+
 type HeadersFrame struct {
 	*FrameHeader
-	PadLength      uint8
-	DependencyTree *DependencyTree
-	HeaderBlock    []byte
-	Headers        http.Header
-	Padding        []byte
+	PadLength           uint8
+	DependencyTree      *DependencyTree
+	HeaderBlockFragment []byte
+	Headers             http.Header
+	Padding             []byte
 }
 
 type DependencyTree struct {
@@ -397,11 +397,11 @@ type DependencyTree struct {
 	Weight           uint8
 }
 
-func NewHeadersFrame(flags Flag, streamID uint32, dependencyTree *DependencyTree, headerBlock []byte, padding []byte) *HeadersFrame {
+func NewHeadersFrame(flags Flag, streamID uint32, dependencyTree *DependencyTree, headerBlockFragment []byte, padding []byte) *HeadersFrame {
 	var padded bool = flags&PADDED == PADDED
 	var priority bool = flags&PRIORITY == PRIORITY
 
-	length := len(headerBlock)
+	length := len(headerBlockFragment)
 	if padded {
 		length = length + len(padding) + 1
 	}
@@ -413,11 +413,11 @@ func NewHeadersFrame(flags Flag, streamID uint32, dependencyTree *DependencyTree
 	fh := NewFrameHeader(uint32(length), HeadersFrameType, flags, streamID)
 
 	headersFrame := &HeadersFrame{
-		FrameHeader:    fh,
-		PadLength:      uint8(len(padding)),
-		DependencyTree: dependencyTree,
-		HeaderBlock:    headerBlock,
-		Padding:        padding,
+		FrameHeader:         fh,
+		PadLength:           uint8(len(padding)),
+		DependencyTree:      dependencyTree,
+		HeaderBlockFragment: headerBlockFragment,
+		Padding:             padding,
 	}
 
 	return headersFrame
@@ -475,11 +475,11 @@ func (frame *HeadersFrame) Read(r io.Reader) (err error) {
 	if padded {
 		// header block + padding
 		boundary := len(data) - int(frame.PadLength)
-		frame.HeaderBlock = data[:boundary]
+		frame.HeaderBlockFragment = data[:boundary]
 		frame.Padding = data[boundary:]
 	} else {
 		// header block only
-		frame.HeaderBlock = data
+		frame.HeaderBlockFragment = data
 	}
 
 	return err
@@ -517,7 +517,7 @@ func (frame *HeadersFrame) Write(w io.Writer) (err error) {
 			return err
 		}
 	}
-	err = binary.Write(w, binary.BigEndian, &frame.HeaderBlock)
+	err = binary.Write(w, binary.BigEndian, &frame.HeaderBlockFragment)
 	if err != nil {
 		return err
 	}

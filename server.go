@@ -130,10 +130,10 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 		// Send response headers as HEADERS Frame
 		headerList := hpack.ToHeaderList(responseHeader)
-		headerBlock := stream.HpackContext.Encode(*headerList)
+		headerBlockFragment := stream.HpackContext.Encode(*headerList)
 		Debug("%v", headerList)
 
-		headersFrame := NewHeadersFrame(END_HEADERS, stream.ID, nil, headerBlock, nil)
+		headersFrame := NewHeadersFrame(END_HEADERS, stream.ID, nil, headerBlockFragment, nil)
 		headersFrame.Headers = responseHeader
 
 		stream.Write(headersFrame)

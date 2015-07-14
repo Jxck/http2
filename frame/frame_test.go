@@ -227,10 +227,10 @@ func TestHeadersCase(t *testing.T) {
 	wire := c.Wire
 	flags := Flag(c.Frame.Flags)
 	streamId := c.Frame.StreamId
-	headerBlock := []byte(p.HeaderBlockFragment)
+	headerBlockFragment := []byte(p.HeaderBlockFragment)
 
 	// compare struct
-	expected := NewHeadersFrame(flags, streamId, nil, headerBlock, nil)
+	expected := NewHeadersFrame(flags, streamId, nil, headerBlockFragment, nil)
 	actual, err := ReadFrame(hexToBuffer(wire))
 	if err != nil {
 		t.Fatal(err)
