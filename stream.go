@@ -28,13 +28,13 @@ type Stream struct {
 
 type Bucket struct {
 	Headers http.Header
-	Data    []*DataFrame
+	Body    *Body
 }
 
 func NewBucket() *Bucket {
 	return &Bucket{
 		Headers: make(http.Header),
-		Data:    make([]*DataFrame, 0),
+		Body:    new(Body),
 	}
 }
 
@@ -79,7 +79,11 @@ func (stream *Stream) Read(f Frame) {
 	case *DataFrame:
 		length := int32(frame.Header().Length)
 		stream.WindowUpdate(length)
-		stream.Bucket.Data = append(stream.Bucket.Data, frame)
+
+		_, err := stream.Bucket.Body.Write(frame.Data)
+		if err != nil {
+			Fatal("%v", err)
+		}
 
 		if frame.Header().Flags&END_STREAM == END_STREAM {
 			stream.CallBack(stream)

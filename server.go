@@ -75,6 +75,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 func HandlerCallBack(handler http.Handler) CallBack {
 	return func(stream *Stream) {
 		header := stream.Bucket.Headers
+		body := stream.Bucket.Body
 
 		authority := header.Get(":authority")
 		method := header.Get(":method")
@@ -90,17 +91,6 @@ func HandlerCallBack(handler http.Handler) CallBack {
 		url, err := neturl.ParseRequestURI(rawurl)
 		if err != nil {
 			Fatal("%v", err)
-		}
-
-		// request body がある場合
-		body := new(Body)
-		if len(stream.Bucket.Data) != 0 {
-			for _, data := range stream.Bucket.Data {
-				_, err := body.Write(data.Data)
-				if err != nil {
-					Fatal("%v", err)
-				}
-			}
 		}
 
 		req := &http.Request{

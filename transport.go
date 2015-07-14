@@ -1,7 +1,6 @@
 package http2
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
 	. "github.com/Jxck/color"
@@ -121,13 +120,7 @@ func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 	response := make(chan *http.Response)
 	return func(stream *Stream) {
 
-		var data bytes.Buffer
-		for _, dataFrame := range stream.Bucket.Data {
-			data.Write(dataFrame.Data)
-		}
-
-		body := &Body{data}
-
+		body := stream.Bucket.Body
 		headers := stream.Bucket.Headers
 
 		status, _ := strconv.Atoi(headers.Get(":status")) // err
