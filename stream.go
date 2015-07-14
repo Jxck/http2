@@ -27,13 +27,13 @@ type Stream struct {
 }
 
 type Bucket struct {
-	Headers []*HeadersFrame
+	Headers http.Header
 	Data    []*DataFrame
 }
 
 func NewBucket() *Bucket {
 	return &Bucket{
-		Headers: make([]*HeadersFrame, 0),
+		Headers: make(http.Header),
 		Data:    make([]*DataFrame, 0),
 	}
 }
@@ -67,7 +67,11 @@ func (stream *Stream) Read(f Frame) {
 		header := stream.DecodeHeader(frame.HeaderBlockFragment)
 		frame.Headers = header
 
-		stream.Bucket.Headers = append(stream.Bucket.Headers, frame)
+		for name, values := range header {
+			for _, value := range values {
+				stream.Bucket.Headers.Add(name, value)
+			}
+		}
 
 		if frame.Header().Flags&END_STREAM == END_STREAM {
 			go stream.CallBack(stream)
@@ -91,6 +95,20 @@ func (stream *Stream) Read(f Frame) {
 	case *WindowUpdateFrame:
 		Info("Window Update %d byte stream(%v)", frame.WindowSizeIncrement, stream.ID)
 		stream.Window.UpdatePeer(int32(frame.WindowSizeIncrement))
+	case *ContinuationFrame:
+		// Decode Headers
+		header := stream.DecodeHeader(frame.HeaderBlockFragment)
+		frame.Headers = header
+
+		for name, values := range header {
+			for _, value := range values {
+				stream.Bucket.Headers.Add(name, value)
+			}
+		}
+
+		if frame.Header().Flags&END_STREAM == END_STREAM {
+			go stream.CallBack(stream)
+		}
 	}
 }
 

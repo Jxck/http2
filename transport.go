@@ -120,7 +120,6 @@ func (transport *Transport) RoundTrip(req *http.Request) (res *http.Response, er
 func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 	response := make(chan *http.Response)
 	return func(stream *Stream) {
-		headerFrame := stream.Bucket.Headers[0]
 
 		var data bytes.Buffer
 		for _, dataFrame := range stream.Bucket.Data {
@@ -129,7 +128,7 @@ func TransportCallBack(req *http.Request) (CallBack, chan *http.Response) {
 
 		body := &Body{data}
 
-		headers := headerFrame.Headers
+		headers := stream.Bucket.Headers
 
 		status, _ := strconv.Atoi(headers.Get(":status")) // err
 		headers.Del(":status")

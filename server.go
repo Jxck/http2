@@ -74,8 +74,7 @@ func HandleTLSConnection(conn net.Conn, handler http.Handler) {
 // req/res を作って handler を実行する関数を生成
 func HandlerCallBack(handler http.Handler) CallBack {
 	return func(stream *Stream) {
-		headerFrame := stream.Bucket.Headers[0]
-		header := headerFrame.Headers
+		header := stream.Bucket.Headers
 
 		authority := header.Get(":authority")
 		method := header.Get(":method")

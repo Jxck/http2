@@ -1145,8 +1145,8 @@ func (frame *WindowUpdateFrame) String() string {
 // +---------------------------------------------------------------+
 type ContinuationFrame struct {
 	*FrameHeader
+	Headers             http.Header
 	HeaderBlockFragment []byte
-	// TODO: support headers encode/decode
 }
 
 func NewContinuationFrame(flags Flag, streamID uint32, headerBlockFragment []byte) *ContinuationFrame {
