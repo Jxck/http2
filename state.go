@@ -180,15 +180,36 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 			return
 		}
 	case HALF_CLOSED_LOCAL:
-		// ES
-		if flags&END_STREAM == END_STREAM && context == RECV {
-			stream.changeState(CLOSED)
-			return
+
+		if context == SEND {
+			if types == WindowUpdateFrameType ||
+				types == PriorityFrameType {
+
+				// valid frame
+				return
+			}
+
+			// R
+			if types == RstStreamFrameType {
+				stream.changeState(CLOSED)
+				return
+			}
 		}
 
-		// R
-		if types == RstStreamFrameType {
-			stream.changeState(CLOSED)
+		if context == RECV {
+			// ES
+			if flags&END_STREAM == END_STREAM {
+				stream.changeState(CLOSED)
+				return
+			}
+
+			// R
+			if types == RstStreamFrameType {
+				stream.changeState(CLOSED)
+				return
+			}
+
+			// recv any type of frames are valid
 			return
 		}
 	case HALF_CLOSED_REMOTE:
@@ -206,7 +227,7 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 				return
 			}
 
-			// send any type of frame are valid
+			// send any type of frames are valid
 			return
 		}
 
