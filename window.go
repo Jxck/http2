@@ -73,7 +73,7 @@ func (window *Window) ConsumePeer(length int32) {
 }
 
 func (window *Window) Consumable(length int32) int32 {
-	if window.peerCurrentSize > length {
+	if window.peerCurrentSize < length {
 		return window.peerCurrentSize
 	} else {
 		return length

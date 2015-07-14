@@ -156,7 +156,7 @@ func HandlerCallBack(handler http.Handler) CallBack {
 
 			frameSize = stream.Window.Consumable(rest)
 
-			if frameSize < 0 {
+			if frameSize <= 0 {
 				Debug("peer stream(%v) blocked with full window\n", stream.ID)
 				continue
 			}
