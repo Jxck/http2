@@ -244,6 +244,10 @@ func (stream *Stream) ChangeState(frame Frame, context Context) (err error) {
 				stream.changeState(CLOSED)
 				return
 			}
+
+			msg := fmt.Sprintf("invalid frame type %v at %v state", types, state)
+			Error(Red(msg))
+			return &H2Error{STREAM_CLOSED, msg}
 		}
 	case CLOSED:
 
