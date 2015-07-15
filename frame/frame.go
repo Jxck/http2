@@ -184,6 +184,12 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	fh.Length = first >> 8
 	Trace("length = %d", fh.Length)
 
+	if fh.Type == RstStreamFrameType && fh.Length != 4 {
+		msg := fmt.Sprintf("frame size of RST_STREAM should be 4 but %v", fh.Length)
+		Error(Red(msg))
+		return &H2Error{FRAME_SIZE_ERROR, msg}
+	}
+
 	if int32(fh.Length) > fh.MaxFrameSize {
 		msg := fmt.Sprintf("frame size(%v) is larger than MAX_FRAME_SIZE(%v)", fh.Length, fh.MaxFrameSize)
 		Error(Red(msg))
