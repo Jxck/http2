@@ -818,6 +818,14 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 				return &H2Error{PROTOCOL_ERROR, msg}
 			}
 		}
+
+		if settingsID == SETTINGS_INITIAL_WINDOW_SIZE {
+			if value < 0 { // value is int32 = 2^31-1 so over 2^31-1 value became negative value
+				msg := fmt.Sprintf("SETTINGS_INITIAL_WINDOW_SIZE value should be smaller than 2^31-1 but %v", value)
+				Error(Red(msg))
+				return &H2Error{FLOW_CONTROL_ERROR, msg}
+			}
+		}
 		frame.Settings[settingsID] = value
 	}
 	return err
