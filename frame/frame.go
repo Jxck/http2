@@ -205,11 +205,21 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	}
 	Trace("flags = %d", fh.Flags)
 
-	// SETTINGS ACKs payload length should 0
-	if fh.Type == SettingsFrameType && fh.Flags == ACK && fh.Length > 0 {
-		msg := fmt.Sprintf("frame size of SETTINGS_STREAM should be 0 if ACK set but %v", fh.Length)
-		Error(Red(msg))
-		return &H2Error{FRAME_SIZE_ERROR, msg}
+	if fh.Type == SettingsFrameType {
+		// SETTINGS ACKs payload length should 0
+		if fh.Flags == ACK && fh.Length > 0 {
+			msg := fmt.Sprintf("frame size of SETTINGS_STREAM should be 0 if ACK set but %v", fh.Length)
+			Error(Red(msg))
+			return &H2Error{FRAME_SIZE_ERROR, msg}
+		}
+
+		// SETTINGS payload should multiple of 6 octets
+		if fh.Length%6 != 0 {
+			msg := fmt.Sprintf("frame size of SETTINGS_STREAM should multiple of 6 octets but %v", fh.Length)
+			Error(Red(msg))
+			return &H2Error{FRAME_SIZE_ERROR, msg}
+		}
+
 	}
 
 	// read 32 bit for StreamID
