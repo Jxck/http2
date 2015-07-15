@@ -184,12 +184,14 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	fh.Length = first >> 8
 	Trace("length = %d", fh.Length)
 
+	// RST_STREAM payload length should be 4
 	if fh.Type == RstStreamFrameType && fh.Length != 4 {
 		msg := fmt.Sprintf("frame size of RST_STREAM should be 4 but %v", fh.Length)
 		Error(Red(msg))
 		return &H2Error{FRAME_SIZE_ERROR, msg}
 	}
 
+	// payload length should equal or smaller than MAX_FRAME_SIZE
 	if int32(fh.Length) > fh.MaxFrameSize {
 		msg := fmt.Sprintf("frame size(%v) is larger than MAX_FRAME_SIZE(%v)", fh.Length, fh.MaxFrameSize)
 		Error(Red(msg))
@@ -202,6 +204,13 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 		return err
 	}
 	Trace("flags = %d", fh.Flags)
+
+	// SETTINGS ACKs payload length should 0
+	if fh.Type == SettingsFrameType && fh.Flags == ACK && fh.Length > 0 {
+		msg := fmt.Sprintf("frame size of SETTINGS_STREAM should be 0 if ACK set but %v", fh.Length)
+		Error(Red(msg))
+		return &H2Error{FRAME_SIZE_ERROR, msg}
+	}
 
 	// read 32 bit for StreamID
 	var last uint32
