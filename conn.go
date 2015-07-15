@@ -171,6 +171,15 @@ func (conn *Conn) ReadLoop() {
 				conn.Window.UpdatePeer(int32(windowUpdateFrame.WindowSizeIncrement))
 			}
 
+			// respond to PING
+			if types == PingFrameType {
+				// ignore ack
+				if frame.Header().Flags != ACK {
+					conn.PingACK([]byte("pong    ")) // should be 8 byte
+				}
+				continue
+			}
+
 			// handle GOAWAY with close connection
 			if types == GoAwayFrameType {
 				Debug("stop conn.ReadLoop() by GOAWAY")
@@ -252,6 +261,12 @@ func (conn *Conn) WriteLoop() (err error) {
 		}
 	}
 	return
+}
+
+func (conn *Conn) PingACK(opaqueData []byte) {
+	Debug("Ping ACK with opaque(%v)", opaqueData)
+	pingAck := NewPingFrame(ACK, 0, opaqueData)
+	conn.WriteChan <- pingAck
 }
 
 func (conn *Conn) GoAway(streamId uint32, h2Error *H2Error) {

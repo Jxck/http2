@@ -1065,6 +1065,9 @@ func (frame *PingFrame) Header() *FrameHeader {
 func (frame *PingFrame) String() string {
 	str := Cyan("PING")
 	str += frame.FrameHeader.String()
+	if frame.Flags == ACK {
+		str += "\n; ACK"
+	}
 	str += fmt.Sprintf("\nopaque_data=%x", frame.OpaqueData)
 	return str
 }
