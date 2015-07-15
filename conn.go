@@ -100,7 +100,6 @@ func (conn *Conn) HandleSettings(settingsFrame *SettingsFrame) {
 			return
 		}
 
-		conn.Window.UpdateInitialSize(initialWindowSize)
 		conn.PeerSettings[SETTINGS_INITIAL_WINDOW_SIZE] = initialWindowSize
 
 		for _, stream := range conn.Streams {
@@ -199,10 +198,10 @@ func (conn *Conn) ReadLoop() {
 				break // TODO: check this flow is correct or not
 			}
 
-			// DATA frame なら winodw update
+			// DATA frame なら winodw を消費
 			if types == DataFrameType {
 				length := int32(frame.Header().Length)
-				conn.WindowUpdate(length)
+				conn.WindowConsume(length)
 			}
 
 			// 新しいストリーム ID なら対応するストリームを生成
@@ -278,7 +277,7 @@ func (conn *Conn) GoAway(streamId uint32, h2Error *H2Error) {
 	conn.WriteChan <- goaway
 }
 
-func (conn *Conn) WindowUpdate(length int32) {
+func (conn *Conn) WindowConsume(length int32) {
 	Debug("connection window update %d byte", length)
 
 	// update する必要があればそれが返ってくる
