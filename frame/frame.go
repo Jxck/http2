@@ -810,6 +810,14 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 		if err != nil {
 			return err
 		}
+
+		if settingsID == SETTINGS_ENABLE_PUSH {
+			if !(value == 0 || value == 1) {
+				msg := fmt.Sprintf("SETTINGS_ENABLE_PUSH value should be 0 or 1 but %v", value)
+				Error(Red(msg))
+				return &H2Error{PROTOCOL_ERROR, msg}
+			}
+		}
 		frame.Settings[settingsID] = value
 	}
 	return err
