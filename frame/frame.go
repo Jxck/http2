@@ -826,6 +826,15 @@ func (frame *SettingsFrame) Read(r io.Reader) (err error) {
 				return &H2Error{FLOW_CONTROL_ERROR, msg}
 			}
 		}
+
+		if settingsID == SETTINGS_MAX_FRAME_SIZE {
+			if value < 16384 || 16777215 < value {
+				msg := fmt.Sprintf("SETTINGS_MAX_FRAME_SIZE value should between initial value is 2^14 (16,384) and maximum 2^24-1 (16,777,215) but %v", value)
+				Error(Red(msg))
+				return &H2Error{PROTOCOL_ERROR, msg}
+			}
+		}
+
 		frame.Settings[settingsID] = value
 	}
 	return err
