@@ -147,6 +147,7 @@ func (conn *Conn) ReadLoop() {
 				msg := fmt.Sprintf("%s FRAME for Stream ID 0", types)
 				Error("%v", msg)
 				conn.GoAway(0, &H2Error{PROTOCOL_ERROR, msg})
+				break // TODO: check this flow is correct or not
 			}
 
 			// SETTINGS frame を受け取った場合
@@ -195,6 +196,7 @@ func (conn *Conn) ReadLoop() {
 				msg := fmt.Sprintf("%s FRAME for Stream ID not 0", types)
 				Error("%v", msg)
 				conn.GoAway(0, &H2Error{PROTOCOL_ERROR, msg})
+				break // TODO: check this flow is correct or not
 			}
 
 			// DATA frame なら winodw update
