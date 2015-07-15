@@ -123,7 +123,6 @@ func (conn *Conn) ReadLoop() {
 		if err != nil {
 			Error("%v", err)
 			h2Error, ok := err.(*H2Error)
-			Debug("%v", ok)
 			if ok {
 				conn.GoAway(0, h2Error)
 			}

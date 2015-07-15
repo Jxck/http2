@@ -191,6 +191,13 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 		return &H2Error{FRAME_SIZE_ERROR, msg}
 	}
 
+	// PING_FRAME payload length should be 8
+	if fh.Type == PingFrameType && fh.Length != 8 {
+		msg := fmt.Sprintf("frame size of PING_FRAME should be 8 but %v", fh.Length)
+		Error(Red(msg))
+		return &H2Error{FRAME_SIZE_ERROR, msg}
+	}
+
 	// payload length should equal or smaller than MAX_FRAME_SIZE
 	if int32(fh.Length) > fh.MaxFrameSize {
 		msg := fmt.Sprintf("frame size(%v) is larger than MAX_FRAME_SIZE(%v)", fh.Length, fh.MaxFrameSize)
