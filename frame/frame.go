@@ -289,6 +289,13 @@ func (frame *DataFrame) Read(r io.Reader) (err error) {
 		if err != nil {
 			return err
 		}
+
+		if uint32(frame.PadLength) > frameLen {
+			msg := fmt.Sprintf("Pad Length(%v) is larger than frame.Length(%v)", frame.PadLength, frameLen)
+			Error(Red(msg))
+			return &H2Error{PROTOCOL_ERROR, msg}
+		}
+
 		frameLen = frameLen - 1 // (remove pad length)
 	}
 
