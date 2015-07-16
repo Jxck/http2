@@ -158,7 +158,9 @@ func HandlerCallBack(handler http.Handler) CallBack {
 			Debug("send %v/%v data", frameSize, rest)
 
 			// ここまでに算出した frameSize 分のデータを DATA Frame を作って送る
-			dataFrame := NewDataFrame(UNSET, stream.ID, data[:frameSize], nil)
+			dataToSend := make([]byte, frameSize)
+			copy(dataToSend, data[:frameSize])
+			dataFrame := NewDataFrame(UNSET, stream.ID, dataToSend, nil)
 			stream.Write(dataFrame)
 
 			// 送った分を削る
