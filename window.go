@@ -43,18 +43,31 @@ func NewWindow(initialWindow, peerInitilaWindow int32) *Window {
 	}
 }
 
-func (window *Window) UpdateInitialSize(initialWindowSize int32) {
-	window.peerCurrentSize -= window.initialSize
-	window.peerCurrentSize += initialWindowSize
-	window.initialSize = initialWindowSize
+func (window *Window) UpdateInitialSize(newInitialWindowSize int32) {
+	currentInitialWindowSize := window.initialSize
+	currentWindowSize := window.peerCurrentSize
+	newWindwoSize := newInitialWindowSize - (window.initialSize - currentWindowSize)
+
+	window.peerCurrentSize = newWindwoSize
+	window.initialSize = newInitialWindowSize
+
+	Trace(Brown(`update initial window size
+	"New WindowSize(%v)" = "New InitialWindowSize(%v)" - ("Current InitialWindow ize(%v)" - "Current WindowSize(%v)")`),
+		newWindwoSize, newInitialWindowSize, currentInitialWindowSize, currentWindowSize)
 }
 
 func (window *Window) Update(windowSizeIncrement int32) {
-	window.currentSize += windowSizeIncrement
+	current := window.currentSize
+	window.currentSize = current + windowSizeIncrement
+
+	Trace(Brown("increment current window size (%v) + increment (%v) = (%v)"), current, windowSizeIncrement, window.currentSize)
 }
 
 func (window *Window) UpdatePeer(windowSizeIncrement int32) {
-	window.peerCurrentSize += windowSizeIncrement
+	current := window.peerCurrentSize
+	window.peerCurrentSize = current + windowSizeIncrement
+
+	Trace(Brown("increment peer window size (%v) + increment (%v) = (%v)"), current, windowSizeIncrement, window.peerCurrentSize)
 }
 
 func (window *Window) Consume(length int32) (update int32) {
@@ -68,8 +81,10 @@ func (window *Window) Consume(length int32) (update int32) {
 }
 
 func (window *Window) ConsumePeer(length int32) {
-	Trace("consume peer window current(%v), use(%v), rest(%v)", window.peerCurrentSize, length, window.peerCurrentSize-length)
-	window.peerCurrentSize -= length
+	current := window.peerCurrentSize
+	window.peerCurrentSize = current - length
+
+	Trace(Brown("consume peer window size (%v) - (%v) = (%v)"), current, length, window.peerCurrentSize)
 }
 
 func (window *Window) Consumable(length int32) int32 {
