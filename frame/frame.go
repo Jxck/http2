@@ -184,6 +184,13 @@ func (fh *FrameHeader) Read(r io.Reader) (err error) {
 	fh.Length = first >> 8
 	Trace("length = %d", fh.Length)
 
+	// PRIORITY payload length should be 5
+	if fh.Type == PriorityFrameType && fh.Length != 5 {
+		msg := fmt.Sprintf("frame size of PRIORITY should be 5 but %v", fh.Length)
+		Error(Red(msg))
+		return &H2Error{FRAME_SIZE_ERROR, msg}
+	}
+
 	// RST_STREAM payload length should be 4
 	if fh.Type == RstStreamFrameType && fh.Length != 4 {
 		msg := fmt.Sprintf("frame size of RST_STREAM should be 4 but %v", fh.Length)
